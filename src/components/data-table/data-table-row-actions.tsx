@@ -257,11 +257,7 @@ function exportServerDataToCSV(
 		.map((row) =>
 			row
 				.map((cell) => {
-					if (
-						cell.includes(",") ||
-						cell.includes('"') ||
-						cell.includes("\n")
-					) {
+					if (cell.includes(",") || cell.includes('"') || cell.includes("\n")) {
 						return `"${cell.replace(/"/g, '""')}"`;
 					}
 					return cell;

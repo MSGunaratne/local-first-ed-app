@@ -5,7 +5,12 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 
 import { db } from "../db";
 import { ac, roles } from "src/lib/permissions";
-import { users,accounts, sessions, verifications } from "#/features/users/users.schema";
+import {
+	users,
+	accounts,
+	sessions,
+	verifications,
+} from "#/features/users/users.schema";
 
 import { Role } from "src/types/user";
 

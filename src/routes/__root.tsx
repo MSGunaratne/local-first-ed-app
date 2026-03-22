@@ -1,22 +1,21 @@
+import type { QueryClient } from "@tanstack/react-query";
 import {
 	HeadContent,
 	Scripts,
 	createRootRouteWithContext,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { AppError } from "@/components/app-error";
+import { ReloadPrompt } from "@/components/pwa/reload-prompt";
+import { Toaster } from "@/components/ui/sonner";
+import { getLocale } from "#/paraglide/runtime";
+import { NotFound } from "../components/not-found";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-
 import TanStackQueryProvider from "../integrations/tanstack-query/root-provider";
-
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
-
-import { getLocale } from "#/paraglide/runtime";
-
 import appCss from "../styles.css?url";
-
-import type { QueryClient } from "@tanstack/react-query";
 
 interface MyRouterContext {
 	queryClient: QueryClient;
@@ -45,15 +44,40 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 			{
 				title: "TanStack Start Starter",
 			},
+			{
+				name: "theme-color",
+				content: "#000000",
+			},
 		],
 		links: [
 			{
 				rel: "stylesheet",
 				href: appCss,
 			},
+			{
+				rel: "manifest",
+				href: "/manifest.webmanifest",
+			},
+			{
+				rel: "apple-touch-icon",
+				sizes: "180x180",
+				href: "/apple-touch-icon.png",
+			},
+			{
+				rel: "icon",
+				type: "image/svg+xml",
+				href: "/favicon.svg",
+			},
+			{
+				rel: "shortcut icon",
+				href: "/favicon.ico",
+			},
 		],
 	}),
+
 	shellComponent: RootDocument,
+	notFoundComponent: NotFound,
+	errorComponent: AppError,
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
@@ -67,7 +91,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<TanStackQueryProvider>
 					<Header />
 					{children}
+					<Toaster />
 					<Footer />
+					<ReloadPrompt />
 					<TanStackDevtools
 						config={{
 							position: "bottom-right",

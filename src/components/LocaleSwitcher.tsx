@@ -1,44 +1,79 @@
 // Locale switcher refs:
 // - Paraglide docs: https://inlang.com/m/gerre34r/library-inlang-paraglideJs
 // - Router example: https://github.com/TanStack/router/tree/main/examples/react/i18n-paraglide#switching-locale
-import { getLocale, locales, setLocale } from "#/paraglide/runtime";
-import { m } from "#/paraglide/messages";
 
-export default function ParaglideLocaleSwitcher() {
+import { Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
+import { getLocale, locales, setLocale } from "@/paraglide/runtime";
+
+const labels = {
+	en: "English",
+	si: "සිංහල",
+} as const;
+
+export default function ParaglideLocaleSwitcher({
+	isCollapsed = false,
+	className,
+}: {
+	isCollapsed?: boolean;
+	className?: string;
+}) {
 	const currentLocale = getLocale();
+
+	if (isCollapsed) {
+		return (
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button
+						variant="ghost"
+						size="icon"
+						className={cn("h-10 w-10", className)}
+					>
+						<Globe className="h-4 w-4" />
+						<span className="sr-only">Switch Language</span>
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="start" side="right">
+					{locales.map((locale) => (
+						<DropdownMenuItem
+							key={locale}
+							onClick={() => setLocale(locale)}
+							className={cn(locale === currentLocale && "bg-accent")}
+						>
+							{labels[locale] ?? locale.toUpperCase()}
+						</DropdownMenuItem>
+					))}
+				</DropdownMenuContent>
+			</DropdownMenu>
+		);
+	}
 
 	return (
 		<div
-			style={{
-				display: "flex",
-				gap: "0.5rem",
-				alignItems: "center",
-				color: "inherit",
-			}}
-			aria-label={m.language_label()}
+			className={cn("flex items-center gap-2 px-2 py-1.5 w-full", className)}
 		>
-			<span style={{ opacity: 0.85 }}>
-				{m.current_locale({ locale: currentLocale })}
+			<span className="text-xs text-muted-foreground font-medium shrink-0">
+				{m.common_current_locale({ locale: currentLocale })}
 			</span>
-			<div style={{ display: "flex", gap: "0.25rem" }}>
+			<div className="flex gap-1 ml-auto">
 				{locales.map((locale) => (
-					<button
+					<Button
 						key={locale}
+						variant={locale === currentLocale ? "secondary" : "ghost"}
+						size="sm"
+						className="h-6 px-2 text-xs"
 						onClick={() => setLocale(locale)}
-						aria-pressed={locale === currentLocale}
-						style={{
-							cursor: "pointer",
-							padding: "0.35rem 0.75rem",
-							borderRadius: "999px",
-							border: "1px solid #d1d5db",
-							background: locale === currentLocale ? "#0f172a" : "transparent",
-							color: locale === currentLocale ? "#f8fafc" : "inherit",
-							fontWeight: locale === currentLocale ? 700 : 500,
-							letterSpacing: "0.01em",
-						}}
 					>
 						{locale.toUpperCase()}
-					</button>
+					</Button>
 				))}
 			</div>
 		</div>
