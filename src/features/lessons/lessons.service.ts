@@ -1,0 +1,140 @@
+import { getRequestHeaders } from "@tanstack/react-start/server";
+import { asc, count, desc, eq } from "drizzle-orm";
+import { db } from "@/db";
+import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
+import { buildDrizzleFilter, DataType } from "@/db/utils/drizzle-filter";
+import {
+	AuthorizationError,
+	NotFoundError,
+	ServerError,
+} from "@/db/utils/errors";
+import { safeAction } from "@/db/utils/safe-action";
+import { auth } from "@/lib/auth";
+import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
+import type { Lesson, LessonInsert } from "./lessons.schema";
+import { lessonInsertSchema, lessons } from "./lessons.schema";
+
+// ----------------------------------------------------------------------
+
+const lessonQuickFilterConfig: QuickFilterConfig<typeof lessons> = {
+	fields: [
+		{ field: "title", type: DataType.String },
+		{ field: "subject", type: DataType.String },
+	],
+};
+
+// ----------------------------------------------------------------------
+
+export async function getLessons(params: DataTableQueryParams) {
+	const { pagination, sorting, columnFilters, globalFilter } = params;
+
+	const page = pagination?.pageIndex ?? 0;
+	const limit = pagination?.pageSize ?? 10;
+
+	const searchFilters = buildDrizzleFilter(
+		lessons,
+		columnFilters ?? [],
+		globalFilter,
+		lessonQuickFilterConfig,
+	);
+
+	const sort = sorting?.[0];
+	const sortField = (sort?.id as keyof Lesson) ?? "createdAt";
+	const isDesc = sort?.desc ?? true;
+	const orderBy = isDesc ? desc(lessons[sortField]) : asc(lessons[sortField]);
+
+	const dataPromise = db
+		.select()
+		.from(lessons)
+		.where(searchFilters)
+		.orderBy(orderBy)
+		.limit(limit)
+		.offset(page * limit);
+
+	const totalPromise = db
+		.select({ total: count() })
+		.from(lessons)
+		.where(searchFilters);
+
+	const [data, totalResult] = await Promise.all([dataPromise, totalPromise]);
+	const total = totalResult[0]?.total ?? 0;
+	const pageCount = Math.ceil(total / limit);
+
+	return {
+		data,
+		meta: {
+			page,
+			limit,
+			itemCount: total,
+			pageCount,
+			hasPreviousPage: page > 0,
+			hasNextPage: page < pageCount - 1,
+		},
+	};
+}
+
+export async function getLessonById(id: string) {
+	const selectedLesson = await db.query.lessons.findFirst({
+		where: eq(lessons.id, id),
+	});
+	if (!selectedLesson) {
+		throw new NotFoundError("Lesson", id);
+	}
+	return selectedLesson;
+}
+
+export async function createLesson(data: LessonInsert) {
+	return safeAction(async () => {
+		const headers = await getRequestHeaders();
+		const session = await auth.api.getSession({ headers });
+
+		if (!session) {
+			throw new AuthorizationError("You must be logged in to create a lesson");
+		}
+
+		const validatedData = lessonInsertSchema.parse(data);
+
+		const [newLesson] = await db
+			.insert(lessons)
+			.values(validatedData)
+			.returning();
+
+		if (!newLesson) throw new ServerError("Failed to create lesson");
+
+		return newLesson;
+	});
+}
+
+export async function updateLesson(id: string, data: Partial<LessonInsert>) {
+	return safeAction(async () => {
+		const headers = await getRequestHeaders();
+		const session = await auth.api.getSession({ headers });
+		if (!session)
+			throw new AuthorizationError("You must be logged in to update a lesson");
+
+		const [updatedLesson] = await db
+			.update(lessons)
+			.set(data)
+			.where(eq(lessons.id, id))
+			.returning();
+
+		if (!updatedLesson) {
+			throw new ServerError("Failed to update lesson");
+		}
+
+		return updatedLesson;
+	});
+}
+
+export async function deleteLesson(id: string) {
+	return safeAction(async () => {
+		const headers = await getRequestHeaders();
+		const session = await auth.api.getSession({ headers });
+		if (!session)
+			throw new AuthorizationError("You must be logged in to delete a lesson");
+
+		await db.delete(lessons).where(eq(lessons.id, id));
+	});
+}
+
+export type LessonDetails = Awaited<ReturnType<typeof getLessonById>>;

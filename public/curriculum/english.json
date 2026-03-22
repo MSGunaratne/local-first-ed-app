@@ -1,0 +1,5729 @@
+[
+	{
+		"id": "ENG-GR6-1.1",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "1.1",
+		"topic": "Pronunciation Basics",
+		"learning_outcome": "Students will be able to identify the long and short vowel sounds and consonant sounds and pronounce two to six letter words accurately.",
+		"content_summary": "Practice with vowel-consonant combinations, long and short vowel sounds, and word lists ranging from two to six letters (e.g., 'bat', 'bell', 'stem', 'pack', 'bank').",
+		"keywords": [
+			"Pronunciation",
+			"Vowels",
+			"Consonants",
+			"Phonics",
+			"Sounds",
+			"උච්චාරණය",
+			"ස්වර",
+			"ව්‍යංජන",
+			"ශබ්ද",
+			"ඉංග්‍රීසි"
+		]
+	},
+	{
+		"id": "ENG-GR6-1.2",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "1.2",
+		"topic": "Reading Aloud",
+		"learning_outcome": "Students will be able to read different types of texts accurately and meaningfully.",
+		"content_summary": "Reading aloud tongue twisters, announcements, dialogues, instructions, news, stories, and poems with attention to short (,) and long (.) pauses.",
+		"keywords": [
+			"Reading",
+			"Fluency",
+			"Intonation",
+			"Pauses",
+			"Literacy",
+			"කියවීම",
+			"ප්‍රකාශනය",
+			"නිරවද්‍යතාව",
+			"විරාම",
+			"සාහිත්‍යය"
+		]
+	},
+	{
+		"id": "ENG-GR6-2.1",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "2.1",
+		"topic": "Capitalization",
+		"learning_outcome": "Students will be able to use capital and simple letters in a sentence appropriately.",
+		"content_summary": "Identifying words requiring capitalization including the first letter of sentences, pronoun 'I', and proper names of people and places.",
+		"keywords": [
+			"Capitalization",
+			"Writing",
+			"Mechanics",
+			"Proper Nouns",
+			"Grammar",
+			"අකුරු",
+			"ලිවීම",
+			"විධිමත්",
+			"නම",
+			"අක්ෂර"
+		]
+	},
+	{
+		"id": "ENG-GR6-2.2",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "2.2",
+		"topic": "Full Stops",
+		"learning_outcome": "Students will be able to use full stop where necessary.",
+		"content_summary": "Practicing the use of full stops at the end of sentences and with abbreviations like Mr., Mrs., Dr., and Rs.",
+		"keywords": [
+			"Punctuation",
+			"Full Stop",
+			"Abbreviations",
+			"Sentence End",
+			"Titles",
+			"විරාම ලකුණු",
+			"නැවතීමේ ලකුණ",
+			"කෙටි කිරීම්",
+			"වාක්‍යය",
+			"විධික්‍රම"
+		]
+	},
+	{
+		"id": "ENG-GR6-2.3",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "2.3",
+		"topic": "Question Marks",
+		"learning_outcome": "Students will be able to use question mark where necessary.",
+		"content_summary": "Understanding the concept of a question and practicing the use of question marks in simple passages and dialogues.",
+		"keywords": [
+			"Question Mark",
+			"Interrogation",
+			"Sentences",
+			"Punctuation",
+			"Dialogue",
+			"ප්‍රශ්නාර්ථය",
+			"ප්‍රශ්න",
+			"සංවාද",
+			"ලකුණු",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR6-3.1",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "3.1",
+		"topic": "School Announcements",
+		"learning_outcome": "Students will be able to respond to simple announcements appropriately.",
+		"content_summary": "Listening and responding to various school-level announcements regarding sports, schedule changes, and school activities.",
+		"keywords": [
+			"Listening",
+			"Announcements",
+			"Response",
+			"Comprehension",
+			"School",
+			"සවන්දීම",
+			"නිවේදන",
+			"ප්‍රතිචාර",
+			"පාසල",
+			"තොරතුරු"
+		]
+	},
+	{
+		"id": "ENG-GR6-3.2",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "3.2",
+		"topic": "Following Instructions",
+		"learning_outcome": "Students will be able to follow instructions accurately and respond to various types of requests appropriately.",
+		"content_summary": "Activities including 'listen and draw', 'listen and colour', 'listen and find', and games like 'Simon says'.",
+		"keywords": [
+			"Instructions",
+			"Requests",
+			"Action",
+			"Listening",
+			"Compliance",
+			"උපදෙස්",
+			"ඉල්ලීම්",
+			"ක්‍රියාව",
+			"අවධානය",
+			"භාෂණ"
+		]
+	},
+	{
+		"id": "ENG-GR6-3.3",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "3.3",
+		"topic": "Specific Listening",
+		"learning_outcome": "Students will be able to listen to and find specific information such as names of persons, animals, places, dates, days, months, years, etc.",
+		"content_summary": "Extracting data from dialogues, stories, and descriptions of processes like making a kite or fruit salad.",
+		"keywords": [
+			"Data Extraction",
+			"Specific Info",
+			"Identification",
+			"Memory",
+			"Context",
+			"දත්ත",
+			"තොරතුරු",
+			"හඳුනා ගැනීම",
+			"මතකය",
+			"විස්තර"
+		]
+	},
+	{
+		"id": "ENG-GR6-4.1",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "4.1",
+		"topic": "Gendered Nouns",
+		"learning_outcome": "Students will be able to identify the forms of masculine and feminine nouns and use them in sentences appropriately.",
+		"content_summary": "Learning pairs of gendered nouns for people (e.g., uncle-aunt) and animals (e.g., bull-cow, lion-lioness).",
+		"keywords": [
+			"Gender",
+			"Nouns",
+			"Masculine",
+			"Feminine",
+			"Vocabulary",
+			"ස්ත්‍රී-පුරුෂ",
+			"නාමපද",
+			"පුරුෂ",
+			"ස්ත්‍රී",
+			"වචන මාලාව"
+		]
+	},
+	{
+		"id": "ENG-GR6-4.2",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "4.2",
+		"topic": "Young Animals",
+		"learning_outcome": "Students will be able to identify and use terms referring to young ones of animals in sentences appropriately.",
+		"content_summary": "Learning specific terminology for baby animals, such as cub, calf, duckling, nymph, and foal.",
+		"keywords": [
+			"Animals",
+			"Baby Animals",
+			"Terminology",
+			"Biology",
+			"Nature",
+			"සතුන්",
+			"පැටවුන්",
+			"නාමකරණය",
+			"ජීව විද්‍යාව",
+			"පරිසරය"
+		]
+	},
+	{
+		"id": "ENG-GR6-4.3",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "4.3",
+		"topic": "Synonyms Antonyms",
+		"learning_outcome": "Students will be able to find synonyms and antonyms for given words.",
+		"content_summary": "Identifying words with similar and opposite meanings (e.g., fat/thin, big/small, begin/start).",
+		"keywords": [
+			"Synonyms",
+			"Antonyms",
+			"Opposites",
+			"Vocabulary",
+			"Word Meaning",
+			"සමාන පද",
+			"විරුද්ධ පද",
+			"අර්ථය",
+			"වචන",
+			"ඉගෙනුම"
+		]
+	},
+	{
+		"id": "ENG-GR6-4.4",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "4.4",
+		"topic": "Affixes",
+		"learning_outcome": "Students will be able to use affixes (-un, -ful, -less, -dis, -ily, -ness, -fully, re-) to change the word class and the meaning of words.",
+		"content_summary": "Understanding how prefixes and suffixes change words (e.g., happy/unhappy, care/careless, beauty/beautiful).",
+		"keywords": [
+			"Prefixes",
+			"Suffixes",
+			"Word Class",
+			"Derivation",
+			"Morphology",
+			"උපසර්ග",
+			"ප්‍රත්‍ය",
+			"වචන පන්තිය",
+			"වචන සැකසීම",
+			"අර්ථය වෙනස් කිරීම"
+		]
+	},
+	{
+		"id": "ENG-GR6-4.5",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "4.5",
+		"topic": "Plural Nouns",
+		"learning_outcome": "Students will be able to form the plurals of nouns adding –s, -es, -en and vowel change.",
+		"content_summary": "Learning pluralization rules: adding -s (girls), -es (boxes), -en (oxen), and irregular vowel changes (teeth, women).",
+		"keywords": [
+			"Plurals",
+			"Singular",
+			"Nouns",
+			"Grammar Rules",
+			"Language",
+			"බහුවචන",
+			"ඒකවචන",
+			"නාමපද",
+			"ව්‍යාකරණ",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR6-5.1",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "5.1",
+		"topic": "Visual Clues",
+		"learning_outcome": "Students will be able to study the pictures given in each text book to derive the meaning of that particular text.",
+		"content_summary": "Using advertisements, stories, and picture passages to comprehend meaning and unfamiliar words through visual context.",
+		"keywords": [
+			"Visual Aids",
+			"Context Clues",
+			"Inference",
+			"Comprehension",
+			"Illustrations",
+			"දෘශ්‍ය ආධාරක",
+			"අර්ථය තේරුම් ගැනීම",
+			"පින්තූර",
+			"අවබෝධය",
+			"නිගමනය"
+		]
+	},
+	{
+		"id": "ENG-GR6-5.2",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "5.2",
+		"topic": "Specific Reading",
+		"learning_outcome": "Students will be able to find specific information (names, dates, days, places etc) from various types of texts.",
+		"content_summary": "Reading notices, letters, and instructions to respond to 'Wh-' questions (what, when, where, who, which).",
+		"keywords": [
+			"Reading Skills",
+			"Information",
+			"Scanning",
+			"Notices",
+			"Wh-Questions",
+			"කියවීමේ කුසලතා",
+			"තොරතුරු",
+			"පිරික්සීම",
+			"නිවේදන",
+			"ප්‍රශ්න"
+		]
+	},
+	{
+		"id": "ENG-GR6-5.3",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "5.3",
+		"topic": "Information Transfer",
+		"learning_outcome": "Students will be able to read and transfer the needed information into other forms.",
+		"content_summary": "Transferring textual data into grids, pictures, or marking maps based on descriptions in stories or songs.",
+		"keywords": [
+			"Data Transfer",
+			"Mapping",
+			"Grids",
+			"Interpretation",
+			"Transformation",
+			"තොරතුරු හුවමාරුව",
+			"සිතියම්ගත කිරීම",
+			"සටහන්",
+			"අර්ථ නිරූපණය",
+			"පරිවර්තනය"
+		]
+	},
+	{
+		"id": "ENG-GR6-5.4",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "5.4",
+		"topic": "Poetry Response",
+		"learning_outcome": "Students will be able to identify the simple poetic techniques mentioned and express their ideas, feelings, emotions in simple sentences.",
+		"content_summary": "Studying visual/auditory imagery, metaphors, similes, stanzas, and rhyming words in poems about family, pets, or nature.",
+		"keywords": [
+			"Poetry",
+			"Techniques",
+			"Imagery",
+			"Rhyme",
+			"Emotion",
+			"කවි",
+			"තාක්ෂණික",
+			"රූපක",
+			"ප්‍රයෝග",
+			"හැඟීම්"
+		]
+	},
+	{
+		"id": "ENG-GR6-5.5",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "5.5",
+		"topic": "Folk Stories",
+		"learning_outcome": "Students will be able to identify the characters, their dress, qualities, message expressed in folk stories.",
+		"content_summary": "Reading simple folk tales (e.g., Andare, Mahadanamutta) and expressing attitudes through drawing or acting.",
+		"keywords": [
+			"Folklore",
+			"Culture",
+			"Characters",
+			"Morals",
+			"Tradition",
+			"ජනකතා",
+			"සංස්කෘතිය",
+			"චරිත",
+			"උපදේශන",
+			"සම්ප්‍රදාය"
+		]
+	},
+	{
+		"id": "ENG-GR6-5.6",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "5.6",
+		"topic": "General Idea",
+		"learning_outcome": "Students will be able to extract the general idea of a text.",
+		"content_summary": "Matching headings and sub-headings to notices, notes, and descriptions of events or festivals.",
+		"keywords": [
+			"Gist",
+			"Main Idea",
+			"Skimming",
+			"Headings",
+			"Summary",
+			"සාරාංශය",
+			"ප්‍රධාන අදහස",
+			"කියවීම",
+			"මාතෘකා",
+			"සංක්ෂිප්තය"
+		]
+	},
+	{
+		"id": "ENG-GR6-6.1",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "6.1",
+		"topic": "Sentence Construction",
+		"learning_outcome": "Students will be able to write sentences using 'Be' verbs, 'Have' as a full verb, 'There is/are', and various tenses (Present, Past, Future, Continuous).",
+		"content_summary": "Constructing positive, negative, and question forms for sentences using auxiliary and full verbs across different timeframes.",
+		"keywords": [
+			"Tenses",
+			"Be Verbs",
+			"Syntax",
+			"Grammar",
+			"Verb Forms",
+			"කාලය",
+			"ක්‍රියාපද",
+			"ව්‍යාකරණ",
+			"වාක්‍ය සැකසීම",
+			"භාෂා රටා"
+		]
+	},
+	{
+		"id": "ENG-GR6-6.2",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "6.2",
+		"topic": "Pronoun Usage",
+		"learning_outcome": "Students will be able to write sentences using subject and object pronouns correctly.",
+		"content_summary": "Distinguishing and correctly using I/me, we/us, you, he/him, she/her, it, they/them in written contexts.",
+		"keywords": [
+			"Pronouns",
+			"Subject",
+			"Object",
+			"Sentence Structure",
+			"Grammar",
+			"සර්වනාම",
+			"කර්තෘ",
+			"කර්ම",
+			"වාක්‍ය ව්‍යුහය",
+			"ව්‍යාකරණ"
+		]
+	},
+	{
+		"id": "ENG-GR6-6.3",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "6.3",
+		"topic": "Modal Verbs",
+		"learning_outcome": "Students will be able to use 'may' and 'can' to express possibility and get permission.",
+		"content_summary": "Practicing 'May' and 'Can' in positive, negative, and question forms for situational requests and ability.",
+		"keywords": [
+			"Modals",
+			"Permission",
+			"Possibility",
+			"Ability",
+			"Communication",
+			"අනුමතය",
+			"හැකියාව",
+			"ප්‍රකාශනය",
+			"භාෂා භාවිතය",
+			"සංවාද"
+		]
+	},
+	{
+		"id": "ENG-GR6-6.4",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "6.4",
+		"topic": "Determiners",
+		"learning_outcome": "Students will be able to use determiners correctly.",
+		"content_summary": "Using articles (a, an), quantifiers (some, one, two), and demonstratives/possessives (this, that, these, those, my, your).",
+		"keywords": [
+			"Articles",
+			"Determiners",
+			"Quantifiers",
+			"Demonstratives",
+			"Possessives",
+			"නිශ්චයකාරක",
+			"ප්‍රමාණකාරක",
+			"භාෂාව",
+			"ව්‍යාකරණ",
+			"නාමපද සහායක"
+		]
+	},
+	{
+		"id": "ENG-GR6-6.5",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "6.5",
+		"topic": "Contracted Forms",
+		"learning_outcome": "Students will be able to use contacted form in speaking and writing.",
+		"content_summary": "Identifying and using short forms like I'm, We're, You're, He's, She's, and It's.",
+		"keywords": [
+			"Contractions",
+			"Short Forms",
+			"Writing Style",
+			"Informal English",
+			"Fluency",
+			"කෙටි ස්වරූප",
+			"ලිවීමේ විලාසය",
+			"කථනය",
+			"භාෂා ලක්ෂණ",
+			"අභ්‍යාස"
+		]
+	},
+	{
+		"id": "ENG-GR6-6.6",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "6.6",
+		"topic": "Adjectives",
+		"learning_outcome": "Students will be able to use adjectives appropriately to describe nouns.",
+		"content_summary": "Describing nouns using categories such as colour, quality, size, origin (Sri Lankan, Japanese), and number.",
+		"keywords": [
+			"Adjectives",
+			"Description",
+			"Qualities",
+			"Modifiers",
+			"Nouns",
+			"නාමවිශේෂණ",
+			"විස්තර කිරීම",
+			"ගුණාංග",
+			"නාමපද",
+			"භාෂා භාවිතය"
+		]
+	},
+	{
+		"id": "ENG-GR6-6.7",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "6.7",
+		"topic": "Prepositions",
+		"learning_outcome": "Students will be able to use prepositions to describe the position.",
+		"content_summary": "Using location-based words: on, in, under, between, near, in front of, and behind.",
+		"keywords": [
+			"Prepositions",
+			"Location",
+			"Position",
+			"Space",
+			"Descriptions",
+			"නිපාත පද",
+			"ස්ථානය",
+			"පිහිටීම",
+			"අවකාශය",
+			"විස්තර"
+		]
+	},
+	{
+		"id": "ENG-GR6-6.8",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "6.8",
+		"topic": "Conjunctions",
+		"learning_outcome": "Students will be able to use the conjunction 'and' to join nouns, adjectives and sentences.",
+		"content_summary": "Joining words and simple sentences using 'and' to improve sentence complexity and flow.",
+		"keywords": [
+			"Conjunctions",
+			"Connectors",
+			"Sentence Joining",
+			"And",
+			"Cohesion",
+			"සම්බන්ධක පද",
+			"එකතු කිරීම",
+			"වාක්‍ය සම්බන්ධය",
+			"භාෂා රටා",
+			"ව්‍යාකරණ"
+		]
+	},
+	{
+		"id": "ENG-GR6-6.9",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "6.9",
+		"topic": "Adverbs",
+		"learning_outcome": "Students will be able to use adverbs appropriately to describe verbs.",
+		"content_summary": "Using adverbs formed with affixes (e.g., beautifully, fast) to modify actions.",
+		"keywords": [
+			"Adverbs",
+			"Modifiers",
+			"Verbs",
+			"Actions",
+			"Description",
+			"ක්‍රියාවිශේෂණ",
+			"විස්තරාත්මක",
+			"ක්‍රියා",
+			"භාෂාව",
+			"ව්‍යාකරණ"
+		]
+	},
+	{
+		"id": "ENG-GR6-7.1",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "7.1",
+		"topic": "Written Descriptions",
+		"learning_outcome": "Students will be able to write descriptions of myself, family, friends, animals, and surroundings using simple sentences.",
+		"content_summary": "Guided and free writing of simple paragraphs about personal topics like home, school, village, or favorite pets.",
+		"keywords": [
+			"Writing",
+			"Descriptions",
+			"Paragraphs",
+			"Composition",
+			"Personal",
+			"ලිවීම",
+			"විස්තර කිරීම",
+			"ඡේද",
+			"නිර්මාණාත්මක",
+			"පෞද්ගලික"
+		]
+	},
+	{
+		"id": "ENG-GR6-7.2",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "7.2",
+		"topic": "Picture Description",
+		"learning_outcome": "Students will be able to describe photographs and pictures using simple sentences.",
+		"content_summary": "Writing about visual scenes such as a village fair, supermarket, classroom, or beach.",
+		"keywords": [
+			"Visual Writing",
+			"Observation",
+			"Scenes",
+			"Guided Writing",
+			"Images",
+			"දෘශ්‍ය ලිවීම",
+			"නිරීක්ෂණය",
+			"දර්ශන",
+			"මගපෙන්වීම්",
+			"පින්තූර"
+		]
+	},
+	{
+		"id": "ENG-GR6-7.3",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "7.3",
+		"topic": "Personal Correspondence",
+		"learning_outcome": "Students will be able to write letters and invitations for personal purposes using simple sentences.",
+		"content_summary": "Writing letters to pen friends, birthday party invitations, and letters describing experiences at Sri Lankan locations.",
+		"keywords": [
+			"Letters",
+			"Invitations",
+			"Correspondence",
+			"Personal Writing",
+			"Format",
+			"ලිපි",
+			"ආරාධනා",
+			"සන්නිවේදනය",
+			"පෞද්ගලික ලිවීම",
+			"ආකෘතිය"
+		]
+	},
+	{
+		"id": "ENG-GR6-7.4",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "7.4",
+		"topic": "Writing Instructions",
+		"learning_outcome": "Students will be able to write instructions for simple tasks.",
+		"content_summary": "Creating step-by-step guides for making fruit salad, washing clothes, or making paper masks and lanterns.",
+		"keywords": [
+			"Procedural",
+			"Instructions",
+			"Sequence",
+			"How-to",
+			"Task-based",
+			"පියවර",
+			"උපදෙස්",
+			"අනුපිළිවෙල",
+			"ක්‍රියාකාරකම්",
+			"විධිමත්"
+		]
+	},
+	{
+		"id": "ENG-GR6-7.5",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "7.5",
+		"topic": "Simple Compositions",
+		"learning_outcome": "Students will be able to write simple compositions on sports, food and Sri Lanka.",
+		"content_summary": "Drafting model essays and dialogues based on common national and cultural topics.",
+		"keywords": [
+			"Compositions",
+			"Essays",
+			"General Knowledge",
+			"National Topics",
+			"Drafting",
+			"රචනා",
+			"ලිපි",
+			"සාමාන්‍ය දැනුම",
+			"ජාතික මාතෘකා",
+			"නිර්මාණ"
+		]
+	},
+	{
+		"id": "ENG-GR6-7.6",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "7.6",
+		"topic": "Creative Writing",
+		"learning_outcome": "Students will be able to write simple poems and stories about family and pets.",
+		"content_summary": "Parallel writing and free writing of simple creative texts focused on immediate relationships and animals.",
+		"keywords": [
+			"Poetry",
+			"Stories",
+			"Creative Writing",
+			"Imagination",
+			"Family",
+			"කවි",
+			"කතා",
+			"නිර්මාණාත්මක ලිවීම",
+			"සංකල්ප",
+			"පවුල"
+		]
+	},
+	{
+		"id": "ENG-GR6-8.1",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "8.1",
+		"topic": "Self Introduction",
+		"learning_outcome": "Students will be able to speak on ‘Myself’ with personal information (name, age, hobbies, etc.).",
+		"content_summary": "Preparing and delivering a speech including name, age, birth date, school, family members, and best friends.",
+		"keywords": [
+			"Self",
+			"Introduction",
+			"Personal Data",
+			"Oral Skills",
+			"Speaking",
+			"ස්වයං හඳුන්වාදීම",
+			"තොරතුරු",
+			"කථනය",
+			"කුසලතා",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR6-8.2",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "8.2",
+		"topic": "Social Expressions",
+		"learning_outcome": "Students will be able to use simple expressions in greeting, thanking, affirming, and denying in classroom and social situations.",
+		"content_summary": "Role playing situational English for birthdays, sports meets, and alms giving ceremonies.",
+		"keywords": [
+			"Greetings",
+			"Etiquette",
+			"Expressions",
+			"Socializing",
+			"Role Play",
+			"ආචාර කිරීම්",
+			"සදාචාරය",
+			"ප්‍රකාශන",
+			"සමාජයීය",
+			"සංවාද"
+		]
+	},
+	{
+		"id": "ENG-GR6-8.3",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "8.3",
+		"topic": "Oral Descriptions",
+		"learning_outcome": "Students will be able to describe photographs and pictures using simple sentences orally.",
+		"content_summary": "Describing school objects, home environments, and village scenes during speaking activities.",
+		"keywords": [
+			"Oral Description",
+			"Visuals",
+			"Speaking",
+			"Vocabulary",
+			"Environment",
+			"මුඛ විස්තර",
+			"පින්තූර",
+			"කථනය",
+			"වචන මාලාව",
+			"පරිසරය"
+		]
+	},
+	{
+		"id": "ENG-GR6-8.4",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "8.4",
+		"topic": "Familiar Topics",
+		"learning_outcome": "Students will be able to speak on sports, food and Sri Lanka.",
+		"content_summary": "Engaging in discussions and short presentations about national interests and daily life.",
+		"keywords": [
+			"Discussion",
+			"General Topics",
+			"Sri Lanka",
+			"Culture",
+			"Fluency",
+			"සාකච්ඡාව",
+			"පොදු මාතෘකා",
+			"ශ්‍රී ලංකාව",
+			"සංස්කෘතිය",
+			"කථන වේගය"
+		]
+	},
+	{
+		"id": "ENG-GR6-8.5",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "8.5",
+		"topic": "Surrounding Objects",
+		"learning_outcome": "Students will be able to speak on the things in the classroom, school and home garden using adjectives.",
+		"content_summary": "Identifying and describing objects in the lab, library, playground, and home rooms.",
+		"keywords": [
+			"Environment",
+			"Adjectives",
+			"Identification",
+			"School",
+			"Home",
+			"පරිසරය",
+			"විශේෂණ",
+			"හඳුනා ගැනීම",
+			"පාසල",
+			"නිවස"
+		]
+	},
+	{
+		"id": "ENG-GR6-8.6",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "8.6",
+		"topic": "Possessive Forms",
+		"learning_outcome": "Students will be able to use possessive forms – my, your, mother’s etc.",
+		"content_summary": "Using possessive structures to show ownership during daily classroom activities and conversations.",
+		"keywords": [
+			"Possession",
+			"Ownership",
+			"Grammar",
+			"Pronouns",
+			"Apostrophe",
+			"අයිතිය",
+			"හිමිකම",
+			"ව්‍යාකරණ",
+			"සර්වනාම",
+			"ලකුණු"
+		]
+	},
+	{
+		"id": "ENG-GR6-8.7",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "8.7",
+		"topic": "Asking Information",
+		"learning_outcome": "Students will be able to ask to get personal information from others.",
+		"content_summary": "Formulating questions to learn peers' names, ages, birthdays, and family details.",
+		"keywords": [
+			"Questioning",
+			"Interviewing",
+			"Personal Info",
+			"Interaction",
+			"Social Skills",
+			"ප්‍රශ්න කිරීම",
+			"සම්මුඛ සාකච්ඡා",
+			"තොරතුරු",
+			"අන්තර්ක්‍රියා",
+			"සමාජ කුසලතා"
+		]
+	},
+	{
+		"id": "ENG-GR6-8.8",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "8.8",
+		"topic": "Spatial Position",
+		"learning_outcome": "Students will be able to use prepositions to describe the position of things orally.",
+		"content_summary": "Describing locations of objects in a room using 'on, in, under, near', etc.",
+		"keywords": [
+			"Prepositions",
+			"Position",
+			"Space",
+			"Oral English",
+			"Visual",
+			"නිපාත පද",
+			"පිහිටීම",
+			"අවකාශය",
+			"කථන ඉංග්‍රීසි",
+			"දෘශ්‍ය"
+		]
+	},
+	{
+		"id": "ENG-GR6-8.9",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "8.9",
+		"topic": "Oral Picture Description",
+		"learning_outcome": "Students will be able to describe photographs and pictures of village fairs, markets, etc. using simple sentences.",
+		"content_summary": "Verbalizing details of complex cartoon pictures or playground scenes.",
+		"keywords": [
+			"Verbalizing",
+			"Observation",
+			"Pictures",
+			"Describing",
+			"Language",
+			"කථනය",
+			"නිරීක්ෂණය",
+			"පින්තූර",
+			"විස්තර කිරීම",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR6-8.10",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "8.10",
+		"topic": "Daily Routine",
+		"learning_outcome": "Students will be able to describe one’s daily routine /actions.",
+		"content_summary": "Speaking about daily habits and habitual actions using appropriate verb tenses.",
+		"keywords": [
+			"Routine",
+			"Daily Life",
+			"Habits",
+			"Speaking",
+			"Time",
+			"දෛනික චර්යාව",
+			"ජීවිතය",
+			"පුරුදු",
+			"කථනය",
+			"කාලය"
+		]
+	},
+	{
+		"id": "ENG-GR6-8.11",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "8.11",
+		"topic": "Past Events",
+		"learning_outcome": "Students will be able to describe the things done yesterday, last week end etc.",
+		"content_summary": "Narrating past actions and experiences orally using the simple past tense.",
+		"keywords": [
+			"Past Tense",
+			"Narrative",
+			"Events",
+			"Speaking",
+			"Memory",
+			"අතීත කාලය",
+			"විස්තරය",
+			"සිදුවීම්",
+			"කථනය",
+			"මතකය"
+		]
+	},
+	{
+		"id": "ENG-GR6-8.12",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "8.12",
+		"topic": "Question Words",
+		"learning_outcome": "Students will be able to use question words (what, when, where, how, why, who, which) to get information.",
+		"content_summary": "Practicing inquiry techniques to gather specific data from others.",
+		"keywords": [
+			"Inquiry",
+			"Question Words",
+			"Communication",
+			"Information",
+			"Wh-Words",
+			"පරීක්ෂාව",
+			"ප්‍රශ්න පද",
+			"සන්නිවේදනය",
+			"තොරතුරු",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR6-8.13",
+		"subject": "English",
+		"grade": 6,
+		"competency_level": "8.13",
+		"topic": "Contextual Language",
+		"learning_outcome": "Students will be able to use the language appropriately in the given situation.",
+		"content_summary": "Applying English in various contexts: sports meets, classrooms, village fairs, kitchens, dining tables, supermarkets, and festivals.",
+		"keywords": [
+			"Context",
+			"Pragmatics",
+			"Situation",
+			"Usage",
+			"Functional English",
+			"සන්දර්භය",
+			"ප්‍රායෝගික",
+			"අවස්ථාව",
+			"භාවිතය",
+			"ඉංග්‍රීසි"
+		]
+	},
+	{
+		"id": "ENG-GR7-1.1",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "1.1",
+		"topic": "English Pronunciation",
+		"learning_outcome": "Students will be able to identify the difference between s – sh, p-f sounds and short and long vowel sounds; Students will be able to pronounce the words properly.",
+		"content_summary": "Practice differentiating phonemes like /p/ vs /f/ and /s/ vs /sh/. Includes identification of vowel length contrasts such as 'pill' vs 'feel'.",
+		"keywords": [
+			"Pronunciation",
+			"Phonemes",
+			"Vowels",
+			"Sounds",
+			"Phonetics",
+			"උච්චාරණය",
+			"ස්වර",
+			"ශබ්ද",
+			"භාෂාව",
+			"ඉංග්‍රීසි"
+		]
+	},
+	{
+		"id": "ENG-GR7-1.2",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "1.2",
+		"topic": "Reading Aloud",
+		"learning_outcome": "Students will be able to read different types of texts accurately and meaningfully.",
+		"content_summary": "Development of word recognition and basic comprehension through oral reading of various text types to enhance oral fluency.",
+		"keywords": [
+			"Reading",
+			"Fluency",
+			"Accuracy",
+			"Aloud",
+			"Comprehension",
+			"කියවීම",
+			"ප්‍රවාහය",
+			"නිවැරදිභාවය",
+			"අවබෝධය",
+			"ශබ්ද නගා"
+		]
+	},
+	{
+		"id": "ENG-GR7-2.4",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "2.4",
+		"topic": "Punctuation Mechanics",
+		"learning_outcome": "Students will be able to use the apostrophe appropriately.",
+		"content_summary": "Instruction on the correct usage of the apostrophe for possession (singular/plural) and contractions, helping to avoid fossilized written errors.",
+		"keywords": [
+			"Apostrophe",
+			"Punctuation",
+			"Writing",
+			"Possession",
+			"Contractions",
+			"විරාම ලකුණු",
+			"ලිවීම",
+			"අයිතිවාසිකම",
+			"අකුරු",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-3.1",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "3.1",
+		"topic": "Announcement Response",
+		"learning_outcome": "Students will be able to respond to simple announcements appropriately.",
+		"content_summary": "Developing the skill to listen to simple announcements and react or take necessary action based on the information provided.",
+		"keywords": [
+			"Listening",
+			"Announcements",
+			"Response",
+			"Communication",
+			"Attention",
+			"සවන්දීම",
+			"නිවේදන",
+			"ප්‍රතිචාර",
+			"සන්නිවේදනය",
+			"අවධානය"
+		]
+	},
+	{
+		"id": "ENG-GR7-3.2",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "3.2",
+		"topic": "Follow Instructions",
+		"learning_outcome": "Students will be able to follow instructions accurately to respond to various types of requests appropriately",
+		"content_summary": "Listening and adhering to step-by-step directions or requests in English within the classroom environment.",
+		"keywords": [
+			"Instructions",
+			"Requests",
+			"Adherence",
+			"Listening",
+			"Action",
+			"උපදෙස්",
+			"ඉල්ලීම්",
+			"සවන්දීම",
+			"ක්‍රියාව",
+			"අවබෝධය"
+		]
+	},
+	{
+		"id": "ENG-GR7-3.3",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "3.3",
+		"topic": "Information Extraction",
+		"learning_outcome": "Students will be able to listen to and find specific information such as names of persons, animals, places, dates, days, months, years, etc.",
+		"content_summary": "Active listening to simple texts to identify key facts and proper nouns like names, locations, and dates.",
+		"keywords": [
+			"Listening",
+			"Information",
+			"Details",
+			"Data",
+			"Extraction",
+			"සවන්දීම",
+			"තොරතුරු",
+			"විස්තර",
+			"දත්ත",
+			"අවබෝධය"
+		]
+	},
+	{
+		"id": "ENG-GR7-4.3",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "4.3",
+		"topic": "Synonyms Antonyms",
+		"learning_outcome": "Students will be able to find synonyms and antonyms for given words",
+		"content_summary": "Building vocabulary depth by identifying words with similar meanings (synonyms) and opposite meanings (antonyms).",
+		"keywords": [
+			"Synonyms",
+			"Antonyms",
+			"Vocabulary",
+			"Meaning",
+			"Words",
+			"සමාන පද",
+			"විරුද්ධ පද",
+			"වචන මාලාව",
+			"අර්ථය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-4.4",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "4.4",
+		"topic": "Word Affixes",
+		"learning_outcome": "Students will be able to use affixes -un, -ful, -less, -dis, -ily, -ness , -fully, re- to change the word class and the meaning of words.",
+		"content_summary": "Using prefixes and suffixes to transform word classes (e.g., noun to adjective) and change word meanings.",
+		"keywords": [
+			"Affixes",
+			"Prefix",
+			"Suffix",
+			"Word class",
+			"Grammar",
+			"ප්‍රත්‍ය",
+			"ව්‍යාකරණ",
+			"පද වර්ගය",
+			"වචන",
+			"නිර්මාණය"
+		]
+	},
+	{
+		"id": "ENG-GR7-4.5",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "4.5",
+		"topic": "Plural Nouns",
+		"learning_outcome": "Students will be able to form the plurals of nouns adding –s, -es, -en and vowel change.",
+		"content_summary": "Instruction on pluralization rules including standard suffixes (-s, -es) and irregular forms like vowel changes.",
+		"keywords": [
+			"Plurals",
+			"Nouns",
+			"Grammar",
+			"Suffixes",
+			"Singular",
+			"බහුවචන",
+			"නාම පද",
+			"ව්‍යාකරණ",
+			"ඒකවචන",
+			"වචන"
+		]
+	},
+	{
+		"id": "ENG-GR7-4.6",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "4.6",
+		"topic": "Compound Nouns",
+		"learning_outcome": "Students will be able to identify the collective nouns and compound nouns when used in context",
+		"content_summary": "Recognizing group-based names (collective nouns) and words formed by joining two or more words (compound nouns).",
+		"keywords": [
+			"Collective nouns",
+			"Compound nouns",
+			"Context",
+			"Identification",
+			"Grammar",
+			"සමූහ නාම",
+			"සංයුක්ත නාම",
+			"සන්දර්භය",
+			"ව්‍යාකරණ",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-5.1",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "5.1",
+		"topic": "Visual Clues",
+		"learning_outcome": "Students will be able to study the pictures given in each text book to derive the meaning of that particular text.",
+		"content_summary": "Using illustrations and visual aids to aid comprehension and infer text meaning.",
+		"keywords": [
+			"Visuals",
+			"Clues",
+			"Reading",
+			"Inference",
+			"Pictures",
+			"දෘශ්‍ය ඉඟි",
+			"රූප",
+			"කියවීම",
+			"අර්ථය",
+			"අවබෝධය"
+		]
+	},
+	{
+		"id": "ENG-GR7-5.2",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "5.2",
+		"topic": "Specific Information",
+		"learning_outcome": "Students should be able to find specific information (names, dates, days, places etc. - what, when, where, who, which Qs from various types of texts.",
+		"content_summary": "Scanning texts to extract specific data points in response to 'Wh' questions.",
+		"keywords": [
+			"Scanning",
+			"Information",
+			"Details",
+			"Questions",
+			"Reading",
+			"තොරතුරු",
+			"විස්තර",
+			"ප්‍රශ්න",
+			"කියවීම",
+			"දත්ත"
+		]
+	},
+	{
+		"id": "ENG-GR7-5.3",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "5.3",
+		"topic": "Information Transfer",
+		"learning_outcome": "Students will be able to read and transfer the needed information into other forms.",
+		"content_summary": "Converting information found in written text into different formats like tables, charts, or diagrams.",
+		"keywords": [
+			"Transfer",
+			"Information",
+			"Diagrams",
+			"Reading",
+			"Mapping",
+			"පරිවර්තනය",
+			"තොරතුරු",
+			"කියවීම",
+			"සටහන්",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-5.4",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "5.4",
+		"topic": "Poetry Response",
+		"learning_outcome": "Students will be able to identify the simple poetic techniques mentioned and express their ideas, feelings, emotions in simple sentences.",
+		"content_summary": "Reading simple poems to understand basic poetic devices and responding emotionally or creatively using simple language.",
+		"keywords": [
+			"Poetry",
+			"Rhyme",
+			"Feelings",
+			"Literature",
+			"Response",
+			"පද්‍ය",
+			"කවි",
+			"හැඟීම්",
+			"ප්‍රතිචාර",
+			"සාහිත්‍යය"
+		]
+	},
+	{
+		"id": "ENG-GR7-5.5",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "5.5",
+		"topic": "Folk Stories",
+		"learning_outcome": "Students will be able to identify the characters, their dress, qualities, message expressed and express their ideas, feelings and emotions in simple sentences.",
+		"content_summary": "Reading and understanding traditional stories, focusing on character analysis and moral lessons.",
+		"keywords": [
+			"Folk tales",
+			"Characters",
+			"Reading",
+			"Morals",
+			"Stories",
+			"ජනකතා",
+			"චරිත",
+			"කියවීම",
+			"කථා",
+			"පණිවිඩය"
+		]
+	},
+	{
+		"id": "ENG-GR7-5.6",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "5.6",
+		"topic": "General Idea",
+		"learning_outcome": "Students will be able to extract the general idea of a text.",
+		"content_summary": "Skimming texts to identify the main theme or global gist without getting bogged down in detail.",
+		"keywords": [
+			"Skimming",
+			"Gist",
+			"Main idea",
+			"Reading",
+			"Summary",
+			"ප්‍රධාන අදහස",
+			"කියවීම",
+			"සාරාංශය",
+			"අවබෝධය",
+			"පෙළ"
+		]
+	},
+	{
+		"id": "ENG-GR7-6.1",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "6.1",
+		"topic": "Sentence Structures",
+		"learning_outcome": "Students will be able to construct simple sentences using had as a full verb, Past continuous, future continuous, Present perfect, and 'there was/were/will be'.",
+		"content_summary": "Constructing sentences using specific tenses and verb structures to improve grammatical accuracy in communication.",
+		"keywords": [
+			"Grammar",
+			"Tenses",
+			"Sentences",
+			"Syntax",
+			"Writing",
+			"ව්‍යාකරණ",
+			"කාලය",
+			"වාක්‍යය",
+			"ලිවීම",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-6.2",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "6.2",
+		"topic": "Pronoun Usage",
+		"learning_outcome": "Students will be able to use possessive pronouns – my – mine, our – ours, your – yours, his– his, her – hers, its- its, their – theirs",
+		"content_summary": "Correct application of possessive pronouns and adjectives to show ownership in sentences.",
+		"keywords": [
+			"Pronouns",
+			"Possession",
+			"Grammar",
+			"Sentences",
+			"Writing",
+			"සර්වනාම",
+			"අයිතිවාසිකම",
+			"ව්‍යාකරණ",
+			"වාක්‍යය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-6.3",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "6.3",
+		"topic": "Modal Verbs",
+		"learning_outcome": "Students will be able to use the modals ‘must’ , ‘should’ ‘can’ and ‘would’ appropriately",
+		"content_summary": "Learning to use modal auxiliary verbs to express obligation, advice, ability, and requests.",
+		"keywords": [
+			"Modals",
+			"Verbs",
+			"Grammar",
+			"Obligation",
+			"Ability",
+			"මෝඩල් ක්‍රියා",
+			"ක්‍රියා පද",
+			"ව්‍යාකරණ",
+			"හැකියාව",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-6.4",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "6.4",
+		"topic": "Determiners",
+		"learning_outcome": "Students will be able to use determiners appropriately in writing and speaking.",
+		"content_summary": "Using words like 'the', 'a', 'some', 'any' to clarify nouns in various contexts.",
+		"keywords": [
+			"Determiners",
+			"Nouns",
+			"Grammar",
+			"Accuracy",
+			"Speaking",
+			"නිශ්චයකාරක",
+			"නාම පද",
+			"ව්‍යාකරණ",
+			"භාෂාව",
+			"අර්ථය"
+		]
+	},
+	{
+		"id": "ENG-GR7-6.5",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "6.5",
+		"topic": "Contracted Forms",
+		"learning_outcome": "Students will be able to use contacted form in speaking and writing.",
+		"content_summary": "Using short forms (contractions) such as 'don't', 'isn't', and 'I'm' in natural speech and informal writing.",
+		"keywords": [
+			"Contractions",
+			"Speaking",
+			"Informal",
+			"Grammar",
+			"Writing",
+			"කෙටි ආකෘති",
+			"කථනය",
+			"ව්‍යාකරණ",
+			"ලිවීම",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-6.6",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "6.6",
+		"topic": "Comparative Adjectives",
+		"learning_outcome": "Students will be able to use comparative forms of adjectives appropriately to compare nouns.",
+		"content_summary": "Forming comparisons using adjectives to describe differences between people, objects, or places.",
+		"keywords": [
+			"Adjectives",
+			"Comparison",
+			"Grammar",
+			"Descriptive",
+			"Nouns",
+			"නාමවිශේෂණ",
+			"සංසන්දනය",
+			"ව්‍යාකරණ",
+			"විස්තරාත්මක",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-6.7",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "6.7",
+		"topic": "Prepositions",
+		"learning_outcome": "Students will be able to use prepositions to describe the position.",
+		"content_summary": "Using spatial prepositions to indicate where something is located in relation to other objects.",
+		"keywords": [
+			"Prepositions",
+			"Position",
+			"Location",
+			"Grammar",
+			"Space",
+			"නිපාත පද",
+			"ස්ථානය",
+			"ව්‍යාකරණ",
+			"අවකාශය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-6.8",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "6.8",
+		"topic": "Conjunctions",
+		"learning_outcome": "Students will be able to use the conjunction ‘but, when, while, after, before, because, or’ to join sentences.",
+		"content_summary": "Joining ideas and sentences using linkers to create more complex and coherent structures.",
+		"keywords": [
+			"Conjunctions",
+			"Linking",
+			"Sentences",
+			"Grammar",
+			"Writing",
+			"සම්බන්ධක පද",
+			"වාක්‍යය සම්බන්ධ කිරීම",
+			"ව්‍යාකරණ",
+			"ලිවීම",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-6.9",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "6.9",
+		"topic": "Adverb Usage",
+		"learning_outcome": "Students will be able to use adverbs appropriately to describe verbs.",
+		"content_summary": "Using adverbs to modify verbs, describing how, when, or where an action takes place.",
+		"keywords": [
+			"Adverbs",
+			"Verbs",
+			"Grammar",
+			"Modifiers",
+			"Description",
+			"ක්‍රියා විශේෂණ",
+			"ක්‍රියා පද",
+			"ව්‍යාකරණ",
+			"විස්තරය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-7.1",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "7.1",
+		"topic": "Written Descriptions",
+		"learning_outcome": "Students will be able to write descriptions of people, places and things",
+		"content_summary": "Writing short, descriptive paragraphs about concrete subjects like animals, people, or familiar locations.",
+		"keywords": [
+			"Writing",
+			"Description",
+			"Creativity",
+			"Adjectives",
+			"Nouns",
+			"ලිවීම",
+			"විස්තරය",
+			"නිර්මාණශීලිත්වය",
+			"නාමවිශේෂණ",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-7.2",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "7.2",
+		"topic": "Picture Description",
+		"learning_outcome": "Students will be able to describe photographs and the pictures of various types",
+		"content_summary": "Translating visual information from photos or illustrations into written English sentences.",
+		"keywords": [
+			"Writing",
+			"Pictures",
+			"Visuals",
+			"Description",
+			"Composition",
+			"ලිවීම",
+			"රූප",
+			"විස්තරය",
+			"නිර්මාණය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-7.3",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "7.3",
+		"topic": "Personal Writing",
+		"learning_outcome": "Students will be able to convey the accurate meaning in writing according to their age and level.",
+		"content_summary": "Writing for personal purposes, such as notes or simple messages, ensuring the intended meaning is clear.",
+		"keywords": [
+			"Writing",
+			"Personal",
+			"Meaning",
+			"Communication",
+			"Age-appropriate",
+			"ලිවීම",
+			"පෞද්ගලික",
+			"අර්ථය",
+			"සන්නිවේදනය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-7.4",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "7.4",
+		"topic": "Instruction Writing",
+		"learning_outcome": "Students will be able to write instructions to suite the purpose.",
+		"content_summary": "Creating step-by-step written guides or commands for specific tasks or procedures.",
+		"keywords": [
+			"Instructions",
+			"Writing",
+			"Process",
+			"Clarity",
+			"Tasks",
+			"උපදෙස්",
+			"ලිවීම",
+			"ක්‍රියාවලිය",
+			"පැහැදිලිභාවය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-7.5",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "7.5",
+		"topic": "Simple Compositions",
+		"learning_outcome": "Students will be able to write simple compositions on different types of topics using language appropriate to their age and level.",
+		"content_summary": "Drafting multi-sentence essays or paragraphs on varied topics like school, hobbies, or family.",
+		"keywords": [
+			"Composition",
+			"Essay",
+			"Writing",
+			"Topics",
+			"Drafting",
+			"රචනය",
+			"ලිවීම",
+			"මාතෘකා",
+			"නිර්මාණය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-7.6",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "7.6",
+		"topic": "Poems Stories",
+		"learning_outcome": "Students will be able to write simple poems and stories familiar topics",
+		"content_summary": "Creative expression through writing short narratives and simple rhythmic or rhyming verse.",
+		"keywords": [
+			"Creative writing",
+			"Poetry",
+			"Stories",
+			"Narrative",
+			"Imagination",
+			"නිර්මාණාත්මක ලිවීම",
+			"කවි",
+			"කථා",
+			"පරිකල්පනය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-8.3",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "8.3",
+		"topic": "Oral Description",
+		"learning_outcome": "Students will be able to speak about people, places and things using language appropriate to their age and level.",
+		"content_summary": "Speaking exercises focused on describing the physical attributes and qualities of subjects in the immediate environment.",
+		"keywords": [
+			"Speaking",
+			"Description",
+			"Oral",
+			"Fluency",
+			"Communication",
+			"කථනය",
+			"විස්තරය",
+			"වාචික",
+			"ප්‍රවාහය",
+			"සන්නිවේදනය"
+		]
+	},
+	{
+		"id": "ENG-GR7-8.4",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "8.4",
+		"topic": "Familiar Topics",
+		"learning_outcome": "Students will be able to speak on familiar topics using language appropriate to their level and age.",
+		"content_summary": "Practicing sustained speech on everyday topics like family, school, and likes/dislikes.",
+		"keywords": [
+			"Speaking",
+			"Topics",
+			"Confidence",
+			"Discussion",
+			"Communication",
+			"කථනය",
+			"මාතෘකා",
+			"විශ්වාසය",
+			"සාකච්ඡාව",
+			"සන්නිවේදනය"
+		]
+	},
+	{
+		"id": "ENG-GR7-8.6",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "8.6",
+		"topic": "Oral Modals",
+		"learning_outcome": "Students will be able to use can, would, must and should appropriately in different situations.",
+		"content_summary": "Using modal verbs orally to ask permission, make requests, or give advice in classroom role-plays.",
+		"keywords": [
+			"Speaking",
+			"Modals",
+			"Verbs",
+			"Requests",
+			"Advice",
+			"කථනය",
+			"මෝඩල් ක්‍රියා",
+			"ක්‍රියා පද",
+			"ඉල්ලීම්",
+			"උපදෙස්"
+		]
+	},
+	{
+		"id": "ENG-GR7-8.8",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "8.8",
+		"topic": "Describe Position",
+		"learning_outcome": "Students will be able to describe the position of something accurately using the correct preposition.",
+		"content_summary": "Using oral language to describe where objects are located using prepositions of place.",
+		"keywords": [
+			"Position",
+			"Speaking",
+			"Prepositions",
+			"Accuracy",
+			"Location",
+			"ස්ථානය",
+			"කථනය",
+			"නිපාත පද",
+			"නිවැරදිභාවය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-8.9",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "8.9",
+		"topic": "Oral Picture Description",
+		"learning_outcome": "Students will be able to orally describe various types of photographs and pictures familiar to their lives and appealing to their interests.",
+		"content_summary": "Narrating and describing visual content in pictures during oral presentations or group work.",
+		"keywords": [
+			"Speaking",
+			"Pictures",
+			"Visuals",
+			"Narration",
+			"Description",
+			"කථනය",
+			"රූප",
+			"දෘශ්‍ය",
+			"විස්තරය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-8.13",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "8.13",
+		"topic": "Contextual Language",
+		"learning_outcome": "Students will be able to use language in familiar contexts",
+		"content_summary": "Adapting spoken English to suit specific everyday situations and social interactions.",
+		"keywords": [
+			"Context",
+			"Speaking",
+			"Interaction",
+			"Sociolinguistics",
+			"Situations",
+			"සන්දර්භය",
+			"කථනය",
+			"අන්තර්ක්‍රියා",
+			"සන්නිවේදනය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR7-8.17",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "8.17",
+		"topic": "Continuing Actions",
+		"learning_outcome": "Students will be able to use present, past and future continuous forms to describe continuing actions.",
+		"content_summary": "Orally describing ongoing events in different time frames using the continuous aspect.",
+		"keywords": [
+			"Grammar",
+			"Speaking",
+			"Continuous",
+			"Tenses",
+			"Actions",
+			"ව්‍යාකරණ",
+			"කථනය",
+			"අඛණ්ඩ කාලය",
+			"කාලය",
+			"ක්‍රියා"
+		]
+	},
+	{
+		"id": "ENG-GR7-8.18",
+		"subject": "English",
+		"grade": 7,
+		"competency_level": "8.18",
+		"topic": "Perfect Tense",
+		"learning_outcome": "Students will be able to use perfect tense appropriately in expressing personal experience, immediately completed actions, possessions and visible changes",
+		"content_summary": "Oral practice of the present perfect tense to discuss past experiences that relate to the present.",
+		"keywords": [
+			"Perfect tense",
+			"Experience",
+			"Speaking",
+			"Grammar",
+			"Time",
+			"සම්පූර්ණ කාලය",
+			"අත්දැකීම්",
+			"කථනය",
+			"ව්‍යාකරණ",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR8-1.1",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "1.1",
+		"topic": "Pronunciation & Silent Letters",
+		"learning_outcome": "Students will be able to identify the pronunciation of the words with silent letters. Students will be able to pronounce the words with silent letters correctly. Students will be able to identify the pronunciation of the words ending with the letters ‘ew’. Students will be able to pronounce the words ending with the letters ‘ew’ correctly. Students will be able to identify the pronunciation of the words with the letters ‘a’ and ‘o’ in the middle. Students will be able to pronounce the words with the letters ‘a’ and ‘o’ in the middle correctly.",
+		"content_summary": "Identifying pronunciation of words with silent letters (talk, know, honest), 'ew' endings (flew, crew), vowel differences (walk-work), and initial consonant clusters.",
+		"keywords": [
+			"silent letters",
+			"pronunciation",
+			"consonant clusters",
+			"phonics",
+			"vowels",
+			"නිශ්ශබ්ද අකුරු",
+			"උච්චාරණය",
+			"වචන මාලාව",
+			"කියවීම",
+			"සවන්දීම"
+		]
+	},
+	{
+		"id": "ENG-GR8-1.2",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "1.2",
+		"topic": "Reading Aloud",
+		"learning_outcome": "Students will be able to read different types of texts accurately and meaningfully.",
+		"content_summary": "Reading aloud varied text types including tongue twisters, announcements, dialogues, conversations, poems, and songs with proper intonation.",
+		"keywords": [
+			"reading aloud",
+			"fluency",
+			"accuracy",
+			"intonation",
+			"text types",
+			"කියවීම",
+			"උච්චාරණය",
+			"භාෂාව",
+			"ප්‍රකාශනය",
+			"සන්නිවේදනය"
+		]
+	},
+	{
+		"id": "ENG-GR8-2.5",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "2.5",
+		"topic": "Inverted Commas",
+		"learning_outcome": "Students will be able to use inverted comma in a sentence appropriately.",
+		"content_summary": "Identifying and correctly applying single and double inverted commas for direct speech and speech within speech in writing.",
+		"keywords": [
+			"inverted commas",
+			"punctuation",
+			"direct speech",
+			"quotation marks",
+			"writing mechanics",
+			"ලිවීම",
+			"ව්‍යාකරණ",
+			"ලකුණු",
+			"භාෂා කුසලතා",
+			"නිවැරදි භාවය"
+		]
+	},
+	{
+		"id": "ENG-GR8-3.2",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "3.2",
+		"topic": "Following Instructions",
+		"learning_outcome": "Students will be able to follow instructions accurately to respond to various types of requests appropriately.",
+		"content_summary": "Listening and acting upon simple instructions, games, and directions, including tasks like following routes on maps or making origami.",
+		"keywords": [
+			"listening skills",
+			"instructions",
+			"requests",
+			"directions",
+			"active listening",
+			"සවන්දීම",
+			"උපදෙස්",
+			"ක්‍රියාකාරකම්",
+			"සන්නිවේදනය",
+			"අවබෝධය"
+		]
+	},
+	{
+		"id": "ENG-GR8-3.3",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "3.3",
+		"topic": "Specific Information Listening",
+		"learning_outcome": "Students will be able to listen and find specific information such as names of persons, animals, places, dates, days, months, years, etc.",
+		"content_summary": "Listening to simple texts like stories and descriptions to extract factual details such as names, dates, and locations.",
+		"keywords": [
+			"listening comprehension",
+			"specific information",
+			"details",
+			"factual data",
+			"active listening",
+			"සවන්දීම",
+			"තොරතුරු ග්‍රහණය",
+			"විස්තර",
+			"අවබෝධය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR8-3.4",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "3.4",
+		"topic": "Information Transfer Listening",
+		"learning_outcome": "Students will be able to listen and transfers the given information to other forms.",
+		"content_summary": "Listening to oral texts and transferring the information into non-verbal formats such as flow charts, grids, graphs, or maps.",
+		"keywords": [
+			"information transfer",
+			"listening",
+			"flow charts",
+			"grids",
+			"mapping",
+			"සවන්දීම",
+			"තොරතුරු හුවමාරුව",
+			"අවබෝධය",
+			"සටහන්",
+			"ක්‍රමවේද"
+		]
+	},
+	{
+		"id": "ENG-GR8-4.3",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "4.3",
+		"topic": "Synonyms & Antonyms",
+		"learning_outcome": "Students will be able to find synonyms and antonyms for given words.",
+		"content_summary": "Building vocabulary by identifying words with similar and opposite meanings based on the context of various texts.",
+		"keywords": [
+			"synonyms",
+			"antonyms",
+			"vocabulary",
+			"word meaning",
+			"context",
+			"සමාන පද",
+			"විරුද්ධ පද",
+			"වචන මාලාව",
+			"අර්ථය",
+			"භාෂා දැනුම"
+		]
+	},
+	{
+		"id": "ENG-GR8-4.4",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "4.4",
+		"topic": "Word Classes & Affixes",
+		"learning_outcome": "Students will be able to use affixes -un, -ful, -less, -dis, -ily, -ness , -fully, er, -est to change the word class and the meaning of words. Students will be able to form comparative and superlative adjectives",
+		"content_summary": "Using prefixes and suffixes to transform word classes (e.g., verb to adjective) and forming comparative/superlative degrees.",
+		"keywords": [
+			"affixes",
+			"prefixes",
+			"suffixes",
+			"word class",
+			"comparatives",
+			"ව්‍යාකරණ",
+			"ප්‍රත්‍ය",
+			"වචන නිර්මාණය",
+			"විශේෂණ",
+			"භාෂා රීති"
+		]
+	},
+	{
+		"id": "ENG-GR8-4.5",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "4.5",
+		"topic": "Plural Nouns",
+		"learning_outcome": "Students will be able to form the plurals of compound and collective nouns adding – s/es. Students will be able to form the plurals of countable and uncountable nouns.",
+		"content_summary": "Mastering pluralization rules for countable, uncountable, collective, and compound nouns using appropriate quantifiers.",
+		"keywords": [
+			"plural nouns",
+			"countable nouns",
+			"uncountable nouns",
+			"collective nouns",
+			"grammar",
+			"බහුවචන",
+			"ව්‍යාකරණ",
+			"නාමපද",
+			"ගණනය කළ හැකි",
+			"භාෂා රටා"
+		]
+	},
+	{
+		"id": "ENG-GR8-4.7",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "4.7",
+		"topic": "Compound & Collective Nouns",
+		"learning_outcome": "Students will be able to use the collective nouns and compound nouns in sentences appropriately.",
+		"content_summary": "Identifying and correctly utilizing collective nouns (e.g., a herd of elephants) and compound nouns (e.g., son-in-law) within sentences.",
+		"keywords": [
+			"collective nouns",
+			"compound nouns",
+			"sentence structure",
+			"grammar",
+			"vocabulary",
+			"නාමපද",
+			"ව්‍යාකරණ",
+			"වචන භාවිතය",
+			"වාක්‍ය නිර්මාණය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR8-5.1",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "5.1",
+		"topic": "Visual Clues Interpretation",
+		"learning_outcome": "Students will be able to study the picture given in the text in the text book to derive the meaning of that particular text.",
+		"content_summary": "Utilizing visual aids and contextual clues within reading materials to infer the meaning of unfamiliar words and general text content.",
+		"keywords": [
+			"visual clues",
+			"reading comprehension",
+			"contextual clues",
+			"word meaning",
+			"inference",
+			"කියවීම",
+			"අවබෝධය",
+			"රූප සටහන්",
+			"අර්ථය සෙවීම",
+			"භාෂා කුසලතා"
+		]
+	},
+	{
+		"id": "ENG-GR8-5.2",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "5.2",
+		"topic": "Specific Information Extraction",
+		"learning_outcome": "Students will be able to find specific information (names, dates, days, places etc) from various types of texts.",
+		"content_summary": "Scanning various text types like notices and articles to find specific facts, responding to 'Wh' questions about topics like historical sites and birds.",
+		"keywords": [
+			"scanning",
+			"reading comprehension",
+			"specific information",
+			"text analysis",
+			"Wh questions",
+			"කියවීම",
+			"තොරතුරු සෙවීම",
+			"අවබෝධය",
+			"ප්‍රශ්න පත්‍ර",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR8-5.3",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "5.3",
+		"topic": "Information Transfer (Reading)",
+		"learning_outcome": "Students will be able to read and transfer the needed information into other forms. Students will be able to transfer the given information into a grid, descriptions into pictures, marking maps, etc.",
+		"content_summary": "Reading texts and converting the information into visual or structured formats like grids, pictures, or maps.",
+		"keywords": [
+			"information transfer",
+			"reading skills",
+			"grids",
+			"mapping",
+			"visualizing",
+			"කියවීම",
+			"තොරතුරු හුවමාරුව",
+			"සටහන්",
+			"අවබෝධය",
+			"ප්‍රස්ථාර"
+		]
+	},
+	{
+		"id": "ENG-GR8-5.4",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "5.4",
+		"topic": "Poetry Analysis",
+		"learning_outcome": "Students will be able to identify the simple poetic Techniques mentioned. Students will be able to express their ideas, feelings, emotions in simple sentences.",
+		"content_summary": "Reading simple poems and identifying literary devices like imagery, metaphors, similes, and rhyming words to express emotional responses.",
+		"keywords": [
+			"poetry",
+			"metaphors",
+			"similes",
+			"rhyming words",
+			"literary devices",
+			"පද්‍ය",
+			"සාහිත්‍යය",
+			"නිර්මාණාත්මක කියවීම",
+			"ප්‍රකාශනය",
+			"භාෂා අලංකාර"
+		]
+	},
+	{
+		"id": "ENG-GR8-5.5",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "5.5",
+		"topic": "Folk Stories & Characters",
+		"learning_outcome": "Students will be able to identify the characters, their dress, qualities, message expressed. Students will be able to express their ideas, feelings and emotions in simple sentences.",
+		"content_summary": "Analyzing simple folk stories to identify character traits, physical descriptions, and underlying moral messages.",
+		"keywords": [
+			"folk stories",
+			"character analysis",
+			"comprehension",
+			"storytelling",
+			"literary themes",
+			"කථාන්තර",
+			"කියවීම",
+			"චරිත නිරූපණය",
+			"අවබෝධය",
+			"භාෂා වින්දනය"
+		]
+	},
+	{
+		"id": "ENG-GR8-5.6",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "5.6",
+		"topic": "Gist & General Idea",
+		"learning_outcome": "Students will be able to extract the general idea of a text.",
+		"content_summary": "Skimming various functional and narrative texts to identify the main theme or general idea using headings and sub-headings.",
+		"keywords": [
+			"skimming",
+			"gist",
+			"main idea",
+			"reading strategy",
+			"summary",
+			"කියවීම",
+			"සාරාංශය",
+			"අවබෝධය",
+			"මූලික අදහස",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR8-6.1",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "6.1",
+		"topic": "Past Perfect & Passive Voice",
+		"learning_outcome": "Students will be able to write sentences using ‘Past Perfect’ form. Students will be able to identify the difference between active voice and passive voice sentences. Students will be able to construct sentences using Passive voice - Present tense, Past Tense, and Future Tense.",
+		"content_summary": "Constructing sentences using the Past Perfect tense and transforming active voice sentences into Passive Voice across three main tenses.",
+		"keywords": [
+			"past perfect",
+			"passive voice",
+			"grammar",
+			"tenses",
+			"sentence construction",
+			"ව්‍යාකරණ",
+			"කාල",
+			"ලිවීම",
+			"භාෂා රීති",
+			"වාක්‍ය"
+		]
+	},
+	{
+		"id": "ENG-GR8-6.2",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "6.2",
+		"topic": "Reflexive & Indefinite Pronouns",
+		"learning_outcome": "Students will be able to use reflexive pronouns – myself, our selves, yourselves, himself, herself, itself, themselves.",
+		"content_summary": "Learning the correct usage of reflexive pronouns and indefinite pronouns (e.g., all, some, none) in various communicative contexts.",
+		"keywords": [
+			"reflexive pronouns",
+			"indefinite pronouns",
+			"grammar",
+			"word usage",
+			"pronouns",
+			"ව්‍යාකරණ",
+			"සර්වනාම",
+			"ලිවීම",
+			"භාෂා භාවිතය",
+			"වාක්‍ය"
+		]
+	},
+	{
+		"id": "ENG-GR8-6.3",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "6.3",
+		"topic": "Modals (Must/Have to)",
+		"learning_outcome": "Students will be able to use the modals ‘must and have to’ appropriately.",
+		"content_summary": "Using modal verbs 'must' and 'have to' to express obligation and necessity in dialogues and writing.",
+		"keywords": [
+			"modals",
+			"obligation",
+			"must",
+			"have to",
+			"grammar",
+			"ව්‍යාකරණ",
+			"භාෂා භාවිතය",
+			"වාක්‍ය",
+			"ලිවීම",
+			"අවශ්‍යතාවය"
+		]
+	},
+	{
+		"id": "ENG-GR8-6.5",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "6.5",
+		"topic": "Contracted Forms",
+		"learning_outcome": "Students will be able to use contracted form in speaking and writing.",
+		"content_summary": "Mastering the use of common contractions (e.g., isn't, I'll, they're) in informal speaking and written dialogues.",
+		"keywords": [
+			"contractions",
+			"short forms",
+			"grammar",
+			"speaking skills",
+			"writing skills",
+			"ව්‍යාකරණ",
+			"කථා කිරීම",
+			"ලිවීම",
+			"භාෂාව",
+			"කෙටි යෙදුම්"
+		]
+	},
+	{
+		"id": "ENG-GR8-6.6",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "6.6",
+		"topic": "Adjective Comparison",
+		"learning_outcome": "Students will be able to use comparative adjectives appropriately to compare nouns. Students will be able to use superlative adjectives appropriately to compare nouns.",
+		"content_summary": "Using comparative and superlative forms of adjectives to compare two or more nouns accurately in simple sentences.",
+		"keywords": [
+			"adjectives",
+			"comparatives",
+			"superlatives",
+			"grammar",
+			"comparisons",
+			"විශේෂණ",
+			"ව්‍යාකරණ",
+			"සංසන්දනය",
+			"භාෂා රීති",
+			"ලිවීම"
+		]
+	},
+	{
+		"id": "ENG-GR8-6.7",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "6.7",
+		"topic": "Prepositional Usage",
+		"learning_outcome": "Students will be able to use prepositions to describe the position.",
+		"content_summary": "Applying prepositions like across, through, and along to describe location, movement, and position in sentences.",
+		"keywords": [
+			"prepositions",
+			"grammar",
+			"spatial relations",
+			"sentence structure",
+			"positional words",
+			"ව්‍යාකරණ",
+			"නිපාත",
+			"ස්ථානය",
+			"ලිවීම",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR8-6.8",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "6.8",
+		"topic": "Conjunctions (As/Since/So)",
+		"learning_outcome": "Students will be able to use the conjunction ‘ as, since, so to join sentences.",
+		"content_summary": "Using specific conjunctions to establish cause-effect relationships and join simple sentences logically.",
+		"keywords": [
+			"conjunctions",
+			"sentence joining",
+			"grammar",
+			"logical connectors",
+			"writing skills",
+			"නිපාත",
+			"ව්‍යාකරණ",
+			"ලිවීම",
+			"වාක්‍ය ගැලපීම",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR8-6.9",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "6.9",
+		"topic": "Adverbs of Manner & Frequency",
+		"learning_outcome": "Students will be able to use adverbs : once, twice, always, usually, never, rarely, often, sometimes and the adverbs that formed under C.L.4.4 appropriately to describe verbs.",
+		"content_summary": "Enhancing verb descriptions by using adverbs of manner and adverbs of frequency in varied communicative contexts.",
+		"keywords": [
+			"adverbs",
+			"frequency",
+			"grammar",
+			"verb description",
+			"word usage",
+			"ක්‍රියා විශේෂණ",
+			"ව්‍යාකරණ",
+			"ලිවීම",
+			"භාෂා රීති",
+			"කථනය"
+		]
+	},
+	{
+		"id": "ENG-GR8-7.1",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "7.1",
+		"topic": "Descriptive Writing",
+		"learning_outcome": "Students will be able to write descriptions of people, places things and animals.",
+		"content_summary": "Producing simple descriptive paragraphs about historical sites, animals, and notable people using appropriate vocabulary and structures.",
+		"keywords": [
+			"composition",
+			"descriptive writing",
+			"paragraph writing",
+			"creative writing",
+			"text production",
+			"ලිවීම",
+			"විස්තර කිරීම",
+			"නිර්මාණාත්මක ලිවීම",
+			"භාෂාව",
+			"රචනය"
+		]
+	},
+	{
+		"id": "ENG-GR8-7.2",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "7.2",
+		"topic": "Picture Composition",
+		"learning_outcome": "Students will be able to describe photographs and pictures of busy streets, botanical gardens, pictures; at the post office school bank and birds, cloth.",
+		"content_summary": "Writing descriptions for various visual prompts like photographs of public places, nature, or specific objects.",
+		"keywords": [
+			"picture description",
+			"writing skills",
+			"observation",
+			"vocabulary",
+			"composition",
+			"ලිවීම",
+			"රූප විස්තරය",
+			"භාෂා භාවිතය",
+			"වචන මාලාව",
+			"නිර්මාණය"
+		]
+	},
+	{
+		"id": "ENG-GR8-7.3",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "7.3",
+		"topic": "Personal Correspodence",
+		"learning_outcome": "Students will be able to write letters of excuse, a letter to a pen friend, and note to a friend, a letter to a friend describing a holiday experience etc. According to their age and level.",
+		"content_summary": "Writing informal notes and letters for personal purposes, such as pen-friend letters or holiday accounts.",
+		"keywords": [
+			"letter writing",
+			"personal communication",
+			"notes",
+			"informal writing",
+			"functional writing",
+			"ලිපිය",
+			"ලිවීම",
+			"සන්නිවේදනය",
+			"භාෂා භාවිතය",
+			"පුද්ගලික ලිපි"
+		]
+	},
+	{
+		"id": "ENG-GR8-7.4",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "7.4",
+		"topic": "Procedural Writing",
+		"learning_outcome": "Students will be able to write instructions to suite the purpose.",
+		"content_summary": "Writing clear, step-by-step instructions for practical tasks like crafts or agricultural processes.",
+		"keywords": [
+			"instructions",
+			"procedural writing",
+			"writing skills",
+			"sequencing",
+			"step-by-step",
+			"ලිවීම",
+			"උපදෙස්",
+			"ක්‍රියාවලිය",
+			"භාෂාව",
+			"නිපුණතාවය"
+		]
+	},
+	{
+		"id": "ENG-GR8-7.5",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "7.5",
+		"topic": "Topic-based Compositions",
+		"learning_outcome": "Students will be able to write simple compositions on different types of topics using language appropriate to their age and level.",
+		"content_summary": "Writing 100-word compositions on specific general topics like health, environment, and public property.",
+		"keywords": [
+			"composition",
+			"essay writing",
+			"writing skills",
+			"topic development",
+			"structure",
+			"ලිවීම",
+			"රචනය",
+			"භාෂා ප්‍රකාශනය",
+			"නිර්මාණාත්මක ලිවීම",
+			"අවබෝධය"
+		]
+	},
+	{
+		"id": "ENG-GR8-7.6",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "7.6",
+		"topic": "Creative Expression (Writing)",
+		"learning_outcome": "Students will be able to write simple poems and stories familiar topics.",
+		"content_summary": "Engaging in creative writing by producing original simple poems and short stories based on familiar themes.",
+		"keywords": [
+			"creative writing",
+			"poetry",
+			"story writing",
+			"expression",
+			"literary skills",
+			"ලිවීම",
+			"නිර්මාණාත්මක නිර්මාණ",
+			"පද්‍ය",
+			"කථාන්තර",
+			"භාෂා වින්දනය"
+		]
+	},
+	{
+		"id": "ENG-GR8-8.3",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "8.3",
+		"topic": "Oral Description",
+		"learning_outcome": "Students will be able to speak about people, places things birds using language appropriate to their age and level.",
+		"content_summary": "Developing oral fluency by describing objects, animals, and people using simple sentence patterns.",
+		"keywords": [
+			"oral communication",
+			"speaking skills",
+			"description",
+			"fluency",
+			"presentation",
+			"කථා කිරීම",
+			"සන්නිවේදනය",
+			"විස්තර කිරීම",
+			"භාෂා භාවිතය",
+			"ප්‍රකාශනය"
+		]
+	},
+	{
+		"id": "ENG-GR8-8.4",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "8.4",
+		"topic": "Speaking on Topics",
+		"learning_outcome": "Students will be able to speak on familiar topics using language appropriate to their level and age.",
+		"content_summary": "Participating in oral discussions and delivering short talks on familiar general topics.",
+		"keywords": [
+			"speaking",
+			"discussion",
+			"familiar topics",
+			"communication",
+			"fluency",
+			"කථා කිරීම",
+			"සන්නිවේදනය",
+			"මත ප්‍රකාශ කිරීම",
+			"භාෂාව",
+			"සාකච්ඡා"
+		]
+	},
+	{
+		"id": "ENG-GR8-8.6",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "8.6",
+		"topic": "Oral Modals (Must/Should)",
+		"learning_outcome": "Students will be able to use must, have to and should appropriately in different situations.",
+		"content_summary": "Practicing the oral use of modal verbs to express duty, advice, and necessity in simulated real-life situations.",
+		"keywords": [
+			"modals",
+			"oral skills",
+			"must",
+			"should",
+			"language functions",
+			"කථා කිරීම",
+			"භාෂා භාවිතය",
+			"ව්‍යාකරණ",
+			"සන්නිවේදනය",
+			"උපදෙස්"
+		]
+	},
+	{
+		"id": "ENG-GR8-8.8",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "8.8",
+		"topic": "Describing Positions (Oral)",
+		"learning_outcome": "Students will be able to describe the position of something accurately using the correct preposition.",
+		"content_summary": "Using positional prepositions orally to accurately identify the location of objects or people in a given space.",
+		"keywords": [
+			"speaking",
+			"prepositions",
+			"spatial relations",
+			"positional language",
+			"communication",
+			"කථා කිරීම",
+			"ස්ථානය",
+			"භාෂාව",
+			"සන්නිවේදනය",
+			"වචන භාවිතය"
+		]
+	},
+	{
+		"id": "ENG-GR8-8.9",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "8.9",
+		"topic": "Oral Picture Description",
+		"learning_outcome": "Students will be able to orally describe photographs and pictures of busy streets, botanical gardens, birds, clothes, pictures; at the post office, school, bank, etc.",
+		"content_summary": "Delivering oral descriptions of varied visual scenes and photographs related to daily life and interests.",
+		"keywords": [
+			"oral description",
+			"picture description",
+			"speaking",
+			"vocabulary",
+			"communication",
+			"කථා කිරීම",
+			"රූප විස්තරය",
+			"සන්නිවේදනය",
+			"භාෂාව",
+			"ප්‍රකාශනය"
+		]
+	},
+	{
+		"id": "ENG-GR8-8.13",
+		"subject": "English",
+		"grade": 8,
+		"competency_level": "8.13",
+		"topic": "Functional Contexts",
+		"learning_outcome": "Students will be able to use language in familiar contexts.",
+		"content_summary": "Applying English in functional real-world contexts such as the library, canteen, bank, or post office through role-play.",
+		"keywords": [
+			"situational language",
+			"role play",
+			"communication",
+			"contexts",
+			"functional English",
+			"භාෂා භාවිතය",
+			"සන්නිවේදනය",
+			"ක්‍රියාකාරකම්",
+			"කථා කිරීම",
+			"සන්දර්භය"
+		]
+	},
+	{
+		"id": "ENG-GR9-1.1",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "1.1",
+		"topic": "English Pronunciation",
+		"learning_outcome": "Students will be able to pronounce short and long vowels properly. Students will be able to identify the different ways of pronouncing regular past tense words. Students will be able to pronounce the plural morpheme properly.",
+		"content_summary": "Focuses on identifying vowel sounds (/u/, /u:/, /ə/, etc.), past tense morphemes (-ed as /t/, /d/, /id/), and plural morphemes (/s/, /z/, /iz/).",
+		"keywords": [
+			["Vowels", "Morphemes", "Past Tense", "Phonetics", "Pronunciation"],
+			["ස්වර", "ප්‍රත්‍ය", "අතීත කාලය", "ධ්වනි විද්‍යාව", "උච්චාරණය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-1.2",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "1.2",
+		"topic": "Loud Reading",
+		"learning_outcome": "Students will be able to read aloud different types of texts accurately and meaningfully.",
+		"content_summary": "Involves oral reading of announcements, conversations, news, and poems with attention to relevant punctuation.",
+		"keywords": [
+			["Reading", "Fluency", "Punctuation", "Announcements", "Meaningful"],
+			["කියවීම", "ධාරාළතාව", "විරාම ලකුණු", "නිවේදන", "අර්ථාන්විත"]
+		]
+	},
+	{
+		"id": "ENG-GR9-1.3",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "1.3",
+		"topic": "Spelling Sounds",
+		"learning_outcome": "Students will be able to comprehend and produce different spelling combinations which produce the sounds /ʃ/ and /f/ in words. Students will be able to pronounce English words and phrases meaningfully.",
+		"content_summary": "Covers words with spelling variants for specific sounds, such as 'ti' in national (/ʃ/) and 'ph' in elephant (/f/).",
+		"keywords": [
+			["Phonology", "Spelling", "Consonants", "Comprehension", "Sounds"],
+			["ධ්වනිවේදය", "අක්ෂර වින්‍යාසය", "ව්‍යංජන", "අවබෝධය", "ශබ්ද"]
+		]
+	},
+	{
+		"id": "ENG-GR9-2.6",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "2.6",
+		"topic": "Punctuation Usage",
+		"learning_outcome": "Students will be able to use commas with understanding.",
+		"content_summary": "Instruction on using commas for lists, coordinating clauses, and vocatives to improve written clarity and reading pauses.",
+		"keywords": [
+			["Comma", "Punctuation", "Mechanics", "Writing", "Clarity"],
+			["කොමාව", "විරාම ලකුණු", "යාන්ත්‍රික", "ලේඛනය", "පැහැදිලිකම"]
+		]
+	},
+	{
+		"id": "ENG-GR9-3.3",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "3.3",
+		"topic": "Specific Listening",
+		"learning_outcome": "Students will be able to listen to various types of texts and find specific information.",
+		"content_summary": "Listening to dialogues, lectures, and news to extract names, places, dates, days, and months.",
+		"keywords": [
+			["Listening", "Information", "Extraction", "Aural", "Comprehension"],
+			["ශ්‍රවණය", "තොරතුරු", "නිස්සාරණය", "ශ්‍රව්‍ය", "අවබෝධය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-3.4",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "3.4",
+		"topic": "Information Transfer",
+		"learning_outcome": "Students will be able to listen and transfer information to other forms.",
+		"content_summary": "Listening to descriptions or processes and transferring data into pictures, notes, or flow charts.",
+		"keywords": [
+			["Data Transfer", "Visuals", "Mapping", "Processing", "Organization"],
+			["තොරතුරු මාරු කිරීම", "දෘශ්‍ය", "සිතියම්කරණය", "සැකසීම", "සංවිධානය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-3.5",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "3.5",
+		"topic": "Intonation & Stress",
+		"learning_outcome": "Students will be able to identify different intonation patterns and uses of word stress.",
+		"content_summary": "Recognizing how pitch rises or falls in statements vs questions and identifying stressed focus words.",
+		"keywords": [
+			["Intonation", "Stress", "Pitch", "Statements", "Questions"],
+			["ස්වර උච්චාවචනය", "අවධාරණය", "හඬ තාරතාව", "ප්‍රකාශ", "ප්‍රශ්න"]
+		]
+	},
+	{
+		"id": "ENG-GR9-4.3",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "4.3",
+		"topic": "Synonyms & Antonyms",
+		"learning_outcome": "Students will be able to identify/ use synonyms and antonyms for words that are commonly used/ found in different situations.",
+		"content_summary": "Identifying words with similar or opposite meanings across various text types to enrich vocabulary.",
+		"keywords": [
+			["Vocabulary", "Synonyms", "Antonyms", "Context", "Lexicon"],
+			["වචන මාලාව", "සමාන පද", "විරුද්ධ පද", "සන්දර්භය", "ශබ්දකෝෂය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-4.4",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "4.4",
+		"topic": "Word Affixation",
+		"learning_outcome": "Students will be able to use affixes to change the word class and the meaning of words.",
+		"content_summary": "Using prefixes and suffixes (un-, dis-, -ful, -ness, etc.) to transform word meanings and classes (e.g., verb to adjective).",
+		"keywords": [
+			["Affixes", "Prefix", "Suffix", "Word Class", "Derivation"],
+			["ප්‍රත්‍ය", "උපසර්ග", "පසුපසර්ග", "පද මාලාව", "ව්‍යුත්පන්නය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-4.5",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "4.5",
+		"topic": "Noun Plurals",
+		"learning_outcome": "Students will be able to form the plurals of countable and uncountable nouns. Students will be able to identify singular nouns that do not have plural forms.",
+		"content_summary": "Covers countable/uncountable plural forms (e.g., a bag of rice) and nouns that look plural but are singular (e.g., physics, news).",
+		"keywords": [
+			["Plurals", "Nouns", "Countable", "Uncountable", "Singular"],
+			["බහු වචන", "නාම පද", "ගණනය කළ හැකි", "ගණනය කළ නොහැකි", "ඒක වචන"]
+		]
+	},
+	{
+		"id": "ENG-GR9-4.7",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "4.7",
+		"topic": "Word Classes",
+		"learning_outcome": "Students will be able to use nouns appropriately. Students will be able to identify the different word classes of the same word in different contexts.",
+		"content_summary": "Identifying how a single word can function as different parts of speech (e.g., 'water' as noun, verb, or adjective).",
+		"keywords": [
+			["Nouns", "Verbs", "Adjectives", "Context", "Grammar"],
+			["නාම පද", "ක්‍රියා පද", "නාම විශේෂණ", "සන්දර්භය", "ව්‍යාකරණ"]
+		]
+	},
+	{
+		"id": "ENG-GR9-4.8",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "4.8",
+		"topic": "Collective Nouns",
+		"learning_outcome": "Students will be able to use collective nouns and compound nouns appropriately in a sentence.",
+		"content_summary": "Focuses on subject-verb agreement with collective nouns (army, audience, team) in singular and plural contexts.",
+		"keywords": [
+			[
+				"Collective Nouns",
+				"Subject-Verb",
+				"Agreement",
+				"Compound Nouns",
+				"Grammar"
+			],
+			["සමූහ වාචී නාම", "කර්තෘ-ක්‍රියා", "සම්බන්ධතාවය", "සමාස පද", "ව්‍යාකරණ"]
+		]
+	},
+	{
+		"id": "ENG-GR9-5.1",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "5.1",
+		"topic": "Visual Clues",
+		"learning_outcome": "Students will be able to determine the meaning of an unfamiliar word using visual clues. Students will be able to use visual clues to identify the intention/ message communicated through the visuals. Students will be able to use graphs, tables and charts to derive meaning of graphically stated information.",
+		"content_summary": "Using pictures, graphs, and tables to understand text meaning and trends (e.g., most, least, increase, decrease).",
+		"keywords": [
+			["Visual Literacy", "Graphs", "Charts", "Interpretation", "Meaning"],
+			["දෘශ්‍ය සාක්ෂරතාව", "ප්‍රස්තාර", "වගු", "අර්ථකථනය", "අර්ථය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-5.2",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "5.2",
+		"topic": "Extracting Info",
+		"learning_outcome": "Students will be able to extract specific information from various types of simple texts.",
+		"content_summary": "Finding specific details (names, dates, places) in notices, emails, and minutes using 'wh' questions.",
+		"keywords": [
+			["Scanning", "Information", "Simple Texts", "Reading", "Details"],
+			["පිරික්සීම", "තොරතුරු", "සරල පාඨ", "කියවීම", "විස්තර"]
+		]
+	},
+	{
+		"id": "ENG-GR9-5.3",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "5.3",
+		"topic": "Transferring Data",
+		"learning_outcome": "Students will be able to transfer information into other forms.",
+		"content_summary": "Converting written text from notices or articles into grids, maps, or graphs.",
+		"keywords": [
+			["Transfer", "Grid", "Mapping", "Formatting", "Synthesis"],
+			["මාරු කිරීම", "ප්‍රස්ථාරය", "සිතියම්කරණය", "ආකෘතිකරණය", "සංශ්ලේෂණය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-5.4",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "5.4",
+		"topic": "Poetry Response",
+		"learning_outcome": "Students will be able to read and respond to simple poems. Students will be able to express their ideas, feelings, and emotions in simple sentences.",
+		"content_summary": "Analyzing poetic techniques like imagery, metaphors, similes, and rhyming words to express emotional responses.",
+		"keywords": [
+			["Poetry", "Imagery", "Metaphor", "Simile", "Rhyme"],
+			["පද්‍ය", "ප්‍රතිරූපණ", "රූපක", "උපමා", "එළිසමය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-5.5",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "5.5",
+		"topic": "Folk Tales",
+		"learning_outcome": "Students will be able to identify the characters, their qualities and message expressed. Students will be able to express their ideas, feelings and emotions in simple sentences.",
+		"content_summary": "Reading simple folk stories to explore cultural diversity, character qualities, and moral messages.",
+		"keywords": [
+			["Folklore", "Characters", "Culture", "Moral", "Response"],
+			["ජනකතා", "චරිත", "සංස්කෘතිය", "සදාචාරය", "ප්‍රතිචාරය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-5.6",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "5.6",
+		"topic": "Main Idea Extraction",
+		"learning_outcome": "Students will be able to extract the general idea of a text.",
+		"content_summary": "Identifying the core message of newspaper articles, minutes, and blurbs by matching headings or subheadings.",
+		"keywords": [
+			["Main Idea", "Gist", "Skimming", "Summarizing", "Core"],
+			["ප්‍රධාන අදහස", "සාරාංශය", "වේගවත් කියවීම", "සංග්‍රහය", "හරය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-5.7",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "5.7",
+		"topic": "Ellipted Inference",
+		"learning_outcome": "Students will be able to infer ellipted information in different types of texts.",
+		"content_summary": "Understanding omitted but implied information in dialogues (e.g., 'So do I' meaning 'I too like...').",
+		"keywords": [
+			["Inference", "Ellipsis", "Context", "Dialogue", "Logic"],
+			["අනුමානය", "ලොප් කිරීම", "සන්දර්භය", "සංවාදය", "තර්කය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-5.8",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "5.8",
+		"topic": "Implied Meaning",
+		"learning_outcome": "Students will be able to infer implied information in different types of texts.",
+		"content_summary": "Developing the ability to 'read between the lines' in literary and non-literary extracts to find hidden meanings.",
+		"keywords": [
+			["Implicit", "Deduction", "Interpretation", "Context", "Literary"],
+			["අප්‍රකාශිත", "නිගමනය", "අර්ථකථනය", "සන්දර්භය", "සාහිත්‍යමය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-5.9",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "5.9",
+		"topic": "Text Organization",
+		"learning_outcome": "Students will be able to recognize the organization of a text.",
+		"content_summary": "Understanding narrative structures and expository sequences, including beginning, middle, and end.",
+		"keywords": [
+			["Structure", "Sequencing", "Narrative", "Expository", "Layout"],
+			["ව්‍යුහය", "අනුපිළිවෙල", "කථන", "විවරණ", "සැලැස්ම"]
+		]
+	},
+	{
+		"id": "ENG-GR9-6.1",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "6.1",
+		"topic": "Sentence Construction",
+		"learning_outcome": "Students will be able to construct simple sentences using Future Perfect form (Active Voice). Students will be able to construct sentences using Past Tense and Future Tense (Passive voice).",
+		"content_summary": "Creating affirmative, negative, and interrogative sentences in complex tenses and passive voice formats.",
+		"keywords": [
+			["Grammar", "Tenses", "Passive Voice", "Future Perfect", "Active Voice"],
+			["ව්‍යාකරණ", "කාල", "කර්ම කාරක", "අනාගත පූර්ණ", "කර්තෘ කාරක"]
+		]
+	},
+	{
+		"id": "ENG-GR9-6.2",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "6.2",
+		"topic": "Relative Pronouns",
+		"learning_outcome": "Students will be able to use relative pronouns appropriately.",
+		"content_summary": "Using who, whom, whose, which, and that to join sentences and provide additional information about a subject.",
+		"keywords": [
+			["Pronouns", "Relative Clause", "Clauses", "Conjunction", "Grammar"],
+			["සර්වනාම", "සම්බන්ධක වාක්‍ය ඛණ්ඩය", "වාක්‍ය ඛණ්ඩ", "නිපාත", "ව්‍යාකරණ"]
+		]
+	},
+	{
+		"id": "ENG-GR9-6.6",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "6.6",
+		"topic": "Adjective Usage",
+		"learning_outcome": "Students will be able to use adjectives properly in different contexts.",
+		"content_summary": "Selecting and applying descriptive words correctly in literary and non-literary texts.",
+		"keywords": [
+			["Adjectives", "Descriptors", "Context", "Modifier", "Vocabulary"],
+			["විශේෂණ", "විස්තර පද", "සන්දර්භය", "විශේෂක", "වචන මාලාව"]
+		]
+	},
+	{
+		"id": "ENG-GR9-6.7",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "6.7",
+		"topic": "Preposition Usage",
+		"learning_outcome": "Students will be able to use prepositions appropriately.",
+		"content_summary": "Using location and relationship words like 'among', 'beside', 'beneath', and 'underneath' correctly.",
+		"keywords": [
+			["Prepositions", "Location", "Spatial", "Relations", "Grammar"],
+			["නිපාත පද", "ස්ථානය", "අවකාශීය", "සම්බන්ධතා", "ව්‍යාකරණ"]
+		]
+	},
+	{
+		"id": "ENG-GR9-6.8",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "6.8",
+		"topic": "Correlative Conjunctions",
+		"learning_outcome": "Students will be able to use conjunctions appropriately.",
+		"content_summary": "Using paired conjunctions like 'not only...but also', 'both...and', and 'either...or' to join complex ideas.",
+		"keywords": [
+			[
+				"Conjunctions",
+				"Correlatives",
+				"Linking",
+				"Sentence structure",
+				"Grammar"
+			],
+			["සම්බන්ධක", "අන්‍යෝන්‍ය සම්බන්ධක", "සම්බන්ධ කිරීම", "වාක්‍ය ව්‍යුහය", "ව්‍යාකරණ"]
+		]
+	},
+	{
+		"id": "ENG-GR9-6.9",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "6.9",
+		"topic": "Adverb Usage",
+		"learning_outcome": "Students will be able to use adverbs appropriately.",
+		"content_summary": "Applying adverbs to describe verbs and actions in various narrative and descriptive contexts.",
+		"keywords": [
+			["Adverbs", "Modifying", "Verbs", "Context", "Grammar"],
+			["ක්‍රියා විශේෂණ", "විශේෂ කිරීම", "ක්‍රියා පද", "සන්දර්භය", "ව්‍යාකරණ"]
+		]
+	},
+	{
+		"id": "ENG-GR9-6.10",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "6.10",
+		"topic": "Conditional Clauses",
+		"learning_outcome": "Students will be able to use conditional clauses appropriately.",
+		"content_summary": "Identifying and using Type 1 (realistic) and Type 2 (hypothetical) 'if' clauses with correct tense alignment.",
+		"keywords": [
+			["Conditionals", "If-clauses", "Hypothetical", "Tense", "Possibility"],
+			["කොන්දේසි", "if-වාක්‍ය ඛණ්ඩ", "උපකල්පිත", "කාලය", "හැකියාව"]
+		]
+	},
+	{
+		"id": "ENG-GR9-6.11",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "6.11",
+		"topic": "Reported Speech",
+		"learning_outcome": "Students will be able to use reported speech accurately.",
+		"content_summary": "Transforming direct speech into indirect speech for statements, questions, and imperatives, noting shifts in tenses and pronouns.",
+		"keywords": [
+			[
+				"Indirect Speech",
+				"Direct Speech",
+				"Reporting",
+				"Statements",
+				"Grammar"
+			],
+			["වක්‍ර කථනය", "ප්‍රත්‍යක්ෂ කථනය", "වාර්තා කිරීම", "ප්‍රකාශ", "ව්‍යාකරණ"]
+		]
+	},
+	{
+		"id": "ENG-GR9-7.1",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "7.1",
+		"topic": "Descriptive Writing",
+		"learning_outcome": "Students will be able to write descriptions of people, animals, places and things.",
+		"content_summary": "Writing essays, paragraphs, and biographical sketches focused on detailed descriptions.",
+		"keywords": [
+			["Composition", "Description", "Biographies", "Essays", "Writing"],
+			["නිබන්ධනය", "විස්තරය", "චරිතාපදාන", "රචනා", "ලේඛනය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-7.2",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "7.2",
+		"topic": "Picture Description",
+		"learning_outcome": "Students will be able to describe a given picture.",
+		"content_summary": "Describing photographs or illustrations of events, processes, or familiar places in written form.",
+		"keywords": [
+			["Imagery", "Illustration", "Writing", "Details", "Observation"],
+			["රූපණ", "නිදර්ශනය", "ලේඛනය", "විස්තර", "නිරීක්ෂණය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-7.3",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "7.3",
+		"topic": "Personal Writing",
+		"learning_outcome": "Students will be able to write for personal purposes.",
+		"content_summary": "Crafting informal letters, emails, and notes to friends/relatives for invitations or information.",
+		"keywords": [
+			["Informal Letters", "Email", "Notes", "Personal", "Correspondence"],
+			["පෞද්ගලික ලිපි", "විද්‍යුත් තැපෑල", "සටහන්", "පෞද්ගලික", "ලිපි හුවමාරුව"]
+		]
+	},
+	{
+		"id": "ENG-GR9-7.4",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "7.4",
+		"topic": "Instructional Writing",
+		"learning_outcome": "Students will be able to write a set of instructions appropriately.",
+		"content_summary": "Writing procedural steps for health, safety at home, or transport guidelines.",
+		"keywords": [
+			["Instructions", "Procedures", "Safety", "Guidance", "Sequential"],
+			["උපදෙස්", "පටිපාටි", "ආරක්ෂාව", "මගපෙන්වීම", "අනුපිළිවෙල"]
+		]
+	},
+	{
+		"id": "ENG-GR9-7.5",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "7.5",
+		"topic": "General Compositions",
+		"learning_outcome": "Students will be able to write simple compositions on different types of topics.",
+		"content_summary": "Writing structured model paragraphs, essays, and articles on various relevant topics.",
+		"keywords": [
+			["Essays", "Paragraphs", "Articles", "Writing", "Structure"],
+			["රචනා", "ඡේද", "ලිපි", "ලේඛනය", "ව්‍යුහය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-7.6",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "7.6",
+		"topic": "Creative Writing",
+		"learning_outcome": "Students will be able to write poems and stories.",
+		"content_summary": "Producing creative poems and short stories based on personal experiences, nature, and observations.",
+		"keywords": [
+			["Creative Writing", "Poetry", "Short Stories", "Fiction", "Imagination"],
+			["නිර්මාණාත්මක ලේඛනය", "පද්‍ය", "කෙටිකතා", "ප්‍රබන්ධ", "කල්පනාව"]
+		]
+	},
+	{
+		"id": "ENG-GR9-7.7",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "7.7",
+		"topic": "Official Writing",
+		"learning_outcome": "Students will be able to identify the differences between a formal and an informal letter. Students will be able to identify the features of official letters. Students will be able to write for official purposes.",
+		"content_summary": "Focuses on formal letter features (block/semi-block format), official notices, and professional reports.",
+		"keywords": [
+			["Formal Letters", "Notices", "Reports", "Official", "Formatting"],
+			["නිල ලිපි", "නිවේදන", "වාර්තා", "රාජකාරිමය", "ආකෘතිකරණය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-8.3",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "8.3",
+		"topic": "Oral Description",
+		"learning_outcome": "Students will be able to speak about people, animals, and objects using language appropriately.",
+		"content_summary": "Delivering prepared speeches and concept maps to describe subjects orally using simple patterns.",
+		"keywords": [
+			["Speaking", "Oral", "Speeches", "Description", "Communication"],
+			["කථනය", "වාචික", "දේශන", "විස්තරය", "සන්නිවේදනය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-8.4",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "8.4",
+		"topic": "Oral Presentation",
+		"learning_outcome": "Students will be able to speak on familiar topics using language appropriately.",
+		"content_summary": "Presenting ideas on topics from the syllabus in formal and informal speech settings.",
+		"keywords": [
+			["Presentation", "Oral Skill", "Fluency", "Discussion", "Speech"],
+			["ඉදිරිපත් කිරීම", "වාචික කුසලතා", "ධාරාළතාව", "සාකච්ඡාව", "දේශනය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-8.8",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "8.8",
+		"topic": "Spatial Description",
+		"learning_outcome": "Students will be able to tell the position of people, things and the correct location of places accurately using prepositions.",
+		"content_summary": "Using prepositions in dialogues and map descriptions to convey positions and locations accurately.",
+		"keywords": [
+			["Prepositions", "Locations", "Spatial", "Oral", "Descriptions"],
+			["නිපාත පද", "ස්ථාන", "අවකාශීය", "වාචික", "විස්තර"]
+		]
+	},
+	{
+		"id": "ENG-GR9-8.9",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "8.9",
+		"topic": "Oral Picture Description",
+		"learning_outcome": "Students will be able to orally describe a picture or a photograph using language appropriate for their age and level.",
+		"content_summary": "Practicing role plays and drilling activities to describe visual content with age-appropriate vocabulary.",
+		"keywords": [
+			["Picture Description", "Oral", "Vocabulary", "Drilling", "Observation"],
+			["රූප විස්තර කිරීම", "වාචික", "වචන මාලාව", "පුහුණුව", "නිරීක්ෂණය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-8.11",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "8.11",
+		"topic": "Describing Past Events",
+		"learning_outcome": "Students will be able to describe past events and actions properly.",
+		"content_summary": "Using past tense in itineraries, agendas, and telephone conversations to describe historical or recent events.",
+		"keywords": [
+			["Past Tense", "Events", "Itineraries", "Recalling", "Oral"],
+			["අතීත කාලය", "සිදුවීම්", "ගමන් විස්තර", "මතක් කිරීම", "වාචික"]
+		]
+	},
+	{
+		"id": "ENG-GR9-8.12",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "8.12",
+		"topic": "Inquiry Skills",
+		"learning_outcome": "Students will be able to use question words to get information.",
+		"content_summary": "Practicing information-gap activities and role plays using 'wh' questions to obtain real-world data.",
+		"keywords": [
+			["Questioning", "Information Gap", "Inquiry", "Dialogue", "Oral"],
+			["ප්‍රශ්න කිරීම", "තොරතුරු පරතරය", "විමසීම", "සංවාදය", "වාචික"]
+		]
+	},
+	{
+		"id": "ENG-GR9-8.13",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "8.13",
+		"topic": "Situational Language",
+		"learning_outcome": "Students will be able to use language orally in familiar contexts.",
+		"content_summary": "Engaging in role plays and improvisations for specific settings like a grocery, library, or railway station.",
+		"keywords": [
+			["Situational", "Context", "Role Play", "Improvisation", "Communication"],
+			["සන්දර්භෝචිත", "සන්දර්භය", "භූමිකා නිරූපණය", "ආශු කථනය", "සන්නිවේදනය"]
+		]
+	},
+	{
+		"id": "ENG-GR9-8.14",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "8.14",
+		"topic": "Future Plans",
+		"learning_outcome": "Students will be able to describe future events.",
+		"content_summary": "Describing upcoming plans, itineraries, and actions through drama and dialogues.",
+		"keywords": [
+			["Future Tense", "Plans", "Predictions", "Itinerary", "Oral"],
+			["අනාගත කාලය", "සැලසුම්", "අනාවැකි", "ගමන් විස්තරය", "වාචික"]
+		]
+	},
+	{
+		"id": "ENG-GR9-8.15",
+		"subject": "English",
+		"grade": 9,
+		"competency_level": "8.15",
+		"topic": "Telephone Etiquette",
+		"learning_outcome": "Students will be able to engage in telephone conversations using language appropriately.",
+		"content_summary": "Conducting telephone conversations for both personal and official purposes through pair work and role plays.",
+		"keywords": [
+			["Telephone", "Etiquette", "Dialogue", "Formal", "Informal"],
+			["දුරකථනය", "ආචාර ධර්ම", "සංවාදය", "නිල", "නිල නොවන"]
+		]
+	},
+	{
+		"id": "ENG-GR10-1.2",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "1.2",
+		"topic": "Reading Aloud",
+		"learning_outcome": "Students will be able to read aloud different types of texts accurately and meaningfully.",
+		"content_summary": "Helping students to read aloud various texts like tongue twisters, announcements (obituaries, events), dialogues, news, and role plays.",
+		"keywords": [
+			"Reading",
+			"Pronunciation",
+			"Fluency",
+			"Accuracy",
+			"Oral",
+			"කියවීම",
+			"උච්චාරණය",
+			"ප්‍රවාහය",
+			"නිවැරදිභාවය",
+			"වාචික"
+		]
+	},
+	{
+		"id": "ENG-GR10-1.4",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "1.4",
+		"topic": "Word Pronunciation",
+		"learning_outcome": "Students will be able to pronounce English words with different spelling combinations properly.",
+		"content_summary": "Pronouncing words with silent letters (knee, know), silent 'h' (honourable), and complex spellings (boutique, grotesque, foreign).",
+		"keywords": [
+			"Pronunciation",
+			"Spelling",
+			"Silent Letters",
+			"Phonetics",
+			"Vocabulary",
+			"උච්චාරණය",
+			"අක්ෂර වින්යාසය",
+			"නිහඬ අකුරු",
+			"ශබ්ද විද්යාව",
+			"පද මාලාව"
+		]
+	},
+	{
+		"id": "ENG-GR10-1.5",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "1.5",
+		"topic": "Sentence Intonation",
+		"learning_outcome": "Students will be able to pronounce – affirmatives, imperatives, interrogatives, negatives and question tags used in various situations.",
+		"content_summary": "Practicing pronunciation of different sentence types and question tags through listening, reading, and role-playing.",
+		"keywords": [
+			"Sentences",
+			"Intonation",
+			"Question Tags",
+			"Fluency",
+			"Grammar",
+			"වාක්‍ය",
+			"ස්වරය",
+			"ප්‍රශ්න ටැග්",
+			"ප්‍රවාහය",
+			"ව්‍යාකරණ"
+		]
+	},
+	{
+		"id": "ENG-GR10-2.7",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "2.7",
+		"topic": "Exclamation Marks",
+		"learning_outcome": "Students will be able to identify the places to use exclamation mark appropriately.",
+		"content_summary": "Identifying and using exclamation marks in exclamatory sentences, questions, expressions of surprise, and conventional wishes.",
+		"keywords": [
+			"Punctuation",
+			"Exclamation",
+			"Writing",
+			"Expression",
+			"Mechanics",
+			"විරාම ලකුණු",
+			"උද්ගාර ලකුණ",
+			"ලේඛනය",
+			"ප්‍රකාශනය",
+			"යාන්ත්‍ර විද්‍යාව"
+		]
+	},
+	{
+		"id": "ENG-GR10-3.3",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "3.3",
+		"topic": "Listening for Info",
+		"learning_outcome": "Students will be able to listen to various types of texts and find specific information.",
+		"content_summary": "Listening to dialogues, stories, and descriptions to extract specific details like names, dates, and locations.",
+		"keywords": [
+			"Listening",
+			"Comprehension",
+			"Information",
+			"Auditory",
+			"Scanning",
+			"සවන්දීම",
+			"අවබෝධය",
+			"තොරතුරු",
+			"ශ්‍රවණ",
+			"පරීක්ෂා කිරීම"
+		]
+	},
+	{
+		"id": "ENG-GR10-3.4",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "3.4",
+		"topic": "Information Transfer",
+		"learning_outcome": "Students will be able to listen to and transfer the needed information into other forms.",
+		"content_summary": "Listening to notices, notes, and letters to complete flow charts, draw pictures, or fill in grids.",
+		"keywords": [
+			"Transfer",
+			"Visuals",
+			"Flow Charts",
+			"Listening",
+			"Data",
+			"මාරු කිරීම",
+			"දෘශ්‍ය",
+			"ප්‍රස්ථාර",
+			"සවන්දීම",
+			"දත්ත"
+		]
+	},
+	{
+		"id": "ENG-GR10-3.5",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "3.5",
+		"topic": "Intonation/Stress",
+		"learning_outcome": "Students will be able to identify different intonation patterns and uses of word stress.",
+		"content_summary": "Identifying patterns of word stress in sentences to change the focus of meaning (e.g., Ayana played netball yesterday).",
+		"keywords": [
+			"Intonation",
+			"Stress",
+			"Rhythm",
+			"Meaning",
+			"Phonology",
+			"ස්වරය",
+			"අවධාරණය",
+			"රිද්මය",
+			"අර්ථය",
+			"ධ්වනි විද්යාව"
+		]
+	},
+	{
+		"id": "ENG-GR10-3.6",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "3.6",
+		"topic": "Reporting Oral Info",
+		"learning_outcome": "Students will be able to listen to and report information orally or in written form.",
+		"content_summary": "Listening to messages, announcements, and news articles to provide oral or written reports.",
+		"keywords": [
+			"Reporting",
+			"Listening",
+			"Oral",
+			"Written",
+			"Summarizing",
+			"වාර්තා කිරීම",
+			"සවන්දීම",
+			"වාචික",
+			"ලිඛිත",
+			"සාරාංශකරණය"
+		]
+	},
+	{
+		"id": "ENG-GR10-3.7",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "3.7",
+		"topic": "Discourse Markers",
+		"learning_outcome": "Students will be able to recognize discourse markers and guess the other part of the sentence.",
+		"content_summary": "Recognizing connectors such as 'However', 'Nevertheless', 'Therefore', 'But', and 'Anyway' in dialogues and news.",
+		"keywords": [
+			"Connectors",
+			"Cohesion",
+			"Discourse",
+			"Markers",
+			"Dialogue",
+			"සබැඳි",
+			"සම්බන්ධතාවය",
+			"කථනය",
+			"සලකුණු",
+			"සංවාද"
+		]
+	},
+	{
+		"id": "ENG-GR10-3.8",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "3.8",
+		"topic": "Note Taking",
+		"learning_outcome": "Students will be able to take notes from oral presentations.",
+		"content_summary": "Helping students to record key information from notices, letters, events, and recipes presented orally.",
+		"keywords": [
+			"Note-taking",
+			"Oral",
+			"Listening",
+			"Summarizing",
+			"Academic",
+			"සටහන් ගැනීම",
+			"වාචික",
+			"සවන්දීම",
+			"සාරාංශකරණය",
+			"අධ්යාපනික"
+		]
+	},
+	{
+		"id": "ENG-GR10-4.3",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "4.3",
+		"topic": "Synonyms/Antonyms",
+		"learning_outcome": "Students will be able to find synonyms and antonyms for given words.",
+		"content_summary": "Identifying word pairs such as achieve/accomplish (synonyms) and advance/retreat (antonyms) in various text types.",
+		"keywords": [
+			"Vocabulary",
+			"Synonyms",
+			"Antonyms",
+			"Semantics",
+			"Word Power",
+			"පද මාලාව",
+			"සමාන පද",
+			"විරුද්ධ පද",
+			"අර්ථ විද්යාව",
+			"වචන ශක්තිය"
+		]
+	},
+	{
+		"id": "ENG-GR10-4.4",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "4.4",
+		"topic": "Affixes",
+		"learning_outcome": "Students will be able to use affixes –ly, -fully, - ness, -tion, -sion, -ment, -ance - ous, - some to change the word class and the meaning of words.",
+		"content_summary": "Changing adjectives to nouns/adverbs and verbs to nouns using suffixes like -ness, -ment, and -tion.",
+		"keywords": [
+			"Suffixes",
+			"Word Class",
+			"Affixes",
+			"Grammar",
+			"Morphology",
+			"ප්රත්ය",
+			"පද මාලාව",
+			"වචන සැකැස්ම",
+			"ව්යාකරණ",
+			"රූප විද්යාව"
+		]
+	},
+	{
+		"id": "ENG-GR10-4.5",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "4.5",
+		"topic": "Plural Forms",
+		"learning_outcome": "Students will be able to identify the plural forms of nouns.",
+		"content_summary": "Identifying irregular and complex plural forms like erratum/errata, curriculum/curricula, and syllabus/syllabuses.",
+		"keywords": [
+			"Plurals",
+			"Nouns",
+			"Grammar",
+			"Irregular",
+			"Language",
+			"බහුවචන",
+			"නාම පද",
+			"ව්යාකරණ",
+			"අක්රමවත්",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR10-4.7",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "4.7",
+		"topic": "Word Usage",
+		"learning_outcome": "Students will be able to use nouns, verbs, adjectives and adverbs appropriately in a sentence.",
+		"content_summary": "Practicing the correct application of different word forms (e.g., imagine, imaginatively, imagination, imaginative) within sentences.",
+		"keywords": [
+			"Grammar",
+			"Nouns",
+			"Verbs",
+			"Adjectives",
+			"Adverbs",
+			"ව්යාකරණ",
+			"නාම පද",
+			"ක්රියා පද",
+			"නාමවිශේෂණ",
+			"ක්රියාවිශේෂණ"
+		]
+	},
+	{
+		"id": "ENG-GR10-4.8",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "4.8",
+		"topic": "Collective Nouns",
+		"learning_outcome": "Students will be able to use collective nouns and compound nouns appropriately in a sentence.",
+		"content_summary": "Using group nouns like 'Host of angels', 'Sheaf of arrows', and 'Board of directors' correctly in writing.",
+		"keywords": [
+			"Collective Nouns",
+			"Compound Nouns",
+			"Grammar",
+			"Syntax",
+			"Groups",
+			"සමූහ නාම",
+			"සංයුක්ත නාම",
+			"ව්යාකරණ",
+			"වාක්ය ව්යුහය",
+			"කණ්ඩායම්"
+		]
+	},
+	{
+		"id": "ENG-GR10-5.1",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "5.1",
+		"topic": "Visual Clues",
+		"learning_outcome": "Students will be able to read the picture given in each text book to derive the meaning of that particular text.",
+		"content_summary": "Using pictures and visual contextual clues to comprehend stories, poems, and advertisements containing unfamiliar words.",
+		"keywords": [
+			"Visuals",
+			"Inference",
+			"Context",
+			"Comprehension",
+			"Images",
+			"දෘශ්ය",
+			"අනුමානය",
+			"සන්දර්භය",
+			"අවබෝධය",
+			"රූප"
+		]
+	},
+	{
+		"id": "ENG-GR10-5.2",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "5.2",
+		"topic": "Specific Info Extraction",
+		"learning_outcome": "Students should be able to find specific information (names, dates, days, places etc. - what, when, where, who, which Qs) from various types of texts.",
+		"content_summary": "Extracting facts from formal/informal notices, letters, and descriptions of historical or religious places.",
+		"keywords": [
+			"Reading",
+			"Facts",
+			"Scanning",
+			"Comprehension",
+			"Information",
+			"කියවීම",
+			"කරුණු",
+			"පරීක්ෂා කිරීම",
+			"අවබෝධය",
+			"තොරතුරු"
+		]
+	},
+	{
+		"id": "ENG-GR10-5.3",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "5.3",
+		"topic": "Transferring Info",
+		"learning_outcome": "Students will be able to read and transfer the needed information into other forms.",
+		"content_summary": "Reading various text types to fill grids, complete flow charts, or draw maps/pictures.",
+		"keywords": [
+			"Reading",
+			"Transfer",
+			"Charts",
+			"Grids",
+			"Mapping",
+			"කියවීම",
+			"මාරු කිරීම",
+			"ප්රස්තාර",
+			"ග්රිඩ්",
+			"සිතියම්ගත කිරීම"
+		]
+	},
+	{
+		"id": "ENG-GR10-5.4",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "5.4",
+		"topic": "Poetry Response",
+		"learning_outcome": "Students will be able to identify the simple poetic techniques mentioned and express their ideas, feelings, emotions in simple sentences.",
+		"content_summary": "Understanding poetic language including visual/auditory imagery, metaphors, similes, and structure (stanzas/lines).",
+		"keywords": [
+			"Poetry",
+			"Metaphor",
+			"Simile",
+			"Imagery",
+			"Rhyme",
+			"කවි",
+			"රූපක",
+			"උපමා",
+			"දෘශ්ය රූප",
+			"රිද්මය"
+		]
+	},
+	{
+		"id": "ENG-GR10-5.5",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "5.5",
+		"topic": "Folk Stories",
+		"learning_outcome": "Students will be able to identify the characters, their dress, qualities, message expressed and express their ideas, feelings and emotions in simple sentences.",
+		"content_summary": "Reading extracts from famous stories like Jane Eyre, Oliver Twist, and Madoldoowa to analyze themes and characters.",
+		"keywords": [
+			"Literature",
+			"Stories",
+			"Characters",
+			"Theme",
+			"Folk tales",
+			"සාහිත්යය",
+			"කතා",
+			"චරිත",
+			"තේමාව",
+			"ජනකතා"
+		]
+	},
+	{
+		"id": "ENG-GR10-5.6",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "5.6",
+		"topic": "General Idea",
+		"learning_outcome": "Students will be able to extract the general idea of a text.",
+		"content_summary": "Reading notices, messages, and articles to match headings and identify the primary purpose of the text.",
+		"keywords": [
+			"Skimming",
+			"Main Idea",
+			"Gist",
+			"Comprehension",
+			"Reading",
+			"වේගයෙන් කියවීම",
+			"ප්රධාන අදහස",
+			"සාරාංශය",
+			"අවබෝධය",
+			"කියවීම"
+		]
+	},
+	{
+		"id": "ENG-GR10-5.7",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "5.7",
+		"topic": "Elided Information",
+		"learning_outcome": "Students will be able to infer elipted information in different types of texts.",
+		"content_summary": "Inferring omitted words in dialogues (e.g., 'So do I' meaning 'I too play cricket') and conversational responses.",
+		"keywords": [
+			"Inference",
+			"Dialogue",
+			"Ellipsis",
+			"Conversation",
+			"Reading",
+			"අනුමානය",
+			"සංවාද",
+			"අක්ෂර ලෝපය",
+			"සාකච්ඡාව",
+			"කියවීම"
+		]
+	},
+	{
+		"id": "ENG-GR10-5.8",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "5.8",
+		"topic": "Implied Meaning",
+		"learning_outcome": "Students will be able to infer given implied information in different types of texts.",
+		"content_summary": "Inferring meanings from idioms and phrases like 'beat about the bush', 'behind the scene', and 'butter someone up'.",
+		"keywords": [
+			"Idioms",
+			"Inference",
+			"Meaning",
+			"Metaphor",
+			"Reading",
+			"ප්රස්ථාව පිරුළු",
+			"අනුමානය",
+			"අර්ථය",
+			"රූපක",
+			"කියවීම"
+		]
+	},
+	{
+		"id": "ENG-GR10-5.9",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "5.9",
+		"topic": "Text Organization",
+		"learning_outcome": "Students will be able to recognize the organization of a text.",
+		"content_summary": "Understanding how authors organize information using narrative, description, exposition, and argument structures (beginning, middle, end).",
+		"keywords": [
+			"Structure",
+			"Narrative",
+			"Argument",
+			"Exposition",
+			"Sequence",
+			"ව්යුහය",
+			"කථනය",
+			"තර්කය",
+			"පැහැදිලි කිරීම",
+			"අනුපිළිවෙල"
+		]
+	},
+	{
+		"id": "ENG-GR10-6.1",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "6.1",
+		"topic": "Sentence Construction",
+		"learning_outcome": "Students will be able to construct simple sentences using various perfect and continuous tenses in Active and Passive voices.",
+		"content_summary": "Constructing sentences in Active Voice (Present/Past Perfect Continuous) and Passive Voice (Continuous and Perfect tenses).",
+		"keywords": [
+			"Grammar",
+			"Passive Voice",
+			"Tenses",
+			"Syntax",
+			"Verbs",
+			"ව්යාකරණ",
+			"කර්ම කාරකය",
+			"කාලය",
+			"වාක්ය ව්යුහය",
+			"ක්රියා පද"
+		]
+	},
+	{
+		"id": "ENG-GR10-6.2",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "6.2",
+		"topic": "Reciprocal Pronouns",
+		"learning_outcome": "Students will be able to use pronouns: each other, one another in sentences appropriately.",
+		"content_summary": "Practicing the use of reciprocal pronouns through multiple-choice questions and sentence completion activities.",
+		"keywords": [
+			"Pronouns",
+			"Reciprocal",
+			"Grammar",
+			"Syntax",
+			"Writing",
+			"සර්වනාම",
+			"අන්යෝන්ය",
+			"ව්යාකරණ",
+			"වාක්ය ව්යුහය",
+			"ලේඛනය"
+		]
+	},
+	{
+		"id": "ENG-GR10-6.3",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "6.3",
+		"topic": "Modal Verbs",
+		"learning_outcome": "Students will be able to use the modals; need and ought to in sentences appropriately.",
+		"content_summary": "Meaningful use of the modal verbs 'need' and 'ought to' in sentences, dialogues, and role plays.",
+		"keywords": [
+			"Modals",
+			"Auxiliary",
+			"Grammar",
+			"Syntax",
+			"Communication",
+			"මෝඩල්ස්",
+			"සහකාර ක්රියා",
+			"ව්යාකරණ",
+			"වාක්ය ව්යුහය",
+			"සන්නිවේදනය"
+		]
+	},
+	{
+		"id": "ENG-GR10-6.6",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "6.6",
+		"topic": "Adjective Usage",
+		"learning_outcome": "Students will be able to use adjectives appropriately to describe nouns.",
+		"content_summary": "Using adjectives (especially those formed with suffixes) to provide detailed descriptions of people and objects.",
+		"keywords": [
+			"Adjectives",
+			"Description",
+			"Nouns",
+			"Grammar",
+			"Vocabulary",
+			"නාමවිශේෂණ",
+			"විස්තරය",
+			"නාම පද",
+			"ව්යාකරණ",
+			"පද මාලාව"
+		]
+	},
+	{
+		"id": "ENG-GR10-6.7",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "6.7",
+		"topic": "Preposition Usage",
+		"learning_outcome": "Students will be able to use prepositions appropriately.",
+		"content_summary": "Using prepositions such as 'till', 'towards', 'since', 'within', 'beyond', 'against', and 'upon' in context.",
+		"keywords": [
+			"Prepositions",
+			"Grammar",
+			"Spatial",
+			"Temporal",
+			"Syntax",
+			"නිපාත පද",
+			"ව්යාකරණ",
+			"අවකාශීය",
+			"කාලීන",
+			"වාක්ය ව්යුහය"
+		]
+	},
+	{
+		"id": "ENG-GR10-6.8",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "6.8",
+		"topic": "Conjunction Usage",
+		"learning_outcome": "Students will be able to use conjunctions (co-ordinating conjunctions) appropriately.",
+		"content_summary": "Utilizing conjunctions like 'Though', 'although', 'in spite of', 'even though', 'whenever', and 'while' to join sentences.",
+		"keywords": [
+			"Conjunctions",
+			"Connectors",
+			"Cohesion",
+			"Grammar",
+			"Transitions",
+			"සමුච්චය පද",
+			"සබැඳි",
+			"සම්බන්ධතාවය",
+			"ව්යාකරණ",
+			"සංක්රාන්ති"
+		]
+	},
+	{
+		"id": "ENG-GR10-6.9",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "6.9",
+		"topic": "Adverb Usage",
+		"learning_outcome": "Students will be able to use adverbs appropriately.",
+		"content_summary": "Correctly applying adverbs (formed with suffixes) to modify verbs and adjectives in sentences.",
+		"keywords": [
+			"Adverbs",
+			"Modifiers",
+			"Grammar",
+			"Writing",
+			"Syntax",
+			"ක්රියාවිශේෂණ",
+			"විශේෂණ",
+			"ව්යාකරණ",
+			"ලේඛනය",
+			"වාක්ය ව්යුහය"
+		]
+	},
+	{
+		"id": "ENG-GR10-6.10",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "6.10",
+		"topic": "Conditional Types",
+		"learning_outcome": "Students will be able to identify the differences between ‘If’ type 1, ‘If’ type2 and ‘If’ type 3.",
+		"content_summary": "Learning the structures of conditional sentences, with specific focus on Type 3 (had had... would have passed).",
+		"keywords": [
+			"Conditionals",
+			"Hypothetical",
+			"If clauses",
+			"Grammar",
+			"Syntax",
+			"කොන්දේසි",
+			"ප්රවාදික",
+			"ඉෆ් වාක්ය",
+			"ව්යාකරණ",
+			"වාක්ය ව්යුහය"
+		]
+	},
+	{
+		"id": "ENG-GR10-6.11",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "6.11",
+		"topic": "Reported Speech",
+		"learning_outcome": "Students will be able to use indirect speech properly.",
+		"content_summary": "Understanding and applying the differences between direct and indirect speech in various contexts.",
+		"keywords": [
+			"Indirect Speech",
+			"Reported Speech",
+			"Grammar",
+			"Dialogue",
+			"Syntax",
+			"වක්ර කථනය",
+			"වාර්තාගත කථනය",
+			"ව්යාකරණ",
+			"සංවාද",
+			"වාක්ය ව්යුහය"
+		]
+	},
+	{
+		"id": "ENG-GR10-7.1",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "7.1",
+		"topic": "Descriptive Writing",
+		"learning_outcome": "Students will be able to write descriptions of people, animals, places and things (their physical features, qualities etc.)",
+		"content_summary": "Writing descriptive model essays focusing on the physical attributes and qualities of various subjects.",
+		"keywords": [
+			"Writing",
+			"Description",
+			"Essays",
+			"Adjectives",
+			"Composition",
+			"ලේඛනය",
+			"විස්තරය",
+			"රචනා",
+			"නාමවිශේෂණ",
+			"නිර්මාණය"
+		]
+	},
+	{
+		"id": "ENG-GR10-7.2",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "7.2",
+		"topic": "Picture Writing",
+		"learning_outcome": "Students will be able to describe photographs and pictures of historical and religious places, statues of Buddha, Goddess Saraswathi, Jesus and other deities and kings, national and religious festivals, world famous places, cartoon pictures.",
+		"content_summary": "Drafting written descriptions of photographs, cultural statues, and historical sites using provided models.",
+		"keywords": [
+			"Writing",
+			"Visuals",
+			"History",
+			"Culture",
+			"Composition",
+			"ලේඛනය",
+			"දෘශ්ය",
+			"ඉතිහාසය",
+			"සංස්කෘතිය",
+			"නිර්මාණය"
+		]
+	},
+	{
+		"id": "ENG-GR10-7.3",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "7.3",
+		"topic": "Personal Purposes",
+		"learning_outcome": "Students will be able to write invitations and other personals letters.",
+		"content_summary": "Drafting personal correspondence including model letters and formal/informal invitations.",
+		"keywords": [
+			"Letters",
+			"Invitations",
+			"Personal",
+			"Writing",
+			"Format",
+			"ලිපි",
+			"ආරාධනා",
+			"පුද්ගලික",
+			"ලේඛනය",
+			"ආකෘතිය"
+		]
+	},
+	{
+		"id": "ENG-GR10-7.4",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "7.4",
+		"topic": "Instructional Writing",
+		"learning_outcome": "Students will be able to write instructions appropriately.",
+		"content_summary": "Writing step-by-step instructions for daily activities, games, or processes using imperatives and numbering.",
+		"keywords": [
+			"Instructions",
+			"Process",
+			"Imperatives",
+			"Writing",
+			"Sequential",
+			"උපදෙස්",
+			"ක්රියාවලිය",
+			"විධාන",
+			"ලේඛනය",
+			"අනුපිළිවෙල"
+		]
+	},
+	{
+		"id": "ENG-GR10-7.6",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "7.6",
+		"topic": "Creative Poetry",
+		"learning_outcome": "Students will be able to write simple poems on places, people and festivals.",
+		"content_summary": "Writing original creative works including simple poems and stories based on model texts.",
+		"keywords": [
+			"Poetry",
+			"Creative Writing",
+			"Expression",
+			"Literature",
+			"Verse",
+			"කවි",
+			"නිර්මාණාත්මක ලේඛනය",
+			"ප්රකාශනය",
+			"සාහිත්යය",
+			"පද්ය"
+		]
+	},
+	{
+		"id": "ENG-GR10-7.7",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "7.7",
+		"topic": "Official Purposes",
+		"learning_outcome": "Students will be able to write for official purposes.",
+		"content_summary": "Drafting formal letters, applications, requests, apologies, and appreciation letters using correct layouts.",
+		"keywords": [
+			"Official Letters",
+			"Formal",
+			"Writing",
+			"Applications",
+			"Etiquette",
+			"රාජකාරි ලිපි",
+			"විධිමත්",
+			"ලේඛනය",
+			"අයදුම්පත්",
+			"ආචාරධර්ම"
+		]
+	},
+	{
+		"id": "ENG-GR10-7.9",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "7.9",
+		"topic": "Compositions",
+		"learning_outcome": "Students will be able to write compositions on sports, books, food, music, etc.",
+		"content_summary": "Writing structured compositions with an introduction, main body, and conclusion on various themes.",
+		"keywords": [
+			"Essays",
+			"Structure",
+			"Writing",
+			"Topics",
+			"Academic",
+			"රචනා",
+			"ව්යුහය",
+			"ලේඛනය",
+			"තේමාවන්",
+			"අධ්යාපනික"
+		]
+	},
+	{
+		"id": "ENG-GR10-8.3",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "8.3",
+		"topic": "Oral Descriptions",
+		"learning_outcome": "Students will be able to describe objects, animals, people (their physical features, qualities etc.) using simple sentence patterns.",
+		"content_summary": "Engaging in oral activities to describe the attributes and characteristics of different subjects clearly.",
+		"keywords": [
+			"Speaking",
+			"Oral",
+			"Description",
+			"Fluency",
+			"Attributes",
+			"කථා කිරීම",
+			"වාචික",
+			"විස්තරය",
+			"ප්රවාහය",
+			"ගුණාංග"
+		]
+	},
+	{
+		"id": "ENG-GR10-8.4",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "8.4",
+		"topic": "Familiar Topics",
+		"learning_outcome": "Students will be able to speak on familiar topics like sports, books, food, music, etc.",
+		"content_summary": "Participating in role plays and discussions focused on everyday interests and hobbies.",
+		"keywords": [
+			"Speaking",
+			"Interests",
+			"Role play",
+			"Communication",
+			"Fluency",
+			"කථා කිරීම",
+			"උනන්දුව",
+			"භූමිකා නිරූපණය",
+			"සන්නිවේදනය",
+			"ප්රවාහය"
+		]
+	},
+	{
+		"id": "ENG-GR10-8.9",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "8.9",
+		"topic": "Oral Visual Description",
+		"learning_outcome": "Students will be able to describe photographs and pictures of historical and religious places, statues of Buddha, Goddess Lakshmi, Jesus and other deities and kings, national and religious festivals, world famous places, cartoon pictures etc.",
+		"content_summary": "Orally describing cultural and historical images, using pictures and model descriptions as guides.",
+		"keywords": [
+			"Speaking",
+			"Visuals",
+			"History",
+			"Description",
+			"Oral",
+			"කථා කිරීම",
+			"දෘශ්ය",
+			"ඉතිහාසය",
+			"විස්තරය",
+			"වාචික"
+		]
+	},
+	{
+		"id": "ENG-GR10-8.11",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "8.11",
+		"topic": "Describing Past",
+		"learning_outcome": "Students will be able to describe past events and actions.",
+		"content_summary": "Using role plays to narrate historical events or past personal experiences using appropriate tenses.",
+		"keywords": [
+			"Speaking",
+			"Past Tense",
+			"Events",
+			"Narrative",
+			"Oral",
+			"කථා කිරීම",
+			"අතීත කාලය",
+			"සිදුවීම්",
+			"කථනය",
+			"වාචික"
+		]
+	},
+	{
+		"id": "ENG-GR10-8.12",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "8.12",
+		"topic": "Questioning Skills",
+		"learning_outcome": "Students will be able to get information using what, where, why, when, which, how many, how much, how often etc.",
+		"content_summary": "Practicing the use of 'wh' questions in role plays to gather specific information from others.",
+		"keywords": [
+			"Interrogatives",
+			"Speaking",
+			"Inquiry",
+			"Information",
+			"Dialogue",
+			"ප්රශ්න පද",
+			"කථා කිරීම",
+			"විමසීම",
+			"තොරතුරු",
+			"සංවාද"
+		]
+	},
+	{
+		"id": "ENG-GR10-8.13",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "8.13",
+		"topic": "Situational Language",
+		"learning_outcome": "Students will be able to use appropriate language in different situations. E.g. At the canteen, at the library, at a hospital, at an exhibition appropriately.",
+		"content_summary": "Using situational English in public contexts through role plays and interactive simulations.",
+		"keywords": [
+			"Speaking",
+			"Social",
+			"Context",
+			"Role play",
+			"Dialogue",
+			"කථා කිරීම",
+			"සමාජ",
+			"සන්දර්භය",
+			"භූමිකා නිරූපණය",
+			"සංවාද"
+		]
+	},
+	{
+		"id": "ENG-GR10-8.14",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "8.14",
+		"topic": "Describing Future",
+		"learning_outcome": "Students will be able to describe future events and actions.",
+		"content_summary": "Practicing oral descriptions of future plans and anticipated events through role plays.",
+		"keywords": [
+			"Speaking",
+			"Future Tense",
+			"Planning",
+			"Oral",
+			"Predictions",
+			"කථා කිරීම",
+			"අනාගත කාලය",
+			"සැළසුම් කිරීම",
+			"වාචික",
+			"අනාවැකි"
+		]
+	},
+	{
+		"id": "ENG-GR10-8.15",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "8.15",
+		"topic": "Telephone Skills",
+		"learning_outcome": "Students will be able to engage in telephone conversations using language appropriately.",
+		"content_summary": "Practicing telephone etiquette and dialogue through role-play scenarios.",
+		"keywords": [
+			"Speaking",
+			"Telephone",
+			"Etiquette",
+			"Dialogue",
+			"Communication",
+			"කථා කිරීම",
+			"දුරකථනය",
+			"ආචාරධර්ම",
+			"සංවාද",
+			"සන්නිවේදනය"
+		]
+	},
+	{
+		"id": "ENG-GR10-8.16",
+		"subject": "English",
+		"grade": 10,
+		"competency_level": "8.16",
+		"topic": "Oral Debates",
+		"learning_outcome": "Students will be able to engage in debates on current topics using language appropriately.",
+		"content_summary": "Arguing viewpoints on current social topics such as the internet, television, and vegetarian diets in a formal debate setting.",
+		"keywords": [
+			"Debate",
+			"Speaking",
+			"Argument",
+			"Critical Thinking",
+			"Persuasion",
+			"විවාදය",
+			"කථා කිරීම",
+			"තර්කය",
+			"විවේචනාත්මක චින්තනය",
+			"ප්රේරණය"
+		]
+	},
+	{
+		"id": "ENG-GR11-1.1",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "1.1",
+		"topic": "Proper Word Pronunciation",
+		"learning_outcome": "Students will be able to properly articulate commonly used English words they have come across so far.",
+		"content_summary": "Articulation of words with different spelling combinations and borrowings from other languages.",
+		"keywords": [
+			"Pronunciation",
+			"Articulation",
+			"Phonetics",
+			"Spelling",
+			"Borrowings",
+			"උච්චාරණය",
+			"ශබ්ද විද්‍යාව",
+			"අක්ෂර වින්‍යාසය",
+			"භාෂා කුසලතා",
+			"වචන"
+		]
+	},
+	{
+		"id": "ENG-GR11-1.2",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "1.2",
+		"topic": "Reading Aloud",
+		"learning_outcome": "Students will be able to properly articulate commonly used English words they have come across so far.",
+		"content_summary": "Reading aloud different types of texts accurately and meaningfully with correct articulation.",
+		"keywords": [
+			"Reading",
+			"Articulation",
+			"Fluency",
+			"Accuracy",
+			"Meaning",
+			"කියවීම",
+			"උච්චාරණය",
+			"අවබෝධය",
+			"සන්නිවේදනය",
+			"පැහැදිලිතාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-1.3",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "1.3",
+		"topic": "Phrase Articulation",
+		"learning_outcome": "Students will be able to articulate English words with different spelling combinations.",
+		"content_summary": "Articulation of words and phrases properly to bring out meaning in sentences.",
+		"keywords": [
+			"Phrases",
+			"Articulation",
+			"Spelling",
+			"Combinations",
+			"Language",
+			"වාක්‍යාංශ",
+			"උච්චාරණය",
+			"අක්ෂර",
+			"භාෂාව",
+			"සංයෝජනය"
+		]
+	},
+	{
+		"id": "ENG-GR11-1.4",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "1.4",
+		"topic": "Complex Spellings",
+		"learning_outcome": "Students will be able to articulate English words with different spelling combinations.",
+		"content_summary": "Pronouncing words with varying spelling combinations correctly, such as 'national' and 'crucial'.",
+		"keywords": [
+			"Spelling",
+			"Articulation",
+			"Phonology",
+			"Vocabulary",
+			"Complex",
+			"අක්ෂර වින්‍යාසය",
+			"ශබ්ද",
+			"වචන මාලාව",
+			"කුසලතා",
+			"උච්චාරණය"
+		]
+	},
+	{
+		"id": "ENG-GR11-1.5",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "1.5",
+		"topic": "Sentence Reading",
+		"learning_outcome": "Students will be able to recognize words when they appear in a sentence and read them out properly without difficulty.",
+		"content_summary": "Reading out sentences smoothly to convey the intended meaning accurately.",
+		"keywords": [
+			"Sentences",
+			"Reading",
+			"Recognition",
+			"Meaning",
+			"Smoothness",
+			"වාක්‍ය",
+			"කියවීම",
+			"හඳුනාගැනීම",
+			"අවබෝධය",
+			"පැහැදිලි"
+		]
+	},
+	{
+		"id": "ENG-GR11-2.1",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "2.1",
+		"topic": "Capitalization Rules",
+		"learning_outcome": "Students will be able to write sentences using proper mechanics of writing conforming to the accepted standards in writing.",
+		"content_summary": "Using capital and simple letters appropriately in sentences.",
+		"keywords": [
+			"Capitalization",
+			"Letters",
+			"Mechanics",
+			"Writing",
+			"Standards",
+			"අකුරු භාවිතය",
+			"ලිවීම",
+			"ව්‍යාකරණ",
+			"රීති",
+			"සම්මතය"
+		]
+	},
+	{
+		"id": "ENG-GR11-2.2",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "2.2",
+		"topic": "Full Stops",
+		"learning_outcome": "Students will be able to write sentences using proper mechanics of writing conforming to the accepted standards in writing.",
+		"content_summary": "Applying full stops appropriately to conclude sentences and abbreviations.",
+		"keywords": [
+			"Punctuation",
+			"Full Stop",
+			"Writing",
+			"Accuracy",
+			"Conventions",
+			"විරාම ලකුණු",
+			"නිමාව",
+			"ලිවීම",
+			"ක්‍රමවේදය",
+			"සම්මත"
+		]
+	},
+	{
+		"id": "ENG-GR11-2.3",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "2.3",
+		"topic": "Question Marks",
+		"learning_outcome": "Students will be able to write sentences using proper mechanics of writing conforming to the accepted standards in writing.",
+		"content_summary": "Using question marks appropriately in written interrogative forms.",
+		"keywords": [
+			"Interrogative",
+			"Question Mark",
+			"Punctuation",
+			"Writing",
+			"Mechanics",
+			"ප්‍රශ්නාර්ථය",
+			"විරාම ලකුණු",
+			"ලිවීම",
+			"වාක්‍ය",
+			"සම්මත"
+		]
+	},
+	{
+		"id": "ENG-GR11-2.4",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "2.4",
+		"topic": "Apostrophe Usage",
+		"learning_outcome": "Students will be able to write sentences using proper mechanics of writing conforming to the accepted standards in writing.",
+		"content_summary": "Using apostrophes appropriately for ownership and omission (e.g., Saman's, I'm).",
+		"keywords": [
+			"Apostrophe",
+			"Possession",
+			"Omission",
+			"Punctuation",
+			"Mechanics",
+			"උද්ධෘතය",
+			"අයිතිය",
+			"ලිවීම",
+			"අක්ෂර",
+			"විරාම ලකුණු"
+		]
+	},
+	{
+		"id": "ENG-GR11-2.5",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "2.5",
+		"topic": "Inverted Commas",
+		"learning_outcome": "Students will be able to write sentences using proper mechanics of writing conforming to the accepted standards in writing.",
+		"content_summary": "Using inverted commas to mark the beginning and end of direct speech.",
+		"keywords": [
+			"Direct Speech",
+			"Quotation",
+			"Inverted Commas",
+			"Dialogue",
+			"Mechanics",
+			"උධෘත ලකුණු",
+			"සංවාද",
+			"ලිවීම",
+			"රීති",
+			"විරාම ලකුණු"
+		]
+	},
+	{
+		"id": "ENG-GR11-2.6",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "2.6",
+		"topic": "Comma Usage",
+		"learning_outcome": "Students will be able to write sentences using proper mechanics of writing conforming to the accepted standards in writing.",
+		"content_summary": "Understanding the appropriate placement of commas in sentences.",
+		"keywords": [
+			"Comma",
+			"Punctuation",
+			"Writing",
+			"Clarity",
+			"Mechanics",
+			"කොමාව",
+			"විරාම ලකුණු",
+			"ලිවීම",
+			"වාක්‍ය",
+			"පැහැදිලිතාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-2.7",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "2.7",
+		"topic": "Exclamation Marks",
+		"learning_outcome": "Students will be able to write sentences using proper mechanics of writing conforming to the accepted standards in writing.",
+		"content_summary": "Using exclamation marks appropriately to convey strong emotion or emphasis.",
+		"keywords": [
+			"Exclamation",
+			"Emphasis",
+			"Punctuation",
+			"Writing",
+			"Tone",
+			"විස්මයාර්ථය",
+			"විරාම ලකුණු",
+			"ලිවීම",
+			"හැඟීම්",
+			"සම්මත"
+		]
+	},
+	{
+		"id": "ENG-GR11-3.1",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "3.1",
+		"topic": "Responding to Announcements",
+		"learning_outcome": "Students will be able to respond to spoken English language they listen to appropriately and accurately with confidence.",
+		"content_summary": "Listening and responding to simple school-level announcements correctly.",
+		"keywords": [
+			"Listening",
+			"Announcements",
+			"Response",
+			"Comprehension",
+			"Communication",
+			"ශ්‍රවණය",
+			"නිවේදන",
+			"සවන්දීම",
+			"අවබෝධය",
+			"සන්නිවේදනය"
+		]
+	},
+	{
+		"id": "ENG-GR11-3.2",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "3.2",
+		"topic": "Following Instructions",
+		"learning_outcome": "Students will be able to respond to spoken English language they listen to appropriately and accurately with confidence.",
+		"content_summary": "Listening and following oral instructions and requests accurately.",
+		"keywords": [
+			"Instructions",
+			"Listening",
+			"Execution",
+			"Requests",
+			"Activity",
+			"උපදෙස්",
+			"ශ්‍රවණය",
+			"සවන්දීම",
+			"ක්‍රියාකාරකම්",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-3.3",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "3.3",
+		"topic": "Listening to Simple Texts",
+		"learning_outcome": "Students will be able to respond to spoken English language they listen to appropriately and accurately with confidence.",
+		"content_summary": "Listening to and responding to different types of simple texts to identify intent.",
+		"keywords": [
+			"Listening",
+			"Texts",
+			"Intent",
+			"Comprehension",
+			"Language",
+			"ශ්‍රවණය",
+			"පෙළ",
+			"සවන්දීම",
+			"අවබෝධය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-3.4",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "3.4",
+		"topic": "Information Transfer",
+		"learning_outcome": "Students will be able to respond to spoken English language they listen to appropriately and accurately with confidence.",
+		"content_summary": "Transferring information identified in linear listening texts to non-linear forms.",
+		"keywords": [
+			"Information Transfer",
+			"Listening",
+			"Processing",
+			"Linear",
+			"Non-linear",
+			"තොරතුරු මාරුකිරීම",
+			"ශ්‍රවණය",
+			"දත්ත",
+			"විශ්ලේෂණය",
+			"සවන්දීම"
+		]
+	},
+	{
+		"id": "ENG-GR11-3.5",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "3.5",
+		"topic": "Intonation and Stress",
+		"learning_outcome": "Students will be able to respond to spoken English language they listen to appropriately and accurately with confidence.",
+		"content_summary": "Identifying different intonation patterns and uses of word stress in spoken English.",
+		"keywords": [
+			"Intonation",
+			"Word Stress",
+			"Phonetics",
+			"Listening",
+			"Patterns",
+			"උච්චාරණ විලාසය",
+			"තාලය",
+			"ශ්‍රවණය",
+			"සවන්දීම",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-3.6",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "3.6",
+		"topic": "Reporting Information",
+		"learning_outcome": "Students will be able to respond to spoken English language they listen to appropriately and accurately with confidence.",
+		"content_summary": "Listening to information and reporting it accurately in oral or written form.",
+		"keywords": [
+			"Reporting",
+			"Listening",
+			"Communication",
+			"Accuracy",
+			"Recall",
+			"වාර්තා කිරීම",
+			"ශ්‍රවණය",
+			"සන්නිවේදනය",
+			"සවන්දීම",
+			"තොරතුරු"
+		]
+	},
+	{
+		"id": "ENG-GR11-3.7",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "3.7",
+		"topic": "Discourse Markers",
+		"learning_outcome": "Students will be able to respond to spoken English language they listen to appropriately and accurately with confidence.",
+		"content_summary": "Recognizing discourse markers and identifying speaker intentions.",
+		"keywords": [
+			"Discourse Markers",
+			"Linguistics",
+			"Listening",
+			"Connectives",
+			"Comprehension",
+			"සම්බන්ධක වදන්",
+			"භාෂාව",
+			"ශ්‍රවණය",
+			"සවන්දීම",
+			"අවබෝධය"
+		]
+	},
+	{
+		"id": "ENG-GR11-3.8",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "3.8",
+		"topic": "Note Taking",
+		"learning_outcome": "Students will be able to respond to spoken English language they listen to appropriately and accurately with confidence.",
+		"content_summary": "Taking notes from oral presentations like dialogues, lectures, and debates.",
+		"keywords": [
+			"Note Taking",
+			"Listening",
+			"Summarizing",
+			"Presentations",
+			"Skills",
+			"සටහන් ගැනීම",
+			"ශ්‍රවණය",
+			"සාරාංශකරණය",
+			"සවන්දීම",
+			"අධ්‍යාපනය"
+		]
+	},
+	{
+		"id": "ENG-GR11-4.1",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "4.1",
+		"topic": "Gender Nouns",
+		"learning_outcome": "Students will be able to expand their vocabulary, both productive and receptive to use English language appropriately and accurately in any real life situation.",
+		"content_summary": "Using masculine and feminine forms of nouns appropriately (e.g., lion - lioness).",
+		"keywords": [
+			"Gender Nouns",
+			"Masculine",
+			"Feminine",
+			"Vocabulary",
+			"Grammar",
+			"ස්ත්‍රී පුරුෂ නාම",
+			"වචන මාලාව",
+			"භාෂාව",
+			"නාම පද",
+			"ව්‍යාකරණ"
+		]
+	},
+	{
+		"id": "ENG-GR11-4.2",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "4.2",
+		"topic": "Animal Young Ones",
+		"learning_outcome": "Students will be able to expand their vocabulary, both productive and receptive to use English language appropriately and accurately in any real life situation.",
+		"content_summary": "Using terms referring to young ones of animals appropriately (e.g., bear - cub).",
+		"keywords": [
+			"Animals",
+			"Young Ones",
+			"Vocabulary",
+			"Terms",
+			"Context",
+			"සතුන්",
+			"පැටවුන්",
+			"වචන මාලාව",
+			"භාෂාව",
+			"පද මාලාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-4.3",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "4.3",
+		"topic": "Synonyms and Antonyms",
+		"learning_outcome": "Students will be able to expand their vocabulary, both productive and receptive to use English language appropriately and accurately in any real life situation.",
+		"content_summary": "Finding and using synonyms and antonyms for given words in context.",
+		"keywords": [
+			"Synonyms",
+			"Antonyms",
+			"Vocabulary",
+			"Context",
+			"Thesaurus",
+			"සමාන පද",
+			"විරුද්ධ පද",
+			"වචන මාලාව",
+			"භාෂාව",
+			"අර්ථය"
+		]
+	},
+	{
+		"id": "ENG-GR11-4.4",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "4.4",
+		"topic": "Word Affixes",
+		"learning_outcome": "Students will be able to expand their vocabulary, both productive and receptive to use English language appropriately and accurately in any real life situation.",
+		"content_summary": "Using affixes (prefixes/suffixes) to change word class and meaning (e.g., brightness, judgment).",
+		"keywords": [
+			"Affixes",
+			"Prefixes",
+			"Suffixes",
+			"Word Class",
+			"Morphology",
+			"ප්‍රත්‍ය",
+			"උපසර්ග",
+			"වචන මාලාව",
+			"භාෂාව",
+			"නිෂ්පාදනය"
+		]
+	},
+	{
+		"id": "ENG-GR11-4.5",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "4.5",
+		"topic": "Pluralization Rules",
+		"learning_outcome": "Students will be able to expand their vocabulary, both productive and receptive to use English language appropriately and accurately in any real life situation.",
+		"content_summary": "Forming plurals of nouns including countable, uncountable, and irregular forms.",
+		"keywords": [
+			"Plurals",
+			"Nouns",
+			"Countable",
+			"Uncountable",
+			"Grammar",
+			"බහුවචන",
+			"නාම පද",
+			"ව්‍යාකරණ",
+			"භාෂාව",
+			"රීති"
+		]
+	},
+	{
+		"id": "ENG-GR11-4.6",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "4.6",
+		"topic": "Collective Nouns",
+		"learning_outcome": "Students will be able to expand their vocabulary, both productive and receptive to use English language appropriately and accurately in any real life situation.",
+		"content_summary": "Identifying and using collective nouns and compound nouns correctly.",
+		"keywords": [
+			"Collective Nouns",
+			"Compound Nouns",
+			"Vocabulary",
+			"Grouping",
+			"Identification",
+			"සමූහ වාචී නාම",
+			"සංයුක්ත නාම",
+			"වචන මාලාව",
+			"භාෂාව",
+			"නාම පද"
+		]
+	},
+	{
+		"id": "ENG-GR11-4.7",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "4.7",
+		"topic": "Parts of Speech",
+		"learning_outcome": "Students will be able to expand their vocabulary, both productive and receptive to use English language appropriately and accurately in any real life situation.",
+		"content_summary": "Using nouns, verbs, adjectives, and adverbs appropriately to convey precise meaning.",
+		"keywords": [
+			"Nouns",
+			"Verbs",
+			"Adjectives",
+			"Adverbs",
+			"Parts of Speech",
+			"නාම පද",
+			"ක්‍රියා පද",
+			"විශේෂණ පද",
+			"ක්‍රියා විශේෂණ",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-4.8",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "4.8",
+		"topic": "Precise Word Choice",
+		"learning_outcome": "Students will be able to expand their vocabulary, both productive and receptive to use English language appropriately and accurately in any real life situation.",
+		"content_summary": "Choosing the right word to make precise sense in both speaking and writing.",
+		"keywords": [
+			"Word Choice",
+			"Precision",
+			"Vocabulary",
+			"Semantics",
+			"Context",
+			"පද තෝරා ගැනීම",
+			"අර්ථය",
+			"වචන මාලාව",
+			"භාෂාව",
+			"නිවැරදි"
+		]
+	},
+	{
+		"id": "ENG-GR11-5.1",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "5.1",
+		"topic": "Visual Text Clues",
+		"learning_outcome": "Students will be able to locate necessary information and process such information accurately and appropriately to comprehend a reading text.",
+		"content_summary": "Using visual clues like context and pictures to derive the meaning of texts.",
+		"keywords": [
+			"Visual Clues",
+			"Reading",
+			"Inference",
+			"Context",
+			"Comprehension",
+			"දෘශ්‍ය ඉඟි",
+			"කියවීම",
+			"අවබෝධය",
+			"සන්දර්භය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-5.2",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "5.2",
+		"topic": "Specific Information Extraction",
+		"learning_outcome": "Students will be able to locate necessary information and process such information accurately and appropriately to comprehend a reading text.",
+		"content_summary": "Extracting specific information from various types of simple texts (names, dates, places).",
+		"keywords": [
+			"Extraction",
+			"Information",
+			"Reading",
+			"Scanning",
+			"Specifics",
+			"තොරතුරු උකහා ගැනීම",
+			"කියවීම",
+			"දත්ත",
+			"අවබෝධය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-5.3",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "5.3",
+		"topic": "Transferring Information",
+		"learning_outcome": "Students will be able to locate necessary information and process such information accurately and appropriately to comprehend a reading text.",
+		"content_summary": "Transferring information from reading texts into other forms like grids or charts.",
+		"keywords": [
+			"Information Transfer",
+			"Processing",
+			"Reading",
+			"Formatting",
+			"Organization",
+			"තොරතුරු මාරුකිරීම",
+			"කියවීම",
+			"සංවිධානය",
+			"දත්ත",
+			"අවබෝධය"
+		]
+	},
+	{
+		"id": "ENG-GR11-5.4",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "5.4",
+		"topic": "Poetry Response",
+		"learning_outcome": "Students will be able to locate necessary information and process such information accurately and appropriately to comprehend a reading text.",
+		"content_summary": "Reading and responding to simple poems, identifying imagery and rhyming words.",
+		"keywords": [
+			"Poetry",
+			"Imagery",
+			"Response",
+			"Literary Devices",
+			"Rhyme",
+			"කවි",
+			"කියවීම",
+			"රසවින්දනය",
+			"භාෂාව",
+			"අවබෝධය"
+		]
+	},
+	{
+		"id": "ENG-GR11-5.5",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "5.5",
+		"topic": "Folk Tales",
+		"learning_outcome": "Students will be able to locate necessary information and process such information accurately and appropriately to comprehend a reading text.",
+		"content_summary": "Reading and understanding simple folk tales and identifying characters and messages.",
+		"keywords": [
+			"Folk Tales",
+			"Literature",
+			"Narrative",
+			"Characters",
+			"Morals",
+			"ජනකතා",
+			"කියවීම",
+			"අවබෝධය",
+			"චරිත",
+			"පණිවිඩ"
+		]
+	},
+	{
+		"id": "ENG-GR11-5.6",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "5.6",
+		"topic": "General Idea Extraction",
+		"learning_outcome": "Students will be able to locate necessary information and process such information accurately and appropriately to comprehend a reading text.",
+		"content_summary": "Extracting the general idea or gist of a text through skimming.",
+		"keywords": [
+			"Skimming",
+			"Gist",
+			"Main Idea",
+			"Reading",
+			"Summary",
+			"ප්‍රධාන අදහස",
+			"කියවීම",
+			"සාරාංශය",
+			"අවබෝධය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-5.7",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "5.7",
+		"topic": "Implied Information",
+		"learning_outcome": "Students will be able to locate necessary information and process such information accurately and appropriately to comprehend a reading text.",
+		"content_summary": "Inferring implied meaning and elided information in different types of texts.",
+		"keywords": [
+			"Inference",
+			"Implied Meaning",
+			"Analysis",
+			"Reading",
+			"Logic",
+			"අනුමානය",
+			"කියවීම",
+			"අර්ථය",
+			"විශ්ලේෂණය",
+			"අවබෝධය"
+		]
+	},
+	{
+		"id": "ENG-GR11-5.8",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "5.8",
+		"topic": "Text Organization",
+		"learning_outcome": "Students will be able to locate necessary information and process such information accurately and appropriately to comprehend a reading text.",
+		"content_summary": "Recognizing the organization of a text (beginning, middle, and end).",
+		"keywords": [
+			"Text Structure",
+			"Organization",
+			"Reading",
+			"Sequencing",
+			"Cohesion",
+			"පෙළ සංවිධානය",
+			"කියවීම",
+			"ව්‍යුහය",
+			"අවබෝධය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-6.1",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "6.1",
+		"topic": "Sentence Construction",
+		"learning_outcome": "Students will be able to construct grammatically correct simple sentence both in writing and orally to express precise meaning.",
+		"content_summary": "Constructing simple sentences using Be-verbs, have, and there is/are in various forms.",
+		"keywords": [
+			"Grammar",
+			"Sentence Construction",
+			"Be-verbs",
+			"Tenses",
+			"Syntax",
+			"ව්‍යාකරණ",
+			"වාක්‍ය නිර්මාණය",
+			"කාල",
+			"භාෂාව",
+			"රීති"
+		]
+	},
+	{
+		"id": "ENG-GR11-6.2",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "6.2",
+		"topic": "Pronoun Usage",
+		"learning_outcome": "Students will be able to use pronouns appropriately when producing language in different contexts.",
+		"content_summary": "Using subject, object, possessive, and reflexive pronouns correctly in sentences.",
+		"keywords": [
+			"Pronouns",
+			"Possessive",
+			"Reflexive",
+			"Grammar",
+			"Context",
+			"සර්වනාම",
+			"ව්‍යාකරණ",
+			"භාෂාව",
+			"නිවැරදි භාවිතය",
+			"සන්දර්භය"
+		]
+	},
+	{
+		"id": "ENG-GR11-6.3",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "6.3",
+		"topic": "Modal Verbs",
+		"learning_outcome": "Students will be able to express ideas precisely using modals appropriately and accurately.",
+		"content_summary": "Using modals like may, can, must, should, and would appropriately.",
+		"keywords": [
+			"Modals",
+			"Verbs",
+			"Grammar",
+			"Possibility",
+			"Permission",
+			"ආධාරක ක්‍රියා",
+			"ව්‍යාකරණ",
+			"භාෂාව",
+			"හැකියාව",
+			"අවසරය"
+		]
+	},
+	{
+		"id": "ENG-GR11-6.4",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "6.4",
+		"topic": "Determiners",
+		"learning_outcome": "Students will be able to use determiners appropriately in pre modification.",
+		"content_summary": "Using articles and other determiners properly for noun pre-modification.",
+		"keywords": [
+			"Determiners",
+			"Articles",
+			"Grammar",
+			"Modification",
+			"Nouns",
+			"නිශ්චය පද",
+			"ව්‍යාකරණ",
+			"භාෂාව",
+			"නාම පද",
+			"රීති"
+		]
+	},
+	{
+		"id": "ENG-GR11-6.5",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "6.5",
+		"topic": "Contracted Forms",
+		"learning_outcome": "Students will be able to use the contracted forms accurately in proper contexts.",
+		"content_summary": "Understanding and using contracted forms correctly in oral and written contexts.",
+		"keywords": [
+			"Contractions",
+			"Grammar",
+			"Oral English",
+			"Writing",
+			"Informal",
+			"කෙටි යෙදුම්",
+			"ව්‍යාකරණ",
+			"භාෂාව",
+			"සන්නිවේදනය",
+			"සන්දර්භය"
+		]
+	},
+	{
+		"id": "ENG-GR11-6.6",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "6.6",
+		"topic": "Adjective Usage",
+		"learning_outcome": "Students will be able to identify the deference between adjectives and determiners.",
+		"content_summary": "Using adjectives properly in attributive and predicative functions, including comparatives.",
+		"keywords": [
+			"Adjectives",
+			"Comparatives",
+			"Superlatives",
+			"Grammar",
+			"Descriptors",
+			"විශේෂණ පද",
+			"ව්‍යාකරණ",
+			"භාෂාව",
+			"සසඳා බැලීම",
+			"ගුණාංග"
+		]
+	},
+	{
+		"id": "ENG-GR11-6.7",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "6.7",
+		"topic": "Preposition Usage",
+		"learning_outcome": "Students will be able to use prepositions to bring out precise meaning conforming to the conventions of using prepositions.",
+		"content_summary": "Using prepositions accurately to describe position, time, and direction.",
+		"keywords": [
+			"Prepositions",
+			"Position",
+			"Time",
+			"Direction",
+			"Grammar",
+			"නිපාත පද",
+			"ස්ථානය",
+			"කාලය",
+			"ව්‍යාකරණ",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-6.8",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "6.8",
+		"topic": "Conjunctions",
+		"learning_outcome": "Students will be able to write and speak compound and complex sentences to express precise meaning.",
+		"content_summary": "Using conjunctions appropriately to join nouns, adjectives, and sentences.",
+		"keywords": [
+			"Conjunctions",
+			"Sentence Joining",
+			"Grammar",
+			"Complex Sentences",
+			"Logic",
+			"සම්බන්ධක පද",
+			"ව්‍යාකරණ",
+			"භාෂාව",
+			"සංයුක්ත වාක්‍ය",
+			"සම්බන්ධය"
+		]
+	},
+	{
+		"id": "ENG-GR11-6.9",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "6.9",
+		"topic": "Adverb Usage",
+		"learning_outcome": "Students will be able to use adverbs accurately to convey precise meaning.",
+		"content_summary": "Using adverbs correctly to describe verbs and signify frequency.",
+		"keywords": [
+			"Adverbs",
+			"Frequency",
+			"Grammar",
+			"Description",
+			"Verbs",
+			"ක්‍රියා විශේෂණ",
+			"ව්‍යාකරණ",
+			"භාෂාව",
+			"විස්තරය",
+			"ක්‍රියාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-6.10",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "6.10",
+		"topic": "Conditional Clauses",
+		"learning_outcome": "Students will be able to express ideas logically and rationally.",
+		"content_summary": "Identifying differences and using 'If' clauses (Type 1, 2, and 3) correctly.",
+		"keywords": [
+			"Conditional Clauses",
+			"If Clauses",
+			"Grammar",
+			"Hypothetical",
+			"Logic",
+			"කොන්දේසි සහිත වාක්‍ය",
+			"ව්‍යාකරණ",
+			"භාෂාව",
+			"තර්කනය",
+			"රීති"
+		]
+	},
+	{
+		"id": "ENG-GR11-6.11",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "6.11",
+		"topic": "Reported Speech",
+		"learning_outcome": "Students will be able to report what others say accurately.",
+		"content_summary": "Understanding differences between direct and indirect speech and applying them accurately.",
+		"keywords": [
+			"Reported Speech",
+			"Indirect Speech",
+			"Direct Speech",
+			"Grammar",
+			"Reporting",
+			"අන්‍යෝක්ති",
+			"ව්‍යාකරණ",
+			"භාෂාව",
+			"සන්නිවේදනය",
+			"ප්‍රකාශ"
+		]
+	},
+	{
+		"id": "ENG-GR11-7.1",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "7.1",
+		"topic": "Written Descriptions",
+		"learning_outcome": "Students will be able to engage in a variety of writing activities ranging from short descriptions to compositions to suit the age.",
+		"content_summary": "Writing detailed descriptions of people, animals, places, and things.",
+		"keywords": [
+			"Descriptions",
+			"Creative Writing",
+			"Composition",
+			"Expression",
+			"Vocabulary",
+			"විස්තරාත්මක ලිවීම",
+			"නිර්මාණශීලී",
+			"භාෂාව",
+			"රචනා",
+			"විස්තරය"
+		]
+	},
+	{
+		"id": "ENG-GR11-7.2",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "7.2",
+		"topic": "Picture Description",
+		"learning_outcome": "Students will be able to engage in a variety of writing activities ranging from short descriptions to compositions to suit the age.",
+		"content_summary": "Describing photographs and pictures accurately in written form.",
+		"keywords": [
+			"Pictures",
+			"Descriptions",
+			"Writing",
+			"Observation",
+			"Detail",
+			"පින්තූර විස්තරය",
+			"ලිවීම",
+			"නිරීක්ෂණය",
+			"භාෂාව",
+			"විස්තරය"
+		]
+	},
+	{
+		"id": "ENG-GR11-7.3",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "7.3",
+		"topic": "Personal Writing",
+		"learning_outcome": "Students will be able to engage in a variety of writing activities ranging from short descriptions to compositions to suit the age.",
+		"content_summary": "Writing for personal purposes, such as letters to friends and invitations.",
+		"keywords": [
+			"Personal Writing",
+			"Letters",
+			"Invitations",
+			"Correspondence",
+			"Informal",
+			"පෞද්ගලික ලිපි",
+			"ආරාධනා පත්‍ර",
+			"ලිවීම",
+			"සන්නිවේදනය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-7.4",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "7.4",
+		"topic": "Writing Instructions",
+		"learning_outcome": "Students will be able to engage in a variety of writing activities ranging from short descriptions to compositions to suit the age.",
+		"content_summary": "Writing clear instructions for tasks (e.g., recipes, making a mask).",
+		"keywords": [
+			"Instructions",
+			"Process",
+			"Writing",
+			"Clarity",
+			"Steps",
+			"උපදෙස් ලිවීම",
+			"ක්‍රියාවලිය",
+			"ලිවීම",
+			"පැහැදිලිතාව",
+			"පියවර"
+		]
+	},
+	{
+		"id": "ENG-GR11-7.5",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "7.5",
+		"topic": "Simple Compositions",
+		"learning_outcome": "Students will be able to face the writing tasks of the national level examination with confidence and understanding.",
+		"content_summary": "Writing simple compositions on various topics like sports, food, and historical places.",
+		"keywords": [
+			"Composition",
+			"Essays",
+			"Writing",
+			"Examination",
+			"Topics",
+			"රචනා",
+			"ලිවීම",
+			"විභාග",
+			"අධ්‍යාපනය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-7.6",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "7.6",
+		"topic": "Creative Writing",
+		"learning_outcome": "Students will be able to face the writing tasks of the national level examination with confidence and understanding.",
+		"content_summary": "Writing simple poems and stories creatively.",
+		"keywords": [
+			"Poems",
+			"Stories",
+			"Creative Writing",
+			"Imagination",
+			"Literature",
+			"කවි",
+			"කතා",
+			"නිර්මාණශීලී ලිවීම",
+			"කල්පනාව",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-7.7",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "7.7",
+		"topic": "Official Writing",
+		"learning_outcome": "Students will be able to face the writing tasks of the national level examination with confidence and understanding.",
+		"content_summary": "Writing for official purposes, including applications and formal requests.",
+		"keywords": [
+			"Official Writing",
+			"Applications",
+			"Formal",
+			"Business English",
+			"Communication",
+			"නිල ලිපි",
+			"අයදුම්පත්",
+			"විධිමත්",
+			"සන්නිවේදනය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-7.8",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "7.8",
+		"topic": "Structured Compositions",
+		"learning_outcome": "Students will be able to face the writing tasks of the national level examination with confidence and understanding.",
+		"content_summary": "Formulating structured compositions adequate for national examination standards.",
+		"keywords": [
+			"Composition",
+			"Structure",
+			"Writing",
+			"Examination",
+			"Skills",
+			"රචනා ලිවීම",
+			"ව්‍යුහය",
+			"ලිවීම",
+			"විභාගය",
+			"කුසලතා"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.1",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.1",
+		"topic": "Self Introduction",
+		"learning_outcome": "Students should be able to evaluate their own strengths and weaknesses in effective communication.",
+		"content_summary": "Introducing oneself with personal details like name, age, and hobbies.",
+		"keywords": [
+			"Introduction",
+			"Speaking",
+			"Personal Info",
+			"Communication",
+			"Fluency",
+			"තමන්ව හඳුන්වා දීම",
+			"කථනය",
+			"සන්නිවේදනය",
+			"විස්තර",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.2",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.2",
+		"topic": "Social Expressions",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Using expressions for greeting, thanking, affirming, and denying in social contexts.",
+		"keywords": [
+			"Greetings",
+			"Etiquette",
+			"Social Skills",
+			"Speaking",
+			"Interaction",
+			"සමාජීය ප්‍රකාශන",
+			"ආචාරශීලී",
+			"සන්නිවේදනය",
+			"සංවාද",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.3",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.3",
+		"topic": "Oral Description",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Describing people, animals, and objects orally using simple sentence patterns.",
+		"keywords": [
+			"Description",
+			"Speaking",
+			"Sentence Patterns",
+			"Oral Skills",
+			"Expression",
+			"මෞඛික විස්තරය",
+			"කථනය",
+			"සන්නිවේදනය",
+			"වාක්‍ය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.4",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.4",
+		"topic": "Familiar Topics",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Speaking confidently on familiar topics like sports, food, and interesting news.",
+		"keywords": [
+			"Speaking",
+			"Fluency",
+			"Confidence",
+			"Topics",
+			"Communication",
+			"කථනය",
+			"සන්නිවේදනය",
+			"විශ්වාසය",
+			"මාතෘකා",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.5",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.5",
+		"topic": "Adjective Use in Speech",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Describing things in the immediate surroundings using appropriate adjectives.",
+		"keywords": [
+			"Adjectives",
+			"Speaking",
+			"Environment",
+			"Vocabulary",
+			"Description",
+			"විශේෂණ පද",
+			"කථනය",
+			"පරිසරය",
+			"වචන මාලාව",
+			"සන්නිවේදනය"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.6",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.6",
+		"topic": "Ability and Possibility",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Using simple structures like 'can' and 'may' to show ability and possibility.",
+		"keywords": [
+			"Modals",
+			"Ability",
+			"Possibility",
+			"Speaking",
+			"Grammar",
+			"හැකියාව",
+			"අවස්ථාව",
+			"කථනය",
+			"ව්‍යාකරණ",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.7",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.7",
+		"topic": "Asking for Information",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Asking for and getting personal information from others appropriately.",
+		"keywords": [
+			"Questioning",
+			"Information",
+			"Interaction",
+			"Speaking",
+			"Dialogue",
+			"තොරතුරු විමසීම",
+			"සංවාද",
+			"කථනය",
+			"සන්නිවේදනය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.8",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.8",
+		"topic": "Position Description",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Describing the position of things accurately using prepositions orally.",
+		"keywords": [
+			"Prepositions",
+			"Position",
+			"Speaking",
+			"Accuracy",
+			"Spatial",
+			"ස්ථානය විස්තර කිරීම",
+			"නිපාත පද",
+			"කථනය",
+			"භාෂාව",
+			"සන්නිවේදනය"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.9",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.9",
+		"topic": "Oral Picture Description",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Describing photographs and pictures orally in various social contexts.",
+		"keywords": [
+			"Pictures",
+			"Speaking",
+			"Observation",
+			"Visuals",
+			"Description",
+			"පින්තූර විස්තරය",
+			"මෞඛික",
+			"කථනය",
+			"සන්නිවේදනය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.10",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.10",
+		"topic": "Daily Routine",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Speaking about daily actions and personal routines clearly.",
+		"keywords": [
+			"Daily Routine",
+			"Speaking",
+			"Verbs",
+			"Fluency",
+			"Habits",
+			"දෛනික චර්යාව",
+			"කථනය",
+			"ක්‍රියා පද",
+			"සන්නිවේදනය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.11",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.11",
+		"topic": "Past Events",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Describing past events and actions properly using past tenses.",
+		"keywords": [
+			"Past Tense",
+			"Events",
+			"Speaking",
+			"Narrative",
+			"History",
+			"අතීත සිදුවීම්",
+			"කථනය",
+			"කාලය",
+			"සන්නිවේදනය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.12",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.12",
+		"topic": "Using Question Words",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Using question words (what, when, where, why, etc.) orally to get information.",
+		"keywords": [
+			"Question Words",
+			"Inquiry",
+			"Speaking",
+			"Interaction",
+			"Grammar",
+			"ප්‍රශ්න පද",
+			"කථනය",
+			"විමසීම",
+			"සන්නිවේදනය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.13",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.13",
+		"topic": "Contextual Language",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Using appropriate language in a variety of contexts like the supermarket or hospital.",
+		"keywords": [
+			"Context",
+			"Situational English",
+			"Speaking",
+			"Interaction",
+			"Vocabulary",
+			"සන්දර්භය",
+			"කථනය",
+			"සන්නිවේදනය",
+			"භාෂාව",
+			"අධ්‍යාපනය"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.14",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.14",
+		"topic": "Continuing Actions",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Describing continuing actions using present, past, and future continuous forms.",
+		"keywords": [
+			"Continuous Tense",
+			"Speaking",
+			"Actions",
+			"Grammar",
+			"Description",
+			"පවතින ක්‍රියාවන්",
+			"කථනය",
+			"කාලය",
+			"ව්‍යාකරණ",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.15",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.15",
+		"topic": "Perfect Tense Speech",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Expressing personal experiences and immediately completed actions using perfect tense.",
+		"keywords": [
+			"Perfect Tense",
+			"Experiences",
+			"Speaking",
+			"Recall",
+			"Grammar",
+			"කර්තෘ කාරක",
+			"කථනය",
+			"අත්දැකීම්",
+			"සන්නිවේදනය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.16",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.16",
+		"topic": "Future Events",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Describing future events and planned actions properly.",
+		"keywords": [
+			"Future Tense",
+			"Planning",
+			"Speaking",
+			"Predictions",
+			"Events",
+			"අනාගත සිදුවීම්",
+			"කථනය",
+			"සැලසුම්",
+			"සන්නිවේදනය",
+			"භාෂාව"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.17",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.17",
+		"topic": "Telephone Conversations",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Engaging in telephone conversations using language appropriately and politely.",
+		"keywords": [
+			"Telephone",
+			"Communication",
+			"Politeness",
+			"Speaking",
+			"Interaction",
+			"දුරකථන සංවාද",
+			"කථනය",
+			"සන්නිවේදනය",
+			"භාෂාව",
+			"ආචාරශීලී"
+		]
+	},
+	{
+		"id": "ENG-GR11-8.18",
+		"subject": "English",
+		"grade": 11,
+		"competency_level": "8.18",
+		"topic": "Engaging in Debates",
+		"learning_outcome": "Students will be able to demonstrate a better ability in communication using English as a second language.",
+		"content_summary": "Engaging in debates on current topics like diet, internet, and school rules.",
+		"keywords": [
+			"Debates",
+			"Argumentation",
+			"Speaking",
+			"Public Speaking",
+			"Communication",
+			"විවාද",
+			"කථනය",
+			"සන්නිවේදනය",
+			"තර්කනය",
+			"භාෂාව"
+		]
+	}
+]
