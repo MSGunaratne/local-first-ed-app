@@ -1,0 +1,56 @@
+# Tech Stack
+
+- **Framework**: TanStack Start (Next.js-like full-stack framework on top of TanStack Router)
+- **Router**: TanStack Router (File-based routing in `src/routes`)
+- **Data Fetching**: TanStack Query
+- **UI library**: Shadcn UI + Tailwind CSS v4
+- **Database**: Drizzle ORM + Better SQLite3
+- **Validation**: Zod v4 (Use `zod` for all schema validation)
+- **Authentication**: Better Auth
+- **Forms**: TanStack Form (`@tanstack/react-form`)
+- **Tooling**: Biome (Linting & Formatting)
+
+# Architecture & Project Structure
+
+- **Vertical Slice Architecture**: Organize complex domains in `src/features/<feature-name>`.
+  - Structure: `components/`, `server/` (functions), `types/`, `utils/`, `*.queries.ts`.
+- **Shared UI**: Reusable generic components go in `src/components/ui`.
+- **Routes**: All pages are defined in `src/routes`. Use `createFileRoute` for type safety.
+- **Server Functions**: Use `createServerFn` from `@tanstack/start` for API-like logic.
+
+# UI & Design Principles
+
+- **Aesthetic Skill**: Follow the [frontend-design](https://github.com/anthropics/claude-code/blob/main/plugins/frontend-design/skills/frontend-design/SKILL.md) skill for all UI work.
+- **Styling**:
+  - Use Tailwind CSS v4 classes for the engine.
+  - Define theme variables in `src/styles.css` using `@theme inline`.
+  - Use `clsx` and `tailwind-merge` (via `cn` helper) for dynamic styles.
+- **Typography & Layout**: Prioritize high-impact typography and unique spatial compositions (asymmetry/negative space).
+
+# Coding Standards
+
+- **Imports**: Use `@/` alias for all internal imports.
+- **Exports**: Use **Named Exports** (`export function MyComponent`) for everything.
+- **Type Safety**: NO `any`. Use strict Zod schemas for all API inputs/outputs. Export types from `types/` files if they are large.
+
+# Specialized Patterns
+
+## Data Fetching (TanStack Query)
+
+- **Factories**: Define query/mutation options in `[feature].queries.ts`.
+- **Global Feedback**: The `query-client.ts` handles toasts and invalidation via `meta` (successMessage, errorMessage, invalidates).
+
+## Forms (TanStack Form)
+
+- **Field Pattern**: Always use `<form.AppField>` (nested children) for type inference.
+  - _Correct:_ `<form.AppField name="foo">{() => <TextField />}</form.AppField>`
+- **Reference**: Follow patterns in `src/components/form/field-components.tsx`.
+- **Validation**: Always try to define form/input validation in the feature module's schema file (`src/features/[module]/[module].schema.ts`) using `drizzle-zod`.
+  - Use `createInsertSchema` to derive Zod schemas from Drizzle tables.
+  - References: `src/features/users/users.schema.ts`, `src/features/lessons/lessons.schema.ts`.
+
+# Tooling & Maintenance
+
+- **Formatting**: Biome (Tabs, Double quotes). Run `pnpm format` to resolve issues.
+- **Components**: Add via `pnpm dlx shadcn@latest add <component-name>`.
+- **Type Errors**: If TanStack Form properties are missing, run `pnpm run typecheck` to see the full error.
