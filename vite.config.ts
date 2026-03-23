@@ -2,12 +2,11 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
-
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-
 import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { workboxServiceWorkerPlugin } from "./scripts/vite-plugin-workbox-sw";
 
 const config = defineConfig({
 	plugins: [
@@ -21,6 +20,7 @@ const config = defineConfig({
 		tsconfigPaths({ projects: ["./tsconfig.json"] }),
 		tailwindcss(),
 		tanstackStart(),
+		workboxServiceWorkerPlugin(),
 		viteReact({
 			babel: {
 				plugins: ["babel-plugin-react-compiler"],

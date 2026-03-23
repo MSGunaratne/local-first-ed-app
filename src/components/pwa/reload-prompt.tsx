@@ -9,13 +9,9 @@ function useServiceWorker() {
 	const [needRefresh, setNeedRefresh] = useState(false);
 	const [offlineReady, setOfflineReady] = useState(false);
 
-	// Use explicit any or unknown for the ref initially to avoid import issues,
-	// or rely on type import if it works.
-	// Since we are dynamically importing, we can't use 'typeof Workbox' effectively
-	// without the value import.
-	// We'll trust the type import works for the instance type.
 	const wbRef = useRef<Workbox | null>(null);
 	const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
+	const updateIntervalRef = useRef<number | null>(null);
 
 	const updateServiceWorker = useCallback(async () => {
 		const wb = wbRef.current;
@@ -30,7 +26,6 @@ function useServiceWorker() {
 	}, []);
 
 	useEffect(() => {
-		// Only run on client
 		if (
 			typeof window === "undefined" ||
 			!("serviceWorker" in navigator) ||
@@ -38,58 +33,77 @@ function useServiceWorker() {
 		) {
 			return;
 		}
+		let cancelled = false;
 
-		// Dynamically import Workbox to avoid SSR/build issues
-		import("workbox-window").then(({ Workbox }) => {
-			const wb = new Workbox("/sw.js");
-			wbRef.current = wb;
+		const registerServiceWorker = async () => {
+			try {
+				const { Workbox } = await import("workbox-window");
 
-			// SW installed for the first time (offline ready)
-			wb.addEventListener("installed", (event) => {
-				if (!event.isUpdate) {
-					setOfflineReady(true);
+				if (cancelled) {
+					return;
 				}
-			});
 
-			// New SW waiting to activate (update available)
-			wb.addEventListener("waiting", () => {
-				setNeedRefresh(true);
-			});
+				const wb = new Workbox("/sw.js");
+				wbRef.current = wb;
 
-			// SW is controlling the page
-			wb.addEventListener("controlling", () => {
-				// Reload the page for the new SW to take effect
-				window.location.reload();
-			});
-
-			// Log registration
-			wb.addEventListener("activated", (event) => {
-				console.log(
-					"SW activated:",
-					event.isUpdate ? "updated" : "first install",
-				);
-			});
-
-			// Register the SW
-			wb.register().then((registration) => {
-				if (registration) {
-					registrationRef.current = registration;
-
-					// Check if there's already a waiting SW
-					if (registration.waiting) {
-						setNeedRefresh(true);
+				wb.addEventListener("installed", (event) => {
+					if (!event.isUpdate) {
+						setOfflineReady(true);
 					}
+				});
 
-					// Set up periodic update checks (every hour)
-					setInterval(() => {
-						registration.update();
-					}, UPDATE_INTERVAL_MS);
+				wb.addEventListener("waiting", () => {
+					setNeedRefresh(true);
+				});
+
+				wb.addEventListener("controlling", () => {
+					window.location.reload();
+				});
+
+				wb.addEventListener("activated", (event) => {
+					console.log(
+						"SW activated:",
+						event.isUpdate ? "updated" : "first install",
+					);
+				});
+
+				const registration = await wb.register();
+
+				if (cancelled || !registration) {
+					return;
 				}
-			});
-		});
+
+				registrationRef.current = registration;
+
+				if (registration.waiting) {
+					setNeedRefresh(true);
+				}
+
+				updateIntervalRef.current = window.setInterval(() => {
+					registration.update().catch((error: unknown) => {
+						console.error("Service worker update check failed:", error);
+					});
+				}, UPDATE_INTERVAL_MS);
+			} catch (error) {
+				console.error("Service worker registration failed:", error);
+				toast.error("Offline support is unavailable right now.", {
+					description:
+						"The app will keep working, but offline updates are disabled.",
+				});
+			}
+		};
+
+		void registerServiceWorker();
 
 		return () => {
+			cancelled = true;
+			if (updateIntervalRef.current) {
+				window.clearInterval(updateIntervalRef.current);
+				updateIntervalRef.current = null;
+			}
+
 			wbRef.current = null;
+			registrationRef.current = null;
 		};
 	}, []);
 

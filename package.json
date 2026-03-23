@@ -7,8 +7,7 @@
   },
   "scripts": {
     "dev": "vite dev --port 3000",
-    "build": "vite build",
-    "generate-sw": "tsx scripts/generate-sw.ts",
+    "build": "vite build && tsx scripts/verify-sw.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "format": "biome format",
@@ -84,7 +83,6 @@
     "@vitejs/plugin-react": "^5.2.0",
     "babel-plugin-react-compiler": "^1.0.0",
     "dotenv": "^17.3.1",
-    "esbuild": "^0.27.4",
     "jsdom": "^28.1.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
