@@ -8,25 +8,33 @@ import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { workboxServiceWorkerPlugin } from "./scripts/vite-plugin-workbox-sw";
 
-const config = defineConfig({
-	plugins: [
-		devtools(),
-		paraglideVitePlugin({
-			project: "./project.inlang",
-			outdir: "./src/paraglide",
-			strategy: ["url", "baseLocale"],
-		}),
-		cloudflare({ viteEnvironment: { name: "ssr" } }),
-		tsconfigPaths({ projects: ["./tsconfig.json"] }),
-		tailwindcss(),
-		tanstackStart(),
-		workboxServiceWorkerPlugin(),
-		viteReact({
-			babel: {
-				plugins: ["babel-plugin-react-compiler"],
-			},
-		}),
-	],
+const config = defineConfig(({ command }) => {
+	const isBuild = command === "build";
+	const enableCloudflareDev = process.env.CLOUDFLARE_DEV === "1";
+	const shouldUseCloudflareRuntime = isBuild || enableCloudflareDev;
+
+	return {
+		plugins: [
+			devtools(),
+			paraglideVitePlugin({
+				project: "./project.inlang",
+				outdir: "./src/paraglide",
+				strategy: ["url", "baseLocale"],
+			}),
+			...(shouldUseCloudflareRuntime
+				? [cloudflare({ viteEnvironment: { name: "ssr" } })]
+				: []),
+			tsconfigPaths({ projects: ["./tsconfig.json"] }),
+			tailwindcss(),
+			tanstackStart(),
+			workboxServiceWorkerPlugin(),
+			viteReact({
+				babel: {
+					plugins: ["babel-plugin-react-compiler"],
+				},
+			}),
+		],
+	};
 });
 
 export default config;

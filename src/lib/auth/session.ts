@@ -1,9 +1,9 @@
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { AuthorizationError } from "@/db/utils/errors";
-import { auth } from "@/lib/auth";
 
 export async function readServerSession() {
 	const headers = await getRequestHeaders();
+	const { auth } = await import("@/lib/auth");
 	return auth.api.getSession({ headers });
 }
 

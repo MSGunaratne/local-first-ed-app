@@ -3,9 +3,8 @@ import DashboardSidebar from "@/components/dashboard/sidebar";
 import { requireAuthenticatedRoute } from "@/lib/auth/route-guards";
 
 export const Route = createFileRoute("/_dashboard")({
-	beforeLoad: async ({ context, location }) => {
+	beforeLoad: async ({ location }) => {
 		const session = await requireAuthenticatedRoute({
-			queryClient: context.queryClient,
 			locationHref: location.href,
 		});
 

@@ -1,6 +1,5 @@
 import { getRequestHeaders } from "@tanstack/react-start/server";
 
-import { auth } from "src/lib/auth";
 import { ServerError } from "#/db/utils/errors";
 import type {
 	ChangePasswordParams,
@@ -12,7 +11,10 @@ export async function signInWithPasswordService({
 	email,
 	password,
 }: SignInParams) {
+	const { auth } = await import("src/lib/auth");
+	const headers = await getRequestHeaders();
 	const { user } = await auth.api.signInEmail({
+		headers,
 		body: { email, password },
 	});
 
@@ -22,7 +24,10 @@ export async function signInWithPasswordService({
 }
 
 export async function signUpService({ email, password, name }: SignUpParams) {
+	const { auth } = await import("src/lib/auth");
+	const headers = await getRequestHeaders();
 	const res = await auth.api.signUpEmail({
+		headers,
 		body: { email, password, name },
 	});
 
@@ -32,6 +37,7 @@ export async function signUpService({ email, password, name }: SignUpParams) {
 }
 
 export async function signOutService() {
+	const { auth } = await import("src/lib/auth");
 	await auth.api.signOut({ headers: await getRequestHeaders() });
 }
 
@@ -40,6 +46,7 @@ export async function changePasswordService({
 	newPassword,
 	revokeOtherSessions = true,
 }: ChangePasswordParams) {
+	const { auth } = await import("src/lib/auth");
 	const result = await auth.api.changePassword({
 		body: {
 			currentPassword,

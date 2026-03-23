@@ -1,9 +1,9 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import AuthHeader from "#/components/AuthHeader";
-import { authMutations, authQueries } from "#/features/auth/auth.queries";
+import { authMutations } from "#/features/auth/auth.queries";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -27,7 +27,6 @@ export const Route = createFileRoute("/sign-in")({
 function SignInPage() {
 	const { returnTo } = Route.useSearch();
 	const navigate = useNavigate();
-	const queryClient = useQueryClient();
 	const { mutateAsync, isPending } = useMutation(authMutations.signIn());
 	const [error, setError] = useState("");
 
@@ -46,9 +45,7 @@ function SignInPage() {
 				returnTo,
 			});
 
-			await queryClient.fetchQuery(authQueries.session());
-
-			navigate({ to: redirectTo });
+			navigate({ to: redirectTo, replace: true });
 		} catch (err) {
 			setError(err instanceof Error ? err.message : m.auth_error_default());
 		}

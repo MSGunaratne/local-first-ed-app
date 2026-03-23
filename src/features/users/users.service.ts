@@ -5,7 +5,6 @@ import { db } from "@/db";
 import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
 import { buildDrizzleFilter, DataType } from "@/db/utils/drizzle-filter";
 import { NotFoundError, ServerError } from "@/db/utils/errors";
-import { auth } from "@/lib/auth";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import type { User, UserCreateInput, UserUpdateInput } from "./users.schema";
 import {
@@ -117,6 +116,7 @@ export async function getUserById(id: string) {
 
 export async function createUser(data: UserCreateInput) {
 	await requireAdminSession("Only admins can create users");
+	const { auth } = await import("@/lib/auth");
 
 	const validatedData = userCreateServerSchema.parse(data);
 
@@ -140,6 +140,7 @@ export async function updateUser(id: string, userData: UserUpdateInput) {
 	const session = await requireSession(
 		"You must be logged in to update a user",
 	);
+	const { auth } = await import("@/lib/auth");
 
 	const isSelf = session.user.id === id;
 
@@ -185,6 +186,7 @@ export async function updateUser(id: string, userData: UserUpdateInput) {
 export async function deleteUser(id: string) {
 	await requireAdminSession("Only admins can delete users");
 	const headers = await getRequestHeaders();
+	const { auth } = await import("@/lib/auth");
 
 	const result = await auth.api.removeUser({
 		headers,

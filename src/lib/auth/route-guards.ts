@@ -1,18 +1,15 @@
-import type { QueryClient } from "@tanstack/react-query";
 import { isRedirect, redirect } from "@tanstack/react-router";
-import { authQueries } from "#/features/auth/auth.queries";
+import { getSession } from "./auth-functions";
 
 interface RequireAuthenticatedRouteParams {
-	queryClient: QueryClient;
 	locationHref: string;
 }
 
 export async function requireAuthenticatedRoute({
-	queryClient,
 	locationHref,
 }: RequireAuthenticatedRouteParams) {
 	try {
-		const session = await queryClient.ensureQueryData(authQueries.session());
+		const session = await getSession();
 
 		if (!session) {
 			throw redirect({
