@@ -1,14 +1,10 @@
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { asc, count, desc, eq } from "drizzle-orm";
+import { requireAdminSession, requireSession } from "#/lib/auth/access";
 import { db } from "@/db";
 import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
 import { buildDrizzleFilter, DataType } from "@/db/utils/drizzle-filter";
-import {
-	AuthorizationError,
-	NotFoundError,
-	ServerError,
-} from "@/db/utils/errors";
-import { safeAction } from "@/db/utils/safe-action";
+import { NotFoundError, ServerError } from "@/db/utils/errors";
 import { auth } from "@/lib/auth";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import type { User, UserCreateInput, UserUpdateInput } from "./users.schema";
@@ -120,82 +116,82 @@ export async function getUserById(id: string) {
 }
 
 export async function createUser(data: UserCreateInput) {
-	return safeAction(async () => {
-		const validatedData = userCreateServerSchema.parse(data);
+	await requireAdminSession("Only admins can create users");
 
-		const { user } = await auth.api.createUser({
-			body: {
-				name: validatedData.name,
-				email: validatedData.email,
-				password: validatedData.password,
-				data: {
-					phoneNumber: validatedData.phoneNumber ?? undefined,
-				},
+	const validatedData = userCreateServerSchema.parse(data);
+
+	const { user } = await auth.api.createUser({
+		body: {
+			name: validatedData.name,
+			email: validatedData.email,
+			password: validatedData.password,
+			data: {
+				phoneNumber: validatedData.phoneNumber ?? undefined,
 			},
-		});
-		if (!user) throw new ServerError("Failed to create user");
-
-		return user;
+		},
 	});
+	if (!user) throw new ServerError("Failed to create user");
+
+	return user;
 }
 
 export async function updateUser(id: string, userData: UserUpdateInput) {
-	return safeAction(async () => {
-		const headers = await getRequestHeaders();
-		const session = await auth.api.getSession({ headers });
-		if (!session)
-			throw new AuthorizationError("You must be logged in to update a user");
+	const headers = await getRequestHeaders();
+	const session = await requireSession(
+		"You must be logged in to update a user",
+	);
 
-		const isSelf = session.user.id === id;
+	const isSelf = session.user.id === id;
 
-		const validatedData = userUpdateServerSchema.parse(userData);
+	const validatedData = userUpdateServerSchema.parse(userData);
 
-		// If updating self, use Better Auth API to ensure session session is invalidated
-		if (isSelf) {
-			const updatedUser = await auth.api.updateUser({
-				headers,
-				body: {
-					name: validatedData.name,
-					image: validatedData.image ?? undefined,
-					phoneNumber: validatedData.phoneNumber ?? undefined,
-				},
-			});
-
-			if (!updatedUser) {
-				throw new ServerError("Failed to update user profile");
-			}
-			return updatedUser;
-		}
-
-		const updatedUser = await auth.api.adminUpdateUser({
+	// If updating self, use Better Auth API to ensure session session is invalidated
+	if (isSelf) {
+		const updatedUser = await auth.api.updateUser({
 			headers,
 			body: {
-				userId: id,
-				data: {
-					...validatedData,
-					image: validatedData.image ?? undefined,
-					phoneNumber: validatedData.phoneNumber ?? undefined,
-				},
+				name: validatedData.name,
+				image: validatedData.image ?? undefined,
+				phoneNumber: validatedData.phoneNumber ?? undefined,
 			},
 		});
 
 		if (!updatedUser) {
-			throw new ServerError("Failed to update user");
+			throw new ServerError("Failed to update user profile");
 		}
 		return updatedUser;
+	}
+
+	await requireAdminSession("Only admins can update other users");
+
+	const updatedUser = await auth.api.adminUpdateUser({
+		headers,
+		body: {
+			userId: id,
+			data: {
+				...validatedData,
+				image: validatedData.image ?? undefined,
+				phoneNumber: validatedData.phoneNumber ?? undefined,
+			},
+		},
 	});
+
+	if (!updatedUser) {
+		throw new ServerError("Failed to update user");
+	}
+	return updatedUser;
 }
 
 export async function deleteUser(id: string) {
-	return safeAction(async () => {
-		const result = await auth.api.removeUser({
-			headers: await getRequestHeaders(),
-			body: { userId: id },
-		});
+	await requireAdminSession("Only admins can delete users");
+	const headers = await getRequestHeaders();
 
-		if (result.success === false)
-			throw new ServerError("Failed to delete user");
+	const result = await auth.api.removeUser({
+		headers,
+		body: { userId: id },
 	});
+
+	if (result.success === false) throw new ServerError("Failed to delete user");
 }
 
 export type UserDetails = Awaited<ReturnType<typeof getUserById>>;

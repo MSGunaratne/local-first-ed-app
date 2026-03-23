@@ -35,8 +35,9 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 
 	//TODO: find a better pattern later
 	// @ts-ignore - dynamic key access
-	const translatedTitle = (m as any)[item.title]
-		? (m as any)[item.title]()
+	const translatedTitle = (m)[item.title]
+	// @ts-ignore - dynamic key access
+		? (m)[item.title]()
 		: item.title;
 
 	// Render Mini Version (Icon only with Tooltip or Dropdown)
@@ -68,8 +69,9 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 					<DropdownMenuContent side="right" align="start" className="min-w-56">
 						{item.items.map((subItem) => {
 							// @ts-ignore - dynamic key access
-							const subTranslatedTitle = (m as any)[subItem.title]
-								? (m as any)[subItem.title]()
+							const subTranslatedTitle = (m)[subItem.title]
+							// @ts-ignore - dynamic key access
+								? (m)[subItem.title]()
 								: subItem.title;
 							return (
 								<DropdownMenuItem key={subItem.title} asChild>

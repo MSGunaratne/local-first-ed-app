@@ -1,14 +1,14 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
-import { unwrapResult } from "@/db/utils/safe-action";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
-import type { ClassInsert } from "./classes.schema";
+import { m } from "@/paraglide/messages";
 import {
 	createClassFn,
 	deleteClassFn,
 	getClassByIdFn,
 	getClassesFn,
 	updateClassFn,
-} from "./classes.server";
+} from "./classes.actions";
+import type { ClassInsert } from "./classes.schema";
 
 // ----------------------------------------------------------------------
 
@@ -30,30 +30,30 @@ export const classQueries = {
 export const classMutations = {
 	create: () =>
 		mutationOptions({
-			mutationFn: (data: ClassInsert) => unwrapResult(createClassFn({ data })),
+			mutationFn: (data: ClassInsert) => createClassFn({ data }),
 			meta: {
 				invalidates: [classQueries.lists()],
-				successMessage: "Class created successfully",
-				errorMessage: "Failed to create class",
+				successMessage: m.toast_class_create_success(),
+				errorMessage: m.toast_class_create_error(),
 			},
 		}),
 	update: () =>
 		mutationOptions({
 			mutationFn: ({ id, data }: { id: string; data: Partial<ClassInsert> }) =>
-				unwrapResult(updateClassFn({ data: { id, data } })),
+				updateClassFn({ data: { id, data } }),
 			meta: {
 				invalidates: [classQueries.lists()],
-				successMessage: "Class updated successfully",
-				errorMessage: "Failed to update class",
+				successMessage: m.toast_class_update_success(),
+				errorMessage: m.toast_class_update_error(),
 			},
 		}),
 	delete: () =>
 		mutationOptions({
-			mutationFn: (id: string) => unwrapResult(deleteClassFn({ data: { id } })),
+			mutationFn: (id: string) => deleteClassFn({ data: { id } }),
 			meta: {
 				invalidates: [classQueries.lists()],
-				successMessage: "Class deleted successfully",
-				errorMessage: "Failed to delete class",
+				successMessage: m.toast_class_delete_success(),
+				errorMessage: m.toast_class_delete_error(),
 			},
 		}),
 };

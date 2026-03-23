@@ -1,7 +1,9 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import AuthHeader from "#/components/AuthHeader";
+import { authMutations, authQueries } from "#/features/auth/auth.queries";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -13,7 +15,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signInWithPassword } from "#/features/auth/action";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/sign-in")({
@@ -26,35 +27,30 @@ export const Route = createFileRoute("/sign-in")({
 function SignInPage() {
 	const { returnTo } = Route.useSearch();
 	const navigate = useNavigate();
+	const queryClient = useQueryClient();
+	const { mutateAsync, isPending } = useMutation(authMutations.signIn());
 	const [error, setError] = useState("");
-	const [isLoading, setIsLoading] = useState(false);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setError("");
-		setIsLoading(true);
 
 		const formData = new FormData(e.currentTarget);
 		const email = formData.get("email") as string;
 		const password = formData.get("password") as string;
 
 		try {
-			const result = await signInWithPassword({
+			const { redirectTo } = await mutateAsync({
 				email,
 				password,
 				returnTo,
 			});
 
-			if (result.error) {
-				setError(result.error.message || m.auth_error_sign_in_failed());
-				setIsLoading(false);
-				return;
-			}
+			await queryClient.fetchQuery(authQueries.session());
 
-			navigate({ to: returnTo || "/" });
+			navigate({ to: redirectTo });
 		} catch (err) {
 			setError(err instanceof Error ? err.message : m.auth_error_default());
-			setIsLoading(false);
 		}
 	};
 
@@ -109,8 +105,8 @@ function SignInPage() {
 							</div>
 						</CardContent>
 						<CardFooter className="flex flex-col space-y-4 pt-6">
-							<Button type="submit" className="w-full" disabled={isLoading}>
-								{isLoading
+							<Button type="submit" className="w-full" disabled={isPending}>
+								{isPending
 									? m.auth_signing_in_button()
 									: m.auth_sign_in_button()}
 							</Button>

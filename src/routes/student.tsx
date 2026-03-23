@@ -1,10 +1,7 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-export const Route = createFileRoute("/student")({
-	component: StudentLayout,
-});
+export const Route = createFileRoute("/student")({ component: StudentLayout });
 
 function StudentLayout() {
 	return (

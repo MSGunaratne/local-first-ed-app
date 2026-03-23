@@ -1,15 +1,14 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
-import { unwrapResult } from "@/db/utils/safe-action";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { m } from "@/paraglide/messages";
-import type { LessonInsert } from "./lessons.schema";
 import {
 	createLessonFn,
 	deleteLessonFn,
 	getLessonByIdFn,
 	getLessonsFn,
 	updateLessonFn,
-} from "./lessons.server";
+} from "./lessons.actions";
+import type { LessonInsert } from "./lessons.schema";
 
 // ----------------------------------------------------------------------
 
@@ -31,8 +30,7 @@ export const lessonQueries = {
 export const lessonMutations = {
 	create: () =>
 		mutationOptions({
-			mutationFn: (data: LessonInsert) =>
-				unwrapResult(createLessonFn({ data })),
+			mutationFn: (data: LessonInsert) => createLessonFn({ data }),
 			meta: {
 				invalidates: [lessonQueries.lists()],
 				successMessage: m.toast_lesson_create_success(),
@@ -42,7 +40,7 @@ export const lessonMutations = {
 	update: (id: string) =>
 		mutationOptions({
 			mutationFn: (data: LessonInsert) =>
-				unwrapResult(updateLessonFn({ data: { id, data } })),
+				updateLessonFn({ data: { id, data } }),
 			meta: {
 				invalidates: [lessonQueries.lists(), lessonQueries.detail(id).queryKey],
 				successMessage: m.toast_lesson_update_success(),
@@ -51,8 +49,7 @@ export const lessonMutations = {
 		}),
 	delete: () =>
 		mutationOptions({
-			mutationFn: (id: string) =>
-				unwrapResult(deleteLessonFn({ data: { id } })),
+			mutationFn: (id: string) => deleteLessonFn({ data: { id } }),
 			meta: {
 				invalidates: [lessonQueries.lists()],
 				successMessage: m.toast_lesson_delete_success(),

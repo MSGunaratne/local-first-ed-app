@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { PanelLeft } from "lucide-react";
+import type { Session } from "#/lib/auth-client";
 import ParaglideLocaleSwitcher from "@/components/LocaleSwitcher";
 import { Button } from "@/components/ui/button";
 import { navConfig } from "@/config/dashboard-nav";
@@ -9,7 +10,10 @@ import { m } from "@/paraglide/messages";
 import { NavItem } from "./nav-item";
 import { useSidebar } from "./sidebar-context";
 
-export function Sidebar({ className }: React.ComponentProps<"aside">) {
+export function Sidebar({
+	className,
+	session,
+}: React.ComponentProps<"aside"> & { session: Session }) {
 	const { state, isMobile, openMobile, setOpenMobile, toggleSidebar } =
 		useSidebar();
 	const isCollapsed = state === "collapsed";
@@ -95,7 +99,7 @@ export function Sidebar({ className }: React.ComponentProps<"aside">) {
 						)}
 					>
 						<ParaglideLocaleSwitcher isCollapsed={isCollapsed} />
-						<BetterAuthHeader />
+						<BetterAuthHeader session={session} />
 					</div>
 				</div>
 			</aside>

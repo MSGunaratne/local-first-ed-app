@@ -69,3 +69,73 @@ export interface DataTableQueryParams {
 	columnFilters: ColumnFiltersState;
 	globalFilter: string;
 }
+
+export const dataTableListInputSchema = z.object({
+	pagination: z.object({
+		pageIndex: z.number().default(DATA_TABLE_SEARCH_DEFAULTS.pageIndex),
+		pageSize: z.number().default(DATA_TABLE_SEARCH_DEFAULTS.pageSize),
+	}),
+	sorting: z
+		.array(
+			z.object({
+				id: z.string(),
+				desc: z.boolean(),
+			}),
+		)
+		.optional(),
+	columnFilters: z
+		.array(
+			z.object({
+				id: z.string(),
+				value: z.unknown(),
+			}),
+		)
+		.optional(),
+	globalFilter: z.string().optional(),
+});
+
+export const dataTableExportInputSchema = z.object({
+	sorting: z
+		.array(
+			z.object({
+				id: z.string(),
+				desc: z.boolean(),
+			}),
+		)
+		.optional(),
+	columnFilters: z
+		.array(
+			z.object({
+				id: z.string(),
+				value: z.unknown(),
+			}),
+		)
+		.optional(),
+	globalFilter: z.string().optional(),
+});
+
+type DataTableListInput = z.infer<typeof dataTableListInputSchema>;
+type DataTableExportInput = z.infer<typeof dataTableExportInputSchema>;
+
+export function normalizeDataTableListInput(
+	data: DataTableListInput,
+): DataTableQueryParams {
+	return {
+		pagination: data.pagination,
+		sorting: data.sorting ?? DATA_TABLE_SEARCH_DEFAULTS.sorting,
+		columnFilters:
+			data.columnFilters ?? DATA_TABLE_SEARCH_DEFAULTS.columnFilters,
+		globalFilter: data.globalFilter ?? DATA_TABLE_SEARCH_DEFAULTS.globalFilter,
+	};
+}
+
+export function normalizeDataTableExportInput(
+	data: DataTableExportInput,
+): Omit<DataTableQueryParams, "pagination"> {
+	return {
+		sorting: data.sorting ?? DATA_TABLE_SEARCH_DEFAULTS.sorting,
+		columnFilters:
+			data.columnFilters ?? DATA_TABLE_SEARCH_DEFAULTS.columnFilters,
+		globalFilter: data.globalFilter ?? DATA_TABLE_SEARCH_DEFAULTS.globalFilter,
+	};
+}

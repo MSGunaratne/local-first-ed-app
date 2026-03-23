@@ -91,10 +91,10 @@ export const assessments = sqliteTable("assessment", {
 export type Assessment = InferSelectModel<typeof assessments>;
 
 // -----------------------------------------------------------------------------
-const flashcardItemSchema = z.object({
-	question: z.string().min(1),
-	answer: z.string().min(1),
-});
+// const flashcardItemSchema = z.object({
+// 	question: z.string().min(1),
+// 	answer: z.string().min(1),
+// });
 
 export const lessonInsertSchema = createInsertSchema(lessons, {
 	title: z.string().min(1, "Title is required").trim(),

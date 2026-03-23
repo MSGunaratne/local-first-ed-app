@@ -1,7 +1,6 @@
-import type { ZodType } from "zod";
-
-import { z } from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input/input";
+import type { ZodType } from "zod";
+import { z } from "zod";
 
 // ----------------------------------------------------------------------
 

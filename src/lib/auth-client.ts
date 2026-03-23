@@ -6,3 +6,5 @@ import { ac, roles } from "src/lib/permissions";
 export const authClient = createAuthClient({
 	plugins: [inferAdditionalFields<typeof auth>(), adminClient({ ac, roles })],
 });
+
+export type Session = typeof authClient.$Infer.Session;

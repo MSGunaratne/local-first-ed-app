@@ -1,15 +1,12 @@
-import { getRequestHeaders } from "@tanstack/react-start/server";
 import { asc, count, desc, eq } from "drizzle-orm";
+import {
+	requireTeacherOrAdminSession,
+	requireTeacherOwnershipOrAdmin,
+} from "#/lib/auth/access";
 import { db } from "@/db";
 import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
 import { buildDrizzleFilter, DataType } from "@/db/utils/drizzle-filter";
-import {
-	AuthorizationError,
-	NotFoundError,
-	ServerError,
-} from "@/db/utils/errors";
-import { safeAction } from "@/db/utils/safe-action";
-import { auth } from "@/lib/auth";
+import { NotFoundError, ServerError } from "@/db/utils/errors";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import type { Class, ClassInsert } from "./classes.schema";
 import { classes, classInsertSchema } from "./classes.schema";
@@ -90,74 +87,88 @@ export async function getClassById(id: string) {
 }
 
 export async function createClass(data: ClassInsert) {
-	return safeAction(async () => {
-		const headers = await getRequestHeaders();
-		const session = await auth.api.getSession({ headers });
+	const session = await requireTeacherOrAdminSession(
+		"Only teachers and admins can create classes",
+	);
 
-		if (!session) {
-			throw new AuthorizationError("You must be logged in to create a class");
-		}
+	const validatedData = classInsertSchema.parse(data);
 
-		// Ensure user is teacher or admin
-		// if (session.user.role !== "teacher" && session.user.role !== "admin") ...
+	const result = await db
+		.insert(classes)
+		.values({
+			...validatedData,
+			teacherId: session.user.id, // Auto-assign to creating teacher
+		})
+		.returning();
 
-		const validatedData = classInsertSchema.parse(data);
+	if (!result[0]) throw new ServerError("Failed to create class");
 
-		const result = await db
-			.insert(classes)
-			.values({
-				...validatedData,
-				teacherId: session.user.id, // Auto-assign to creating teacher
-			})
-			.returning();
-
-		if (!result[0]) throw new ServerError("Failed to create class");
-
-		// throw redirect({
-		// 	to: "/classes",
-		// 	search: {},
-		// });
-	});
+	// throw redirect({
+	// 	to: "/classes",
+	// 	search: {},
+	// });
 }
 
 export async function updateClass(id: string, data: Partial<ClassInsert>) {
-	return safeAction(async () => {
-		const headers = await getRequestHeaders();
-		const session = await auth.api.getSession({ headers });
-		if (!session)
-			throw new AuthorizationError("You must be logged in to update a class");
+	const session = await requireTeacherOrAdminSession(
+		"Only teachers and admins can update classes",
+	);
 
-		// TODO: Check if user owns the class or is admin
-
-		const [updatedClass] = await db
-			.update(classes)
-			.set(data)
-			.where(eq(classes.id, id))
-			.returning();
-
-		if (!updatedClass) {
-			throw new ServerError("Failed to update class");
-		}
-		// throw redirect({
-		// 	to: "/classes",
-		// 	search: {},
-		// });
+	const existingClass = await db.query.classes.findFirst({
+		where: eq(classes.id, id),
 	});
+	if (!existingClass) {
+		throw new NotFoundError("Class", id);
+	}
+
+	requireTeacherOwnershipOrAdmin(
+		existingClass.teacherId,
+		session.user.id,
+		session.user.role,
+		"You can only update classes assigned to you",
+	);
+
+	const { teacherId: _ignoredTeacherId, ...safeUpdateData } = data;
+
+	const [updatedClass] = await db
+		.update(classes)
+		.set(safeUpdateData)
+		.where(eq(classes.id, id))
+		.returning();
+
+	if (!updatedClass) {
+		throw new ServerError("Failed to update class");
+	}
+	// throw redirect({
+	// 	to: "/classes",
+	// 	search: {},
+	// });
 }
 
 export async function deleteClass(id: string) {
-	return safeAction(async () => {
-		const headers = await getRequestHeaders();
-		const session = await auth.api.getSession({ headers });
-		if (!session)
-			throw new AuthorizationError("You must be logged in to delete a class");
+	const session = await requireTeacherOrAdminSession(
+		"Only teachers and admins can delete classes",
+	);
 
-		await db.delete(classes).where(eq(classes.id, id));
-
-		// Drizzle delete doesn't return success status in simple run, but if it throws it fails.
-		// We can check rowsAffected if we used execute() or returned valid info,
-		// but 'result' depends on driver.
-		// For sqlite with drizzle-orm/libsql or better-sqlite3:
-		// usually it just works or throws.
+	const existingClass = await db.query.classes.findFirst({
+		where: eq(classes.id, id),
 	});
+	if (!existingClass) {
+		throw new NotFoundError("Class", id);
+	}
+
+	requireTeacherOwnershipOrAdmin(
+		existingClass.teacherId,
+		session.user.id,
+		session.user.role,
+		"You can only delete classes assigned to you",
+	);
+
+	await db.delete(classes).where(eq(classes.id, id));
+
+	// Drizzle delete doesn't return success status in simple run, but if it throws it fails.
+	// We can check rowsAffected if we used execute() or returned valid info,
+	// but 'result' depends on driver.
+	// For sqlite with drizzle-orm/libsql or better-sqlite3:
+	// usually it just works or throws.
 }

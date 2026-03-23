@@ -3,10 +3,8 @@ import {
 	mutationOptions,
 	queryOptions,
 } from "@tanstack/react-query";
-import { unwrapResult } from "@/db/utils/safe-action";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { m } from "@/paraglide/messages";
-import type { UserCreateInput, UserUpdateInput } from "./users.schema";
 import {
 	createUserFn,
 	deleteUserFn,
@@ -14,7 +12,8 @@ import {
 	getUserByIdFn,
 	getUsersFn,
 	updateUserFn,
-} from "./users.server";
+} from "./users.actions";
+import type { UserCreateInput, UserUpdateInput } from "./users.schema";
 
 // ----------------------------------------------------------------------
 
@@ -47,8 +46,7 @@ export const userQueries = {
 export const userMutations = {
 	create: () =>
 		mutationOptions({
-			mutationFn: (data: UserCreateInput) =>
-				unwrapResult(createUserFn({ data })),
+			mutationFn: (data: UserCreateInput) => createUserFn({ data }),
 			meta: {
 				invalidates: [userQueries.lists()],
 				successMessage: m.toast_user_create_success(),
@@ -58,7 +56,7 @@ export const userMutations = {
 	update: (id: string) =>
 		mutationOptions({
 			mutationFn: (data: UserUpdateInput) =>
-				unwrapResult(updateUserFn({ data: { id, data } })),
+				updateUserFn({ data: { id, data } }),
 			meta: {
 				invalidates: [userQueries.lists(), userQueries.detail(id).queryKey],
 				successMessage: m.toast_user_update_success(),
@@ -67,7 +65,7 @@ export const userMutations = {
 		}),
 	delete: () =>
 		mutationOptions({
-			mutationFn: (id: string) => unwrapResult(deleteUserFn({ data: { id } })),
+			mutationFn: (id: string) => deleteUserFn({ data: { id } }),
 			meta: {
 				invalidates: [userQueries.lists()],
 				successMessage: m.toast_user_delete_success(),

@@ -1,15 +1,9 @@
-import { getRequestHeaders } from "@tanstack/react-start/server";
 import { asc, count, desc, eq } from "drizzle-orm";
+import { requireTeacherOrAdminSession } from "#/lib/auth/access";
 import { db } from "@/db";
 import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
 import { buildDrizzleFilter, DataType } from "@/db/utils/drizzle-filter";
-import {
-	AuthorizationError,
-	NotFoundError,
-	ServerError,
-} from "@/db/utils/errors";
-import { safeAction } from "@/db/utils/safe-action";
-import { auth } from "@/lib/auth";
+import { NotFoundError, ServerError } from "@/db/utils/errors";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import type { Lesson, LessonInsert } from "./lessons.schema";
 import { lessonInsertSchema, lessons } from "./lessons.schema";
@@ -84,57 +78,60 @@ export async function getLessonById(id: string) {
 }
 
 export async function createLesson(data: LessonInsert) {
-	return safeAction(async () => {
-		const headers = await getRequestHeaders();
-		const session = await auth.api.getSession({ headers });
+	await requireTeacherOrAdminSession(
+		"Only teachers and admins can create lessons",
+	);
 
-		if (!session) {
-			throw new AuthorizationError("You must be logged in to create a lesson");
-		}
+	const validatedData = lessonInsertSchema.parse(data);
 
-		const validatedData = lessonInsertSchema.parse(data);
+	const [newLesson] = await db
+		.insert(lessons)
+		.values(validatedData)
+		.returning();
 
-		const [newLesson] = await db
-			.insert(lessons)
-			.values(validatedData)
-			.returning();
+	if (!newLesson) throw new ServerError("Failed to create lesson");
 
-		if (!newLesson) throw new ServerError("Failed to create lesson");
-
-		return newLesson;
-	});
+	return newLesson;
 }
 
 export async function updateLesson(id: string, data: Partial<LessonInsert>) {
-	return safeAction(async () => {
-		const headers = await getRequestHeaders();
-		const session = await auth.api.getSession({ headers });
-		if (!session)
-			throw new AuthorizationError("You must be logged in to update a lesson");
+	await requireTeacherOrAdminSession(
+		"Only teachers and admins can update lessons",
+	);
 
-		const [updatedLesson] = await db
-			.update(lessons)
-			.set(data)
-			.where(eq(lessons.id, id))
-			.returning();
-
-		if (!updatedLesson) {
-			throw new ServerError("Failed to update lesson");
-		}
-
-		return updatedLesson;
+	const existingLesson = await db.query.lessons.findFirst({
+		where: eq(lessons.id, id),
 	});
+	if (!existingLesson) {
+		throw new NotFoundError("Lesson", id);
+	}
+
+	const [updatedLesson] = await db
+		.update(lessons)
+		.set(data)
+		.where(eq(lessons.id, id))
+		.returning();
+
+	if (!updatedLesson) {
+		throw new ServerError("Failed to update lesson");
+	}
+
+	return updatedLesson;
 }
 
 export async function deleteLesson(id: string) {
-	return safeAction(async () => {
-		const headers = await getRequestHeaders();
-		const session = await auth.api.getSession({ headers });
-		if (!session)
-			throw new AuthorizationError("You must be logged in to delete a lesson");
+	await requireTeacherOrAdminSession(
+		"Only teachers and admins can delete lessons",
+	);
 
-		await db.delete(lessons).where(eq(lessons.id, id));
+	const existingLesson = await db.query.lessons.findFirst({
+		where: eq(lessons.id, id),
 	});
+	if (!existingLesson) {
+		throw new NotFoundError("Lesson", id);
+	}
+
+	await db.delete(lessons).where(eq(lessons.id, id));
 }
 
 export type LessonDetails = Awaited<ReturnType<typeof getLessonById>>;

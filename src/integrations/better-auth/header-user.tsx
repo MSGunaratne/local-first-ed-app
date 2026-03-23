@@ -1,6 +1,8 @@
+import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { LogOut, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { authMutations } from "#/features/auth/auth.queries";
+import type { Session } from "#/lib/auth-client";
 import { useSidebar } from "@/components/dashboard/sidebar/sidebar-context";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -12,42 +14,23 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "#/features/auth/action";
 import { cn } from "@/lib/utils";
-import { authClient } from "#/lib/auth-client";
 
-export default function BetterAuthHeader() {
-	const { data: session, isPending } = authClient.useSession();
+export default function BetterAuthHeader({ session }: { session: Session }) {
 	const navigate = useNavigate();
+	const { mutateAsync } = useMutation(authMutations.signOut());
 	const { state, isMobile } = useSidebar();
 	const isCollapsed = state === "collapsed" && !isMobile;
 
-	// Hydration fix
-	const [hasMounted, setHasMounted] = useState(false);
-	useEffect(() => {
-		setHasMounted(true);
-	}, []);
-
 	const handleSignOut = async () => {
-		await signOut({ returnTo: "/sign-in" });
-		//navigate({ to: "/sign-in" });
+		const result = await mutateAsync({ returnTo: "/sign-in" });
+		navigate({ to: result.redirectTo });
 	};
 
 	// Fallback Initials
-	const getInitials = (name?: string) => {
+	const getInitials = (name?: string | null) => {
 		return name ? name.substring(0, 2).toUpperCase() : "U";
 	};
-
-	if (!hasMounted || isPending) {
-		return (
-			<div
-				className={cn(
-					"h-9 w-full rounded-md bg-muted animate-pulse",
-					isCollapsed && "h-10 w-10 rounded-full",
-				)}
-			/>
-		);
-	}
 
 	if (session?.user) {
 		return (
@@ -110,7 +93,7 @@ export default function BetterAuthHeader() {
 				isCollapsed && "justify-center px-0",
 			)}
 		>
-			<Link to="/demo/better-auth">
+			<Link to="/sign-in">
 				{isCollapsed ? <User className="h-4 w-4" /> : "Sign in"}
 			</Link>
 		</Button>

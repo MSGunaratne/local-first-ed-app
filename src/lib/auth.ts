@@ -1,23 +1,27 @@
+import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
-import { drizzleAdapter } from "@better-auth/drizzle-adapter";
-
-import { db } from "../db";
 import { ac, roles } from "src/lib/permissions";
+import { Role } from "src/types/user";
 import {
-	users,
 	accounts,
 	sessions,
+	users,
 	verifications,
 } from "#/features/users/users.schema";
+import { db } from "../db";
 
-import { Role } from "src/types/user";
+const betterAuthUrl = process.env.BETTER_AUTH_URL;
+
+if (!betterAuthUrl) {
+	throw new Error("BETTER_AUTH_URL is required for auth configuration");
+}
 
 export const auth = betterAuth({
 	appName: "Local First Education",
-	baseURL: process.env.BETTER_AUTH_URL,
-	trustedOrigins: [process.env.BETTER_AUTH_URL!],
+	baseURL: betterAuthUrl,
+	trustedOrigins: [betterAuthUrl],
 
 	database: drizzleAdapter(db, {
 		provider: "sqlite",

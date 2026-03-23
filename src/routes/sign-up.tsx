@@ -1,6 +1,8 @@
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import AuthHeader from "#/components/AuthHeader";
+import { authMutations } from "#/features/auth/auth.queries";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -12,9 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { m } from "@/paraglide/messages";
-import { signUp } from "#/features/auth/action";
 
 export const Route = createFileRoute("/sign-up")({
 	component: SignUpPage,
@@ -22,13 +22,12 @@ export const Route = createFileRoute("/sign-up")({
 
 function SignUpPage() {
 	const navigate = useNavigate();
+	const { mutateAsync, isPending } = useMutation(authMutations.signUp());
 	const [error, setError] = useState("");
-	const [isLoading, setIsLoading] = useState(false);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setError("");
-		setIsLoading(true);
 
 		const formData = new FormData(e.currentTarget);
 		const name = formData.get("name") as string;
@@ -38,36 +37,24 @@ function SignUpPage() {
 
 		if (password !== confirmPassword) {
 			setError(m.auth_error_passwords_dont_match());
-			setIsLoading(false);
 			return;
 		}
 
 		if (password.length < 6) {
 			setError(m.auth_error_password_too_short());
-			setIsLoading(false);
 			return;
 		}
 
 		try {
-			// const result = await authQueries.mutation.signUp(
-			// 	name,
-			// 	email,
-			// 	password,
-			// });
+			const { redirectTo } = await mutateAsync({
+				name,
+				email,
+				password,
+			});
 
-			const result = await signUp({ name, email, password });
-
-			if (result.error) {
-				setError(result.error.message || m.auth_error_sign_up_failed());
-				setIsLoading(false);
-				return;
-			}
-
-			// Redirect to dashboard or returnTo after successful registration
-			navigate({ to: "/sign-in" });
+			navigate({ to: redirectTo });
 		} catch (err) {
 			setError(err instanceof Error ? err.message : m.auth_error_default());
-			setIsLoading(false);
 		}
 	};
 
@@ -139,8 +126,8 @@ function SignUpPage() {
 							</div>
 						</CardContent>
 						<CardFooter className="flex flex-col space-y-4 pt-6">
-							<Button type="submit" className="w-full" disabled={isLoading}>
-								{isLoading
+							<Button type="submit" className="w-full" disabled={isPending}>
+								{isPending
 									? m.auth_creating_account_button()
 									: m.auth_create_account_button()}
 							</Button>
