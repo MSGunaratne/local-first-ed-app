@@ -2,8 +2,8 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
-import { ac, roles } from "src/lib/permissions";
-import { Role } from "src/types/user";
+import { ac, roles } from "#/lib/permissions";
+import { Role } from "#/types/user";
 import {
 	accounts,
 	sessions,
@@ -21,6 +21,7 @@ if (!betterAuthUrl) {
 export const auth = betterAuth({
 	appName: "Local First Education",
 	baseURL: betterAuthUrl,
+
 	trustedOrigins: [betterAuthUrl],
 
 	database: drizzleAdapter(db, {
@@ -48,7 +49,7 @@ export const auth = betterAuth({
 
 	session: {
 		cookieCache: {
-			enabled: true,
+			enabled: false,
 			maxAge: 5 * 60, // 5 minutes
 			strategy: "compact", // Default https://www.better-auth.com/docs/concepts/session-management#cookie-cache-strategies
 		},

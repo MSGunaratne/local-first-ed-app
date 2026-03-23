@@ -3,7 +3,7 @@ import { z } from "zod";
 export const signInSchema = z.object({
 	email: z.email(),
 	password: z.string().min(1),
-	returnTo: z.string().optional(),
+	returnTo: z.string().max(2048).optional(),
 });
 
 export const signUpSchema = z.object({
@@ -13,7 +13,7 @@ export const signUpSchema = z.object({
 });
 
 export const signOutSchema = z.object({
-	returnTo: z.string().optional(),
+	returnTo: z.string().max(2048).optional(),
 });
 
 export const changePasswordSchema = z.object({

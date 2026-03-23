@@ -1,4 +1,4 @@
-import { mutationOptions } from "@tanstack/react-query";
+import { mutationOptions, queryOptions } from "@tanstack/react-query";
 
 import {
 	changePassword,
@@ -6,6 +6,19 @@ import {
 	signOut,
 	signUp,
 } from "./auth.actions";
+import { getSession } from "#/lib/auth/auth-functions";
+
+// ----------------------------------------------------------------------
+
+export const authQueries = {
+	all: () => ["auth"] as const,
+	sessionKey: () => [...authQueries.all(), "session"] as const,
+	session: () =>
+		queryOptions({
+			queryKey: authQueries.sessionKey(),
+			queryFn: () => getSession(),
+		}),
+};
 
 // ----------------------------------------------------------------------
 
@@ -16,6 +29,9 @@ export const authMutations = {
 			mutationKey: [...authMutations.all(), "sign-in"],
 			mutationFn: (data: Parameters<typeof signInWithPassword>[0]) =>
 				signInWithPassword(data),
+			meta: {
+				invalidates: [authQueries.sessionKey()],
+			},
 		}),
 	signUp: () =>
 		mutationOptions({
@@ -29,6 +45,7 @@ export const authMutations = {
 			meta: {
 				successMessage: "Signed out successfully!",
 				errorMessage: "Failed to sign out",
+				invalidates: [authQueries.sessionKey()],
 			},
 		}),
 	changePassword: () =>
