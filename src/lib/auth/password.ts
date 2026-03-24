@@ -1,5 +1,7 @@
 const PBKDF2_PREFIX = "pbkdf2-sha256$v1";
-const DEFAULT_PBKDF2_ITERATIONS = 120_000;
+const DEFAULT_PBKDF2_ITERATIONS = 100_000;
+const MAX_PBKDF2_ITERATIONS = 100_000;
+const MIN_PBKDF2_ITERATIONS = 50_000;
 const KEY_LENGTH_BYTES = 32;
 const SALT_LENGTH_BYTES = 16;
 
@@ -10,11 +12,11 @@ const getIterations = (): number => {
 	}
 
 	const parsed = Number.parseInt(raw, 10);
-	if (!Number.isFinite(parsed) || parsed < 50_000) {
+	if (!Number.isFinite(parsed) || parsed < MIN_PBKDF2_ITERATIONS) {
 		return DEFAULT_PBKDF2_ITERATIONS;
 	}
 
-	return parsed;
+	return Math.min(parsed, MAX_PBKDF2_ITERATIONS);
 };
 
 const bytesToHex = (bytes: Uint8Array): string => {
@@ -110,7 +112,11 @@ export const verifyPassword = async ({
 
 	const [, iterationsRaw, saltHex, keyHex] = parts;
 	const iterations = Number.parseInt(iterationsRaw, 10);
-	if (!Number.isFinite(iterations) || iterations < 1) {
+	if (
+		!Number.isFinite(iterations) ||
+		iterations < 1 ||
+		iterations > MAX_PBKDF2_ITERATIONS
+	) {
 		return false;
 	}
 

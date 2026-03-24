@@ -43,7 +43,7 @@ function useServiceWorker() {
 					return;
 				}
 
-				const wb = new Workbox("/sw.js");
+				const wb = new Workbox("/sw.js", { type: "module" });
 				wbRef.current = wb;
 
 				wb.addEventListener("installed", (event) => {
