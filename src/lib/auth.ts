@@ -49,7 +49,7 @@ export const auth = betterAuth({
 
 	session: {
 		cookieCache: {
-			enabled: true,
+			enabled: false,
 			maxAge: 5 * 60, // 5 minutes
 			strategy: "compact", // Default https://www.better-auth.com/docs/concepts/session-management#cookie-cache-strategies
 		},

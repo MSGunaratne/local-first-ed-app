@@ -1,5 +1,12 @@
 {
   "name": "local-first-ed-app",
+  "author": "MS Gunaratne",
+  "description": "A local-first app built with React, TanStack Router, and Drizzle ORM, showcasing offline capabilities and seamless data synchronization",
+   "repository": {
+    "type": "git",
+    "url": "https://github.com/MSGunaratne/local-first-ed-app.git"
+  },
+  "homepage": "https://local-first-ed-app.fyp-dashboard.workers.dev",
   "private": true,
   "type": "module",
   "imports": {
@@ -7,7 +14,6 @@
   },
   "scripts": {
     "dev": "vite dev --port 3000",
-    "dev:worker": "set CLOUDFLARE_DEV=1&& vite dev --port 3000",
     "build": "vite build && tsx scripts/verify-sw.ts",
     "preview": "vite preview",
     "test": "vitest run",
@@ -16,6 +22,7 @@
     "check": "biome check",
     "typecheck": "tsc --noEmit",
     "deploy": "pnpm run build && wrangler deploy",
+    "cf-typegen": "wrangler types",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
