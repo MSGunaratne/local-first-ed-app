@@ -34,7 +34,7 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 	const isActive = item.path ? location.pathname === item.path : false;
 
 	//TODO: find a better pattern later
-	// @ts-ignore - dynamic key access
+	// @ts-expect-error - dynamic key access
 	const translatedTitle = m[item.title]
 		? // @ts-ignore - dynamic key access
 			m[item.title]()
@@ -68,7 +68,7 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 					</TooltipProvider>
 					<DropdownMenuContent side="right" align="start" className="min-w-56">
 						{item.items.map((subItem) => {
-							// @ts-ignore - dynamic key access
+							// @ts-expect-error - dynamic key access
 							const subTranslatedTitle = m[subItem.title]
 								? // @ts-ignore - dynamic key access
 									m[subItem.title]()

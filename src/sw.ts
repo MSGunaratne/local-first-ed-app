@@ -8,6 +8,22 @@ import { NavigationRoute, registerRoute } from "workbox-routing";
 import { CacheFirst, NetworkFirst, NetworkOnly } from "workbox-strategies";
 
 declare let self: ServiceWorkerGlobalScope;
+const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";
+const REPLAYED_QUERY_SCOPES = ["users", "lessons", "classes"];
+
+async function notifyReplaySuccess() {
+	const clientList = await self.clients.matchAll({
+		type: "window",
+		includeUncontrolled: true,
+	});
+
+	for (const client of clientList) {
+		client.postMessage({
+			type: REPLAYED_MUTATIONS_EVENT,
+			queryScopes: REPLAYED_QUERY_SCOPES,
+		});
+	}
+}
 
 // Precache static assets (injected by workbox-build)
 precacheAndRoute(self.__WB_MANIFEST);
@@ -25,6 +41,10 @@ self.addEventListener("message", (event) => {
 
 const bgSyncPlugin = new BackgroundSyncPlugin("offline-mutations", {
 	maxRetentionTime: 24 * 60, // Retry for 24 hours
+	onSync: async ({ queue }) => {
+		await queue.replayRequests();
+		await notifyReplaySuccess();
+	},
 });
 
 // Queue failed mutations (POST, PUT, DELETE, PATCH) for background sync

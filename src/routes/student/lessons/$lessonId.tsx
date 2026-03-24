@@ -7,11 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Editor } from "@/components/ui/editor";
 import { lessonQueries } from "@/features/lessons/lessons.queries";
 import { useLocalProgress } from "@/hooks/use-local-progress";
+import { ensureQueryDataAfterRestore } from "@/lib/query-client";
 
 export const Route = createFileRoute("/student/lessons/$lessonId")({
 	component: LessonPlayer,
 	loader: ({ context: { queryClient }, params }) =>
-		queryClient.ensureQueryData(lessonQueries.detail(params.lessonId)),
+		ensureQueryDataAfterRestore(
+			queryClient,
+			lessonQueries.detail(params.lessonId),
+		),
 });
 
 function LessonPlayer() {

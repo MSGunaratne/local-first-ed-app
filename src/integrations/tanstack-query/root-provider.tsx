@@ -1,6 +1,11 @@
-import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+	environmentManager,
+	type QueryClient,
+	QueryClientProvider,
+} from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import type { ReactNode } from "react";
-import { getQueryClient } from "@/lib/query-client";
+import { getQueryClient, getQueryPersistenceOptions } from "@/lib/query-client";
 
 let context:
 	| {
@@ -28,8 +33,20 @@ export default function TanStackQueryProvider({
 	children: ReactNode;
 }) {
 	const { queryClient } = getContext();
+	const persistenceOptions = getQueryPersistenceOptions();
+
+	if (environmentManager.isServer() || !persistenceOptions) {
+		return (
+			<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+		);
+	}
 
 	return (
-		<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+		<PersistQueryClientProvider
+			client={queryClient}
+			persistOptions={persistenceOptions}
+		>
+			{children}
+		</PersistQueryClientProvider>
 	);
 }

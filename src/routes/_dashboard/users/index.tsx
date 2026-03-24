@@ -47,6 +47,7 @@ import {
 	DATA_TABLE_SEARCH_DEFAULTS,
 	dataTableSearchSchema,
 } from "@/lib/dataTableSearchSchema";
+import { ensureQueryDataAfterRestore } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
 import { ROLE_METADATA } from "@/types/user";
 
@@ -65,7 +66,8 @@ export const Route = createFileRoute("/_dashboard/users/")({
 		globalFilter,
 	}),
 	loader: ({ context: { queryClient }, deps }) =>
-		queryClient.ensureQueryData(
+		ensureQueryDataAfterRestore(
+			queryClient,
 			userQueries.list({
 				pagination: {
 					pageIndex: deps.pageIndex,

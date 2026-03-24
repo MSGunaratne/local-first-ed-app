@@ -1,5 +1,6 @@
 import {
 	defaultShouldDehydrateQuery,
+	type EnsureQueryDataOptions,
 	environmentManager,
 	MutationCache,
 	matchQuery,
@@ -8,7 +9,8 @@ import {
 import {
 	type PersistedClient,
 	type Persister,
-	persistQueryClient,
+	persistQueryClientRestore,
+	persistQueryClientSave,
 } from "@tanstack/react-query-persist-client";
 import { del, get, set } from "idb-keyval";
 import { toast } from "sonner";
@@ -79,6 +81,21 @@ function getErrorMessage(error: unknown) {
 
 // Cache time: 7 days for offline-first support
 const CACHE_TIME = 1000 * 60 * 60 * 24 * 7;
+const PERSISTENCE_BUSTER = "rq-cache-v1";
+const AUTH_QUERY_KEY = "auth";
+const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";
+const REPLAYED_DEFAULT_SCOPES = ["users", "lessons", "classes"] as const;
+
+function shouldPersistQuery(
+	query: Parameters<typeof defaultShouldDehydrateQuery>[0],
+) {
+	const [scope] = query.queryKey;
+	if (scope === AUTH_QUERY_KEY) {
+		return false;
+	}
+
+	return defaultShouldDehydrateQuery(query) || query.state.status === "pending";
+}
 
 function makeQueryClient() {
 	// eslint-disable-next-line prefer-const
@@ -130,6 +147,7 @@ function makeQueryClient() {
 			queries: {
 				networkMode: "offlineFirst",
 				staleTime: 60 * 1000,
+				// Keep gcTime >= persisted maxAge to avoid premature eviction.
 				gcTime: CACHE_TIME,
 				retry: (failureCount, error) => {
 					if (error.status >= 400 && error.status < 500) {
@@ -143,9 +161,7 @@ function makeQueryClient() {
 			},
 			dehydrate: {
 				// include pending queries in dehydration
-				shouldDehydrateQuery: (query) =>
-					defaultShouldDehydrateQuery(query) ||
-					query.state.status === "pending",
+				shouldDehydrateQuery: shouldPersistQuery,
 			},
 		},
 		mutationCache,
@@ -155,6 +171,142 @@ function makeQueryClient() {
 }
 
 let browserQueryClient: QueryClient | undefined;
+let restorePromise: Promise<void> | undefined;
+let browserPersister: Persister | undefined;
+let replayListenerInstalled = false;
+
+function getBrowserPersister() {
+	if (!browserPersister) {
+		browserPersister = createIDBPersister();
+	}
+
+	return browserPersister;
+}
+
+function invalidateReplayScopes(
+	queryClient: QueryClient,
+	scopes: readonly string[],
+) {
+	if (scopes.length === 0) {
+		return;
+	}
+
+	queryClient.invalidateQueries({
+		predicate: (query) => {
+			const [scope] = query.queryKey;
+			return typeof scope === "string" && scopes.includes(scope);
+		},
+	});
+}
+
+function installReplayInvalidationListener(queryClient: QueryClient) {
+	if (replayListenerInstalled || environmentManager.isServer()) {
+		return;
+	}
+
+	replayListenerInstalled = true;
+
+	navigator.serviceWorker.addEventListener("message", (event) => {
+		const data = event.data as
+			| {
+					type?: string;
+					queryScopes?: string[];
+			  }
+			| undefined;
+
+		if (data?.type !== REPLAYED_MUTATIONS_EVENT) {
+			return;
+		}
+
+		invalidateReplayScopes(
+			queryClient,
+			data.queryScopes?.length ? data.queryScopes : REPLAYED_DEFAULT_SCOPES,
+		);
+	});
+}
+
+function startPersistence(queryClient: QueryClient) {
+	if (!restorePromise) {
+		const persister = getBrowserPersister();
+		restorePromise = persistQueryClientRestore({
+			queryClient,
+			persister,
+			maxAge: CACHE_TIME,
+			buster: PERSISTENCE_BUSTER,
+		}).then(() => {
+			// Discard any auth data from older persisted snapshots.
+			queryClient.removeQueries({ queryKey: [AUTH_QUERY_KEY] });
+		});
+	}
+
+	installReplayInvalidationListener(queryClient);
+
+	return restorePromise;
+}
+
+export function getQueryPersistenceOptions() {
+	if (environmentManager.isServer()) {
+		return undefined;
+	}
+
+	return {
+		persister: getBrowserPersister(),
+		maxAge: CACHE_TIME,
+		buster: PERSISTENCE_BUSTER,
+		dehydrateOptions: {
+			shouldDehydrateQuery: shouldPersistQuery,
+		},
+	};
+}
+
+export async function ensureQueryCacheRestored() {
+	if (environmentManager.isServer()) {
+		return;
+	}
+
+	const queryClient = getQueryClient();
+	await startPersistence(queryClient);
+}
+
+export async function ensureQueryDataAfterRestore<
+	TQueryFnData,
+	TError = unknown,
+	TData = TQueryFnData,
+	TQueryKey extends readonly unknown[] = readonly unknown[],
+>(
+	queryClient: QueryClient,
+	options: EnsureQueryDataOptions<
+		TQueryFnData,
+		TError,
+		TData,
+		TQueryKey,
+		never
+	>,
+) {
+	await ensureQueryCacheRestored();
+	return queryClient.ensureQueryData(options);
+}
+
+export async function clearAuthQueryState() {
+	if (environmentManager.isServer()) {
+		return;
+	}
+
+	const queryClient = getQueryClient();
+	await ensureQueryCacheRestored();
+
+	await queryClient.cancelQueries({ queryKey: [AUTH_QUERY_KEY] });
+	queryClient.removeQueries({ queryKey: [AUTH_QUERY_KEY] });
+
+	await persistQueryClientSave({
+		queryClient,
+		persister: getBrowserPersister(),
+		buster: PERSISTENCE_BUSTER,
+		dehydrateOptions: {
+			shouldDehydrateQuery: shouldPersistQuery,
+		},
+	});
+}
 
 export function getQueryClient() {
 	if (environmentManager.isServer()) {
@@ -167,18 +319,7 @@ export function getQueryClient() {
 		// have a suspense boundary BELOW the creation of the query client
 		if (!browserQueryClient) {
 			browserQueryClient = makeQueryClient();
-
-			const persister = createIDBPersister();
-			persistQueryClient({
-				queryClient: browserQueryClient,
-				persister,
-				maxAge: CACHE_TIME,
-				dehydrateOptions: {
-					shouldDehydrateQuery: (query) =>
-						defaultShouldDehydrateQuery(query) ||
-						query.state.status === "pending",
-				},
-			});
+			installReplayInvalidationListener(browserQueryClient);
 		}
 		return browserQueryClient;
 	}

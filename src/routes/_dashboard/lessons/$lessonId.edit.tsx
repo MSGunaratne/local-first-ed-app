@@ -2,11 +2,15 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { LessonForm } from "@/features/lessons/components/lesson-form";
 import { lessonQueries } from "@/features/lessons/lessons.queries";
+import { ensureQueryDataAfterRestore } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/_dashboard/lessons/$lessonId/edit")({
 	loader: async ({ context: { queryClient }, params }) => {
-		await queryClient.ensureQueryData(lessonQueries.detail(params.lessonId));
+		await ensureQueryDataAfterRestore(
+			queryClient,
+			lessonQueries.detail(params.lessonId),
+		);
 	},
 	component: EditLessonPage,
 });

@@ -2,14 +2,14 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
-import { ac, roles } from "#/lib/permissions";
-import { Role } from "#/types/user";
 import {
 	accounts,
 	sessions,
 	users,
 	verifications,
 } from "#/features/users/users.schema";
+import { ac, roles } from "#/lib/permissions";
+import { Role } from "#/types/user";
 import { db } from "../db";
 
 const betterAuthUrl = process.env.BETTER_AUTH_URL;
@@ -49,7 +49,7 @@ export const auth = betterAuth({
 
 	session: {
 		cookieCache: {
-			enabled: false,
+			enabled: true,
 			maxAge: 5 * 60, // 5 minutes
 			strategy: "compact", // Default https://www.better-auth.com/docs/concepts/session-management#cookie-cache-strategies
 		},

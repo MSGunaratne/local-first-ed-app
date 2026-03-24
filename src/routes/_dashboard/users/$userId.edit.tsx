@@ -2,10 +2,14 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { UserEditForm } from "@/features/users/components/user-form";
 import { userQueries } from "@/features/users/users.queries";
+import { ensureQueryDataAfterRestore } from "@/lib/query-client";
 
 export const Route = createFileRoute("/_dashboard/users/$userId/edit")({
 	loader: async ({ context: { queryClient }, params }) => {
-		await queryClient.ensureQueryData(userQueries.detail(params.userId));
+		await ensureQueryDataAfterRestore(
+			queryClient,
+			userQueries.detail(params.userId),
+		);
 	},
 	component: EditUserPage,
 });
