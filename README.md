@@ -70,35 +70,87 @@ pnpm dlx shadcn@latest add button
 
 ## Setting up Better Auth
 
-1. Generate and set the `BETTER_AUTH_SECRET` environment variable in your `.env.local`:
+1. Generate a `BETTER_AUTH_SECRET` value:
 
    ```bash
    pnpm dlx @better-auth/cli secret
    ```
 
-2. Visit the [Better Auth documentation](https://www.better-auth.com) to unlock the full potential of authentication in your app.
+2. Store it in `.dev.vars` for local Worker runtime and in Wrangler secrets for production.
 
-### Adding a Database (Optional)
+3. Visit the [Better Auth documentation](https://www.better-auth.com) to unlock the full potential of authentication in your app.
 
-Better Auth can work in stateless mode, but to persist user data, add a database:
+## Database And Environments (Cloudflare D1)
 
-```typescript
-// src/lib/auth.ts
-import { betterAuth } from "better-auth";
-import { Pool } from "pg";
+This app uses Cloudflare Workers + D1 in runtime and Drizzle ORM for schema/migrations.
 
-export const auth = betterAuth({
-  database: new Pool({
-    connectionString: process.env.DATABASE_URL,
-  }),
-  // ... rest of config
-});
+### Environment model
+
+You only need two logical environments:
+
+1. Local
+2. Production
+
+Wrangler is the runtime configuration layer for both.
+
+### Local setup
+
+1. Keep app-level values in `.env.local` (tooling/build-time only):
+
+```env
+BETTER_AUTH_URL=http://localhost:3000
 ```
 
-Then run migrations:
+2. Keep Wrangler local runtime values in `.dev.vars` (copy from `.dev.vars.example`):
+
+```env
+BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_SECRET=replace-with-local-secret
+```
+
+3. Ensure D1 binding exists in `wrangler.jsonc` under `d1_databases` with binding `ed_app_db`.
+
+### Production setup
+
+1. Set non-secret Worker vars (for example `BETTER_AUTH_URL`) in `wrangler.jsonc` or dashboard.
+2. Set secrets using Wrangler:
 
 ```bash
-pnpm dlx @better-auth/cli migrate
+wrangler secret put BETTER_AUTH_SECRET
+```
+
+3. Use the same D1 binding name (`ed_app_db`) in production.
+
+### Drizzle + D1 workflow
+
+Generate SQL migrations:
+
+```bash
+pnpm run db:generate
+```
+
+Apply migrations locally to D1:
+
+```bash
+pnpm run db:migrate:local
+```
+
+Apply migrations remotely to production D1:
+
+```bash
+pnpm run db:migrate:remote
+```
+
+Run an ad-hoc SQL query against local D1:
+
+```bash
+pnpm run db:query:local -- "SELECT name FROM sqlite_master WHERE type='table'"
+```
+
+Run an ad-hoc SQL query against remote D1:
+
+```bash
+pnpm run db:query:remote -- "SELECT name FROM sqlite_master WHERE type='table'"
 ```
 
 

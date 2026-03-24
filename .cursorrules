@@ -6,7 +6,7 @@
 - **UI library**: Shadcn UI + Tailwind CSS v4
 - **Database**: Drizzle ORM + Better SQLite3
 - **Validation**: Zod v4 (Use `zod` for all schema validation)
-- **Authentication**: Better Auth
+- **Authentication**: Better Auth v1.5
 - **Forms**: TanStack Form (`@tanstack/react-form`)
 - **Tooling**: Biome (Linting & Formatting)
 
@@ -29,7 +29,7 @@
 
 # Coding Standards
 
-- **Imports**: Use `@/` alias for all internal imports.
+- **Imports**: Use `#/` alias for all internal imports.
 - **Exports**: Use **Named Exports** (`export function MyComponent`) for everything.
 - **Type Safety**: NO `any`. Use strict Zod schemas for all API inputs/outputs. Export types from `types/` files if they are large.
 

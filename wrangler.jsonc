@@ -3,8 +3,8 @@
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "local-first-ed-app",
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "local-first-ed-app",
 	"compatibility_date": "2025-09-02",
 	"compatibility_flags": [
 		"nodejs_compat"
@@ -12,6 +12,18 @@
 	"main": "@tanstack/react-start/server-entry",
 	"observability": {
 		"enabled": true
+	},
+	"d1_databases": [
+		{
+			"binding": "ed_app_db",
+			"database_name": "ed-app-db",
+			"database_id": "c0d1dab6-0917-4ecb-b7a7-e7ef771f6343",
+			"migrations_dir": "drizzle",
+			"remote": true
+		}
+	],
+	"vars": {
+		"BETTER_AUTH_URL": "https://local-first-ed-app.fyp-dashboard.workers.dev"
 	}
 	/**
 	 * Smart Placement

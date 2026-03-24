@@ -1,5 +1,4 @@
 import { APIError } from "better-auth";
-import type Database from "better-sqlite3";
 import { prettifyError, ZodError } from "zod";
 
 // ----------------------------------------------------------------------
@@ -13,7 +12,10 @@ const SQLITE_ERROR_CODES = {
 	CHECK_VIOLATION: "SQLITE_CONSTRAINT_CHECK",
 } as const;
 
-type SqliteError = InstanceType<typeof Database.SqliteError>;
+type SqliteError = {
+	code: string;
+	message: string;
+};
 
 // ----------------------------------------------------------------------
 // Structured error types

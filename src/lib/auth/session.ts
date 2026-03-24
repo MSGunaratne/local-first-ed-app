@@ -1,6 +1,4 @@
-import {
-	getRequestHeaders,
-} from "@tanstack/react-start/server";
+import { getRequestHeaders } from "@tanstack/react-start/server";
 import { AuthorizationError } from "@/db/utils/errors";
 
 export async function readServerSession() {
