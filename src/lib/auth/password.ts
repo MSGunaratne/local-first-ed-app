@@ -1,4 +1,4 @@
-const PBKDF2_PREFIX = "pbkdf2-sha256$v1";
+const PBKDF2_PREFIX = "pbkdf2-sha256-v1";
 const DEFAULT_PBKDF2_ITERATIONS = 100_000;
 const MAX_PBKDF2_ITERATIONS = 100_000;
 const MIN_PBKDF2_ITERATIONS = 50_000;
@@ -111,6 +111,7 @@ export const verifyPassword = async ({
 	}
 
 	const [, iterationsRaw, saltHex, keyHex] = parts;
+
 	const iterations = Number.parseInt(iterationsRaw, 10);
 	if (
 		!Number.isFinite(iterations) ||
