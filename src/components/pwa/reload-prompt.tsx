@@ -86,6 +86,24 @@ function useServiceWorker() {
 				}, UPDATE_INTERVAL_MS);
 			} catch (error) {
 				console.error("Service worker registration failed:", error);
+
+				try {
+					const swResponse = await fetch("/sw.js", {
+						cache: "no-store",
+						headers: {
+							accept: "application/javascript,text/javascript,*/*",
+						},
+					});
+					const swBody = await swResponse.text();
+					console.error("Service worker script diagnostics:", {
+						status: swResponse.status,
+						contentType: swResponse.headers.get("content-type"),
+						bodySnippet: swBody.slice(0, 500),
+					});
+				} catch (diagnosticError) {
+					console.error("Failed to fetch service worker diagnostics:", diagnosticError);
+				}
+
 				toast.error("Offline support is unavailable right now.", {
 					description:
 						"The app will keep working, but offline updates are disabled.",

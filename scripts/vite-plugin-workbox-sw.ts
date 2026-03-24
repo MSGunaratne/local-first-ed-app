@@ -53,6 +53,9 @@ export function workboxServiceWorkerPlugin(): Plugin {
 				root: rootDir,
 				configFile: false,
 				publicDir: false,
+				define: {
+					"process.env.NODE_ENV": JSON.stringify("production"),
+				},
 				build: {
 					emptyOutDir: false,
 					minify: true,
