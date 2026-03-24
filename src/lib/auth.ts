@@ -1,5 +1,5 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
-import { betterAuth } from "better-auth";
+import { betterAuth } from "better-auth/minimal";
 import { admin } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import {
@@ -8,6 +8,7 @@ import {
 	users,
 	verifications,
 } from "#/features/users/users.schema";
+import { hashPassword, verifyPassword } from "#/lib/auth/password";
 import { ac, roles } from "#/lib/permissions";
 import { Role } from "#/types/user";
 import { db } from "../db";
@@ -37,7 +38,11 @@ export const auth = betterAuth({
 	// https://www.better-auth.com/docs/reference/options#emailandpassword
 	emailAndPassword: {
 		enabled: true,
-		disableSignUp: false, // Users are created by admins only
+		disableSignUp: false, // Public sign-up is enabled for now.
+		password: {
+			hash: hashPassword,
+			verify: verifyPassword,
+		},
 	},
 
 	user: {
