@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createWorker, PSM, type Worker } from "tesseract.js";
+import type { PSM, Worker } from "tesseract.js";
 
 interface UseOCROptions {
 	/** Page segmentation mode - affects how Tesseract interprets the image layout */
@@ -33,7 +33,7 @@ export function useOCR(options?: UseOCROptions): UseOCRResult {
 		"idle" | "loading" | "success" | "error"
 	>("idle");
 
-	const psm = options?.pageSegmentationMode ?? PSM.AUTO;
+	const psm = (options?.pageSegmentationMode ?? 3) as unknown as PSM;
 
 	/**
 	 * Tesseract Configuration Guide for Future Enhancements:
@@ -70,11 +70,17 @@ export function useOCR(options?: UseOCROptions): UseOCRResult {
 
 	const scanImage = useCallback(
 		async (file: File) => {
+			if (typeof window === "undefined") {
+				return;
+			}
+
 			setStatus("loading");
 			setProgress(0);
 			setText("");
 
 			try {
+				const { createWorker } = await import("tesseract.js");
+
 				if (!workerRef.current) {
 					// Create worker with offline config (WASM from public/ocr-data)
 					workerRef.current = await createWorker("eng+sin", 1, {
