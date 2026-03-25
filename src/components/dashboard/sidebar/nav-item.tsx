@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import {
 	Collapsible,
@@ -30,8 +30,17 @@ interface NavItemProps {
 export function NavItem({ item, depth = 0 }: NavItemProps) {
 	const { state, isMobile } = useSidebar();
 	const isCollapsed = state === "collapsed" && !isMobile;
-	const location = useLocation();
-	const isActive = item.path ? location.pathname === item.path : false;
+	const isActive = useRouterState({
+		select: (routerState) =>
+			item.path ? (routerState.location?.pathname ?? "") === item.path : false,
+	});
+	const isGroupActive = useRouterState({
+		select: (routerState) =>
+			item.items?.some(
+				(subItem) => subItem.path === (routerState.location?.pathname ?? ""),
+			) ?? false,
+	});
+	const isCurrent = isActive || isGroupActive;
 
 	//TODO: find a better pattern later
 	// @ts-expect-error - dynamic key access
@@ -53,7 +62,7 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 										type="button"
 										className={cn(
 											"flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8",
-											isActive && "bg-accent text-accent-foreground",
+											isCurrent && "bg-accent text-accent-foreground",
 										)}
 									>
 										{item.icon}
@@ -75,7 +84,11 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 								: subItem.title;
 							return (
 								<DropdownMenuItem key={subItem.title} asChild>
-									<Link to={subItem.path ?? "#"} className="cursor-pointer">
+									<Link
+										to={subItem.path ?? "#"}
+										preload={subItem.preload}
+										className="cursor-pointer"
+									>
 										{subItem.icon && (
 											<span className="mr-2">{subItem.icon}</span>
 										)}
@@ -95,9 +108,10 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 					<TooltipTrigger asChild>
 						<Link
 							to={item.path ?? "#"}
+							preload={item.preload}
 							className={cn(
 								"flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8",
-								isActive && "bg-accent text-accent-foreground",
+								isCurrent && "bg-accent text-accent-foreground",
 							)}
 						>
 							{item.icon}
@@ -117,7 +131,7 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 	// If has children, use Collapsible
 	if (item.items && item.items.length > 0) {
 		return (
-			<Collapsible defaultOpen={isActive} className="group/collapsible">
+			<Collapsible defaultOpen={isCurrent} className="group/collapsible">
 				<CollapsibleTrigger asChild>
 					<button
 						type="button" // Important for accessibility
@@ -147,6 +161,7 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 	return (
 		<Link
 			to={item.path ?? "#"}
+			preload={item.preload}
 			className={cn(
 				"flex items-center gap-2 rounded-lg px-3 py-2 text-base font-medium text-muted-foreground transition-colors hover:text-foreground",
 				isActive && "bg-accent text-accent-foreground font-semibold shadow-sm",

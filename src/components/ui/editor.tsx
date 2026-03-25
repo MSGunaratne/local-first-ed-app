@@ -38,7 +38,7 @@ export interface EditorProps {
 }
 
 // Extensions configuration - keep in sync with generateHtmlFromJson
-const getExtensions = () => [StarterKit.configure({}), Quiz];
+const EDITOR_EXTENSIONS = [StarterKit.configure({}), Quiz];
 
 const EditorToolbar = ({ editor }: { editor: TipTapEditor | null }) => {
 	if (!editor) return null;
@@ -173,7 +173,7 @@ export function Editor({
 }: EditorProps) {
 	const editor = useEditor({
 		immediatelyRender: false,
-		extensions: getExtensions(),
+		extensions: EDITOR_EXTENSIONS,
 		content: value ?? undefined,
 		editable,
 		onUpdate: ({ editor }) => {
@@ -221,5 +221,5 @@ export function Editor({
  * IMPORTANT: Extensions must match those used in the Editor
  */
 export function generateHtmlFromJson(json: JSONContent): string {
-	return generateHTML(json, getExtensions());
+	return generateHTML(json, EDITOR_EXTENSIONS);
 }

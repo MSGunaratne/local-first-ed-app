@@ -1,13 +1,18 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Suspense } from "react";
 import DashboardSidebar from "@/components/dashboard/sidebar";
-import { requireAuthenticatedRoute } from "@/lib/auth/route-guards";
+import { authQueries } from "@/features/auth/auth.queries";
 
 export const Route = createFileRoute("/_dashboard")({
-	beforeLoad: async ({ location }) => {
-		const session = await requireAuthenticatedRoute({
-			locationHref: location.href,
-		});
+	beforeLoad: async ({ context: { queryClient }, location }) => {
+		const session = await queryClient.ensureQueryData(authQueries.session());
+
+		if (!session) {
+			throw redirect({
+				to: "/sign-in",
+				search: { returnTo: location.href },
+			});
+		}
 
 		return { session };
 	},

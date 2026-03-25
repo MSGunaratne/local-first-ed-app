@@ -1,5 +1,6 @@
 export { DataTable } from "./data-table";
 export { DataTablePagination } from "./data-table-pagination";
+export { DataTableRoutePending } from "./data-table-route-pending";
 export {
 	DataTableExport,
 	DataTableRowActions,

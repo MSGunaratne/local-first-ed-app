@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { PanelLeft } from "lucide-react";
 import type { Session } from "#/lib/auth-client";
 import ParaglideLocaleSwitcher from "@/components/LocaleSwitcher";
+import { ConnectionModeToggle } from "@/components/pwa/connection-mode-toggle";
 import { Button } from "@/components/ui/button";
 import { navConfig } from "@/config/dashboard-nav";
 import BetterAuthHeader from "@/integrations/better-auth/header-user";
@@ -34,7 +35,7 @@ export function Sidebar({
 			<aside
 				data-state={state}
 				className={cn(
-					"inset-y-0 left-0 z-50 h-screen bg-background border-r transition-[width] duration-300 ease-in-out",
+					"inset-y-0 left-0 z-50 flex h-screen flex-col bg-background border-r transition-[width] duration-300 ease-in-out",
 					isMobile
 						? cn(
 								"fixed",
@@ -104,6 +105,10 @@ export function Sidebar({
 						<ParaglideLocaleSwitcher isCollapsed={isCollapsed} />
 						<BetterAuthHeader session={session} />
 					</div>
+				</div>
+
+				<div className="mt-auto border-t p-2 pt-6">
+					<ConnectionModeToggle compact={isCollapsed} />
 				</div>
 			</aside>
 		</>

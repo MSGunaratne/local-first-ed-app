@@ -17,6 +17,7 @@ import {
 	DataTable,
 	DataTableExport,
 	DataTablePagination,
+	DataTableRoutePending,
 	DataTableRowActions,
 	DataTableToolbar,
 	DataTableViewOptions,
@@ -65,8 +66,8 @@ export const Route = createFileRoute("/_dashboard/users/")({
 		columnFilters,
 		globalFilter,
 	}),
-	loader: ({ context: { queryClient }, deps }) =>
-		ensureQueryDataAfterRestore(
+	loader: async ({ context: { queryClient }, deps }) => {
+		await ensureQueryDataAfterRestore(
 			queryClient,
 			userQueries.list({
 				pagination: {
@@ -77,15 +78,22 @@ export const Route = createFileRoute("/_dashboard/users/")({
 				columnFilters: deps.columnFilters,
 				globalFilter: deps.globalFilter,
 			}),
-		),
+		);
+	},
+	pendingComponent: DashboardListRoutePending,
+	pendingMs: 100,
+	pendingMinMs: 150,
 	component: UsersPage,
 });
 
 // Stable fallback to prevent re-render loops from new [] reference each render
 const fallbackData: User[] = [];
 
+function DashboardListRoutePending() {
+	return <DataTableRoutePending message="Preparing users..." />;
+}
+
 function UsersPage() {
-	"use no memo";
 	const {
 		pagination,
 		sorting,
@@ -259,6 +267,10 @@ function UsersPage() {
 		},
 	});
 
+	const hasRows = (data?.data.length ?? 0) > 0;
+	const isTableRefetching = (isFetching || isPending) && hasRows;
+	const isTableLoading = (isFetching || isPending) && !hasRows;
+
 	return (
 		<div className="space-y-4">
 			{/* Header */}
@@ -301,7 +313,11 @@ function UsersPage() {
 			</div>
 
 			{/* Table */}
-			<DataTable table={table} isLoading={isFetching || isPending} />
+			<DataTable
+				table={table}
+				isLoading={isTableLoading}
+				isRefetching={isTableRefetching}
+			/>
 
 			{/* Pagination */}
 			<DataTablePagination

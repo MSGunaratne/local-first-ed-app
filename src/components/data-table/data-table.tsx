@@ -14,12 +14,31 @@ import { cn } from "@/lib/utils";
 interface DataTableProps<TData> {
 	table: TanStackTable<TData>;
 	isLoading?: boolean;
+	isRefetching?: boolean;
 }
 
-export function DataTable<TData>({ table, isLoading }: DataTableProps<TData>) {
+export function DataTable<TData>({
+	table,
+	isLoading,
+	isRefetching,
+}: DataTableProps<TData>) {
 	"use no memo";
+	const rows = table.getRowModel().rows;
+	const hasRows = rows.length > 0;
+	const columnCount = Math.max(1, table.getVisibleLeafColumns().length);
+	const showInitialLoading = !!isLoading && !hasRows;
+	const showRefetchOverlay = !!isRefetching && hasRows;
+
 	return (
-		<div className="rounded-md border">
+		<div className="relative rounded-md border">
+			{showRefetchOverlay ? (
+				<div className="pointer-events-none absolute right-3 top-3 z-10 rounded-md border bg-background/90 px-2 py-1 shadow-sm">
+					<div className="flex items-center gap-2 text-xs text-muted-foreground">
+						<div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+						<span>Updating...</span>
+					</div>
+				</div>
+			) : null}
 			<Table>
 				<TableHeader>
 					{table.getHeaderGroups().map((headerGroup) => (
@@ -65,23 +84,20 @@ export function DataTable<TData>({ table, isLoading }: DataTableProps<TData>) {
 					))}
 				</TableHeader>
 				<TableBody>
-					{isLoading ? (
+					{showInitialLoading ? (
 						<TableRow>
-							<TableCell
-								colSpan={table.getAllColumns().length}
-								className="h-24 text-center"
-							>
+							<TableCell colSpan={columnCount} className="h-24 text-center">
 								<div className="flex items-center justify-center gap-2">
 									<div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
 									<span className="text-lg font-medium">Loading...</span>
 								</div>
 							</TableCell>
 						</TableRow>
-					) : table.getRowModel().rows?.length ? (
-						table.getRowModel().rows.map((row) => (
+					) : hasRows ? (
+						rows.map((row) => (
 							<TableRow
 								key={row.id}
-								data-state={row.getIsSelected() && "selected"}
+								data-state={row.getIsSelected() ? "selected" : undefined}
 								className="hover:bg-muted/50 transition-colors"
 							>
 								{row.getVisibleCells().map((cell) => (
@@ -93,10 +109,7 @@ export function DataTable<TData>({ table, isLoading }: DataTableProps<TData>) {
 						))
 					) : (
 						<TableRow>
-							<TableCell
-								colSpan={table.getAllColumns().length}
-								className="h-24 text-center"
-							>
+							<TableCell colSpan={columnCount} className="h-24 text-center">
 								No results.
 							</TableCell>
 						</TableRow>

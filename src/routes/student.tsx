@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { GraduationCap } from "lucide-react";
+import { ConnectionModeToggle } from "#/components/pwa/connection-mode-toggle";
 import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/student")({ component: StudentLayout });
 
@@ -12,10 +13,11 @@ function StudentLayout() {
 					<GraduationCap className="h-6 w-6" />
 					<span>Student Hub</span>
 				</div>
-				<div className="flex items-center gap-4">
-					<Button variant="ghost" asChild>
+				<div className="flex items-center gap-3 sm:gap-4">
+					<Button variant="ghost" asChild className="whitespace-nowrap">
 						<Link to="/lessons">Back to Teacher Dashboard</Link>
 					</Button>
+					<ConnectionModeToggle compact className="shrink-0" />
 				</div>
 			</header>
 

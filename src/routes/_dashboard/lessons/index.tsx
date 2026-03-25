@@ -17,6 +17,7 @@ import {
 	DataTable,
 	DataTableExport,
 	DataTablePagination,
+	DataTableRoutePending,
 	DataTableRowActions,
 	DataTableToolbar,
 	DataTableViewOptions,
@@ -67,8 +68,8 @@ export const Route = createFileRoute("/_dashboard/lessons/")({
 		columnFilters,
 		globalFilter,
 	}),
-	loader: ({ context: { queryClient }, deps }) =>
-		ensureQueryDataAfterRestore(
+	loader: async ({ context: { queryClient }, deps }) => {
+		await ensureQueryDataAfterRestore(
 			queryClient,
 			lessonQueries.list({
 				pagination: {
@@ -79,9 +80,19 @@ export const Route = createFileRoute("/_dashboard/lessons/")({
 				columnFilters: deps.columnFilters,
 				globalFilter: deps.globalFilter,
 			}),
-		),
+		);
+	},
+	pendingComponent: DashboardListRoutePending,
+	pendingMs: 100,
+	pendingMinMs: 150,
 	component: LessonsPage,
 });
+
+const fallbackData: Lesson[] = [];
+
+function DashboardListRoutePending() {
+	return <DataTableRoutePending message={m.lessons_preparing()} />;
+}
 
 const fuzzyFilter: FilterFn<unknown> = (row, columnId, value, addMeta) => {
 	const itemRank = rankItem(row.getValue(columnId), value);
@@ -90,7 +101,6 @@ const fuzzyFilter: FilterFn<unknown> = (row, columnId, value, addMeta) => {
 };
 
 function LessonsPage() {
-	"use no memo";
 	const {
 		pagination,
 		sorting,
@@ -208,7 +218,7 @@ function LessonsPage() {
 	);
 
 	const table = useReactTable({
-		data: data?.data ?? [],
+		data: data?.data ?? fallbackData,
 		columns,
 		pageCount: data?.meta.pageCount ?? -1,
 		getCoreRowModel: getCoreRowModel(),
@@ -233,6 +243,10 @@ function LessonsPage() {
 			columnVisibility,
 		},
 	});
+
+	const hasRows = (data?.data.length ?? 0) > 0;
+	const isTableRefetching = (isFetching || isPending) && hasRows;
+	const isTableLoading = (isFetching || isPending) && !hasRows;
 
 	return (
 		<div className="space-y-4">
@@ -269,7 +283,11 @@ function LessonsPage() {
 				</div>
 			</div>
 
-			<DataTable table={table} isLoading={isFetching || isPending} />
+			<DataTable
+				table={table}
+				isLoading={isTableLoading}
+				isRefetching={isTableRefetching}
+			/>
 
 			<DataTablePagination
 				table={table}

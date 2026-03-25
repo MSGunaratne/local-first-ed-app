@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Editor } from "@/components/ui/editor";
 import { lessonQueries } from "@/features/lessons/lessons.queries";
 import { useLocalProgress } from "@/hooks/use-local-progress";
+import { m } from "@/paraglide/messages";
 import { ensureQueryDataAfterRestore } from "@/lib/query-client";
 
 export const Route = createFileRoute("/student/lessons/$lessonId")({
@@ -39,20 +40,20 @@ function LessonPlayer() {
 				className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
 			>
 				<ArrowLeft className="mr-2 h-4 w-4" />
-				Back to Lessons
+				{m.common_back_to_lessons()}
 			</Link>
 
 			{/* Header */}
 			<div className="space-y-4">
 				<div className="flex items-center gap-2">
 					<Badge className="capitalize">{lesson.subject}</Badge>
-					<Badge variant="outline">Grade {lesson.gradeLevel}</Badge>
+					<Badge variant="outline">{m.lessons_grade({ grade: lesson.gradeLevel })}</Badge>
 					{isCompleted && (
 						<Badge
 							variant="secondary"
 							className="bg-green-500/15 text-green-600 border-green-200"
 						>
-							Completed
+							{m.common_completed()}
 						</Badge>
 					)}
 				</div>
@@ -62,7 +63,7 @@ function LessonPlayer() {
 				<div className="flex items-center gap-6 text-sm text-muted-foreground">
 					<div className="flex items-center gap-2">
 						<ClockIcon className="h-4 w-4" />
-						<span>{lesson.estimatedDuration ?? "?"} mins</span>
+						<span>{m.common_mins({ count: lesson.estimatedDuration ?? 0 })}</span>
 					</div>
 					<div className="flex items-center gap-2">
 						<Calendar className="h-4 w-4" />
@@ -84,7 +85,7 @@ function LessonPlayer() {
 					/>
 				) : (
 					<div className="text-center py-12 text-muted-foreground">
-						No content available for this lesson.
+						{m.common_no_content()}
 					</div>
 				)}
 			</article>
@@ -103,10 +104,10 @@ function LessonPlayer() {
 					{isCompleted ? (
 						<>
 							<CheckCircle2 className="mr-2 h-5 w-5" />
-							Lesson Completed
+							{m.common_lesson_completed()}
 						</>
 					) : (
-						"Mark as Completed"
+						m.common_mark_as_completed()
 					)}
 				</Button>
 			</div>
@@ -128,7 +129,7 @@ function ClockIcon(props: React.SVGProps<SVGSVGElement>) {
 			strokeLinecap="round"
 			strokeLinejoin="round"
 		>
-			<title>Duration</title>
+			<title>{m.common_duration()}</title>
 			<circle cx="12" cy="12" r="10" />
 			<polyline points="12 6 12 12 16 14" />
 		</svg>

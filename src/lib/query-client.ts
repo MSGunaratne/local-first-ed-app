@@ -94,7 +94,7 @@ function shouldPersistQuery(
 		return false;
 	}
 
-	return defaultShouldDehydrateQuery(query) || query.state.status === "pending";
+	return defaultShouldDehydrateQuery(query);
 }
 
 function makeQueryClient() {
@@ -244,6 +244,14 @@ function startPersistence(queryClient: QueryClient) {
 	return restorePromise;
 }
 
+export function initializeQueryPersistence(queryClient: QueryClient) {
+	if (environmentManager.isServer()) {
+		return;
+	}
+
+	void startPersistence(queryClient);
+}
+
 export function getQueryPersistenceOptions() {
 	if (environmentManager.isServer()) {
 		return undefined;
@@ -283,7 +291,7 @@ export async function ensureQueryDataAfterRestore<
 		never
 	>,
 ) {
-	await ensureQueryCacheRestored();
+	initializeQueryPersistence(queryClient);
 	return queryClient.ensureQueryData(options);
 }
 

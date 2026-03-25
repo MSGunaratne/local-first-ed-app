@@ -25,6 +25,7 @@ import {
 } from "@/features/lessons/student-search";
 import type { Subject } from "@/types/lesson";
 import { SUBJECT_METADATA } from "@/types/lesson";
+import { m } from "@/paraglide/messages";
 
 // ----------------------------------------------------------------------
 
@@ -94,9 +95,11 @@ function StudentDashboard() {
 		<div className="space-y-8">
 			<div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
 				<div className="space-y-2">
-					<h1 className="text-3xl font-bold tracking-tight">Your Lessons</h1>
+					<h1 className="text-3xl font-bold tracking-tight">
+						{m.student_dashboard_title()}
+					</h1>
 					<p className="text-muted-foreground">
-						Browse and manage your learning materials.
+						{m.student_dashboard_description()}
 					</p>
 				</div>
 
@@ -105,7 +108,7 @@ function StudentDashboard() {
 						<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
 						<Input
 							type="search"
-							placeholder="Search lessons..."
+							placeholder={m.student_search_placeholder()}
 							className="pl-9"
 							defaultValue={search.q}
 							onChange={(e) => handleSearch(e.target.value)}
@@ -113,7 +116,7 @@ function StudentDashboard() {
 					</div>
 					<Select value={currentSort} onValueChange={handleSortValChange}>
 						<SelectTrigger className="w-full sm:w-40">
-							<SelectValue placeholder="Sort by" />
+							<SelectValue placeholder={m.student_sort_by()} />
 						</SelectTrigger>
 						<SelectContent>
 							{SORT_OPTIONS.map((option) => (
@@ -132,7 +135,7 @@ function StudentDashboard() {
 				className="w-full"
 			>
 				<TabsList className="w-full grid grid-cols-4">
-					<TabsTrigger value="all">All Subjects</TabsTrigger>
+					<TabsTrigger value="all">{m.student_all_subjects()}</TabsTrigger>
 					{Object.entries(SUBJECT_METADATA).map(([key, meta]) => (
 						<TabsTrigger key={key} value={key}>
 							{meta.label}
@@ -144,8 +147,8 @@ function StudentDashboard() {
 			{(isPending || isFetching || showOfflineHint) && (
 				<div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
 					{isPending || isFetching
-						? "Loading cached lessons and checking for updates..."
-						: "You're offline and this filter has no cached lessons yet"}
+						? m.student_loading_cached()
+						: m.student_offline_no_cache()}
 				</div>
 			)}
 
@@ -155,11 +158,10 @@ function StudentDashboard() {
 						<BookOpen className="h-8 w-8 text-muted-foreground/50" />
 					</div>
 					<h3 className="text-xl font-semibold text-foreground">
-						No lessons found
+						{m.student_no_lessons_found()}
 					</h3>
 					<p className="text-muted-foreground mt-2 max-w-sm">
-						We couldn't find any lessons matching your filters. Try adjusting
-						your search or categories.
+						{m.student_no_lessons_desc()}
 					</p>
 					{(search.q || search.subject) && (
 						<Button
@@ -167,7 +169,7 @@ function StudentDashboard() {
 							onClick={() => navigate({ search: { page: 1, sort: "newest" } })}
 							className="mt-6"
 						>
-							Clear Filters
+							{m.student_clear_filters()}
 						</Button>
 					)}
 				</div>
@@ -183,7 +185,10 @@ function StudentDashboard() {
 			{meta && meta.pageCount > 1 && (
 				<div className="flex items-center justify-between border-t pt-4">
 					<div className="text-sm text-muted-foreground">
-						Page {meta.page} of {meta.pageCount}
+						{m.student_pagination_page({
+							page: meta.page,
+							pageCount: meta.pageCount,
+						})}
 					</div>
 					<div className="flex items-center gap-2">
 						<Button
@@ -192,7 +197,7 @@ function StudentDashboard() {
 							onClick={() => handlePageChange((search.page || 1) - 1)}
 							disabled={!meta.hasPreviousPage}
 						>
-							Previous
+							{m.student_pagination_prev()}
 						</Button>
 						<Button
 							variant="outline"
@@ -200,7 +205,7 @@ function StudentDashboard() {
 							onClick={() => handlePageChange((search.page || 1) + 1)}
 							disabled={!meta.hasNextPage}
 						>
-							Next
+							{m.student_pagination_next()}
 						</Button>
 					</div>
 				</div>

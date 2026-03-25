@@ -5,7 +5,12 @@ import {
 } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import type { ReactNode } from "react";
-import { getQueryClient, getQueryPersistenceOptions } from "@/lib/query-client";
+import { initializeConnectionMode } from "@/lib/connection-mode";
+import {
+	getQueryClient,
+	getQueryPersistenceOptions,
+	initializeQueryPersistence,
+} from "@/lib/query-client";
 
 let context:
 	| {
@@ -19,6 +24,7 @@ export function getContext() {
 	}
 
 	const queryClient = getQueryClient();
+	initializeQueryPersistence(queryClient);
 
 	context = {
 		queryClient,
@@ -34,6 +40,7 @@ export default function TanStackQueryProvider({
 }) {
 	const { queryClient } = getContext();
 	const persistenceOptions = getQueryPersistenceOptions();
+	initializeConnectionMode();
 
 	if (environmentManager.isServer() || !persistenceOptions) {
 		return (

@@ -15,6 +15,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 export default function BetterAuthHeader({ session }: { session: Session }) {
 	const navigate = useNavigate();
@@ -77,7 +78,7 @@ export default function BetterAuthHeader({ session }: { session: Session }) {
 					<DropdownMenuSeparator />
 					<DropdownMenuItem onClick={handleSignOut}>
 						<LogOut className="mr-2 h-4 w-4" />
-						<span>Log out</span>
+						<span>{m.auth_logout()}</span>
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
@@ -94,7 +95,7 @@ export default function BetterAuthHeader({ session }: { session: Session }) {
 			)}
 		>
 			<Link to="/sign-in">
-				{isCollapsed ? <User className="h-4 w-4" /> : "Sign in"}
+				{isCollapsed ? <User className="h-4 w-4" /> : m.auth_signin()}
 			</Link>
 		</Button>
 	);
