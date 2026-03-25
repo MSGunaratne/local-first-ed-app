@@ -37,7 +37,7 @@ export default function ParaglideLocaleSwitcher({
 						size="icon"
 						className={cn("h-10 w-10", className)}
 					>
-						<Globe className="h-4 w-4" />
+						<Globe className="h-5 w-5" />
 						<span className="sr-only">Switch Language</span>
 					</Button>
 				</DropdownMenuTrigger>
@@ -58,21 +58,24 @@ export default function ParaglideLocaleSwitcher({
 
 	return (
 		<div
-			className={cn("flex items-center gap-2 px-2 py-1.5 w-full", className)}
+			className={cn("flex flex-col gap-2 p-2 w-full border rounded-lg bg-muted/30", className)}
 		>
-			<span className="text-xs text-muted-foreground font-medium shrink-0">
-				{m.common_current_locale({ locale: currentLocale })}
-			</span>
-			<div className="flex gap-1 ml-auto">
+			<div className="flex items-center gap-2 px-1">
+				<Globe className="h-4 w-4 text-muted-foreground" />
+				<span className="text-sm font-semibold">
+					{m.common_language_label()}
+				</span>
+			</div>
+			<div className="flex gap-2">
 				{locales.map((locale) => (
 					<Button
 						key={locale}
-						variant={locale === currentLocale ? "secondary" : "ghost"}
+						variant={locale === currentLocale ? "default" : "outline"} // Stronger variant for active
 						size="sm"
-						className="h-6 px-2 text-xs"
+						className="flex-1 h-10 text-sm font-medium" // Increased height and font size
 						onClick={() => setLocale(locale)}
 					>
-						{locale.toUpperCase()}
+						{labels[locale]}
 					</Button>
 				))}
 			</div>

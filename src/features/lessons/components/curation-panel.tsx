@@ -89,13 +89,13 @@ export function CurationPanel({ subject, onMatchSelect }: CurationPanelProps) {
 				</TabsList>
 
 				<TabsContent value="scan" className="space-y-4 mt-4">
-					<Card>
-						<CardHeader>
-							<CardTitle className="text-sm font-medium">
+					<Card className="border-2 shadow-sm">
+						<CardHeader className="bg-muted/30 border-b">
+							<CardTitle className="text-base font-bold">
 								{m.lessons_upload_notes_title()}
 							</CardTitle>
 						</CardHeader>
-						<CardContent>
+						<CardContent className="pt-6">
 							<FileUploader
 								value={[]}
 								onValueChange={handleFileUpload}
@@ -109,12 +109,12 @@ export function CurationPanel({ subject, onMatchSelect }: CurationPanelProps) {
 					</Card>
 
 					{status !== "idle" && (
-						<Card>
-							<CardHeader>
-								<CardTitle className="text-sm font-medium flex justify-between items-center">
+						<Card className="border-2 shadow-md">
+							<CardHeader className="bg-muted/30 border-b">
+								<CardTitle className="text-base font-bold flex justify-between items-center">
 									<span>{m.lessons_extracted_text_title()}</span>
 									{status === "loading" && (
-										<Badge variant="secondary" className="animate-pulse">
+										<Badge variant="secondary" className="animate-pulse py-1 px-2">
 											<Loader2 className="mr-1 h-3 w-3 animate-spin" />
 											{m.lessons_extracted_text_processing({
 												progress: progress.toString(),
@@ -122,7 +122,7 @@ export function CurationPanel({ subject, onMatchSelect }: CurationPanelProps) {
 										</Badge>
 									)}
 									{status === "success" && (
-										<Badge variant="default" className="bg-green-600">
+										<Badge variant="default" className="bg-green-600 py-1 px-2">
 											<CheckCircle2 className="mr-1 h-3 w-3" />
 											{m.lessons_extracted_text_complete()}
 										</Badge>
@@ -131,21 +131,21 @@ export function CurationPanel({ subject, onMatchSelect }: CurationPanelProps) {
 							</CardHeader>
 							<CardContent className="space-y-2">
 								{status === "loading" && (
-									<Progress value={progress} className="w-full h-2" />
+									<Progress value={progress} className="w-full h-3 rounded-full" />
 								)}
 								<Textarea
 									placeholder={m.lessons_extracted_text_placeholder()}
 									value={text}
 									readOnly
-									className="min-h-[200px] font-mono text-sm"
+									className="min-h-[250px] font-mono text-base bg-muted/20"
 								/>
 							</CardContent>
-							<CardFooter>
+							<CardFooter className="pb-6">
 								<Button
 									onClick={handleFindMatches}
 									disabled={!text || status === "loading"}
-									className="w-full"
-									size="sm"
+									className="w-full h-12 text-base font-bold"
+									size="lg"
 									type="button"
 								>
 									{m.lessons_analyze_content_button()}{" "}

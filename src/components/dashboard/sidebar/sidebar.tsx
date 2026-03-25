@@ -57,7 +57,7 @@ export function Sidebar({
 					)}
 				>
 					{!isCollapsed && (
-						<Link to="/" className="flex items-center gap-2 font-semibold">
+						<Link to="/" className="flex items-center gap-2 font-bold text-lg">
 							<img
 								src="/iit-logo.webp"
 								alt={m.common_app_title()}
@@ -70,7 +70,10 @@ export function Sidebar({
 						<Button
 							variant="ghost"
 							size="icon"
-							className="h-8 w-8"
+							className={cn(
+								"h-8 w-8 text-muted-foreground hover:text-foreground",
+								isCollapsed && "mx-auto"
+							)}
 							onClick={toggleSidebar}
 						>
 							<PanelLeft className="h-4 w-4" />

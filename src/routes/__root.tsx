@@ -10,7 +10,6 @@ import { getLocale } from "#/paraglide/runtime";
 import { AppError } from "@/components/app-error";
 import { ReloadPrompt } from "@/components/pwa/reload-prompt";
 import { Toaster } from "@/components/ui/sonner";
-import Footer from "../components/Footer";
 
 import { NotFound } from "../components/not-found";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
@@ -91,7 +90,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<TanStackQueryProvider>
 					{children}
 					<Toaster />
-					<Footer />
 					<ReloadPrompt />
 					<TanStackDevtools
 						config={{

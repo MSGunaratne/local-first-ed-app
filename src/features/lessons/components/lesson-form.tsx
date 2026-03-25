@@ -2,7 +2,7 @@ import { useStore } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { JSONContent } from "@tiptap/core";
-import { X } from "lucide-react";
+import { BookOpen, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
 	Breadcrumb,
@@ -142,8 +142,8 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 	};
 
 	return (
-		<div className="space-y-4">
-			<Breadcrumb>
+		<div className="space-y-4"> 
+			<Breadcrumb className="px-1">
 				<BreadcrumbList>
 					<BreadcrumbItem>
 						<BreadcrumbLink asChild>
@@ -186,9 +186,10 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 				</div>
 
 				<div className="md:col-span-1 lg:col-span-2 space-y-4">
-					<Card>
-						<CardHeader>
-							<CardTitle className="text-lg">
+					<Card className="border-2 shadow-sm">
+						<CardHeader className="border-b bg-muted/30">
+							<CardTitle className="text-xl font-bold flex items-center gap-2"> 
+								<BookOpen className="h-5 w-5 text-primary" />
 								{m.lessons_card_details()}
 							</CardTitle>
 						</CardHeader>
@@ -304,9 +305,10 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 										)}
 									</form.AppField>
 
-									<div className="flex justify-between pt-4">
+									<div className="flex justify-between pt-4 border-t">
 										<form.ResetButton />
 										<form.SubmitButton
+											className="h-12 px-8 text-base font-bold shadow-md"
 											label={
 												mode === "create"
 													? m.lessons_form_submit_create()

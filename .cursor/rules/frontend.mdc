@@ -1,0 +1,58 @@
+---
+description: Aesthetic principles, UI/UX standards, and frontend design excellence for MUI 6 and framer-motion.
+globs: src/**/*.css
+---
+
+# Frontend Design & Aesthetics
+
+> [!NOTE]
+> Core principles inspired by the [Claude Frontend Design Skill](https://github.com/anthropics/claude-code/blob/main/plugins/frontend-design/skills/frontend-design/SKILL.md).
+
+Follow these principles to create premium, "WOW" factor interfaces. While we use MUI 6, we aim for a bespoke, custom feel rather than a generic Material look.
+
+## Core Design Principles
+
+### 1. Spatial Composition
+
+- **Asymmetry & Negative Space**: Avoid perfectly centered or boxy layouts. Use generous padding and intentional whitespace to let components "breathe."
+- **Visual Balance**: Use weight distribution (typography, color, size) to guide the user's eye, rather than just grid alignment.
+
+### 2. Typography First
+
+- **High-Impact Scaling**: Use extreme contrast in font sizes (e.g., very large `h1` vs small, elegant `caption`).
+- **Hierarchy**: Use `fontWeight` and `letterSpacing` via MUI `Typography` to establish clear reading paths.
+- **Line Heights**: Ensure comfortable reading with `lineHeight` between 1.5 and 1.8 for body text.
+
+### 3. Micro-interactions
+
+- **Feedback Loops**: Every interaction (hover, click, focus) must have a subtle, elegant transition.
+- **Framer Motion**: Use `framer-motion` for page transitions and entry animations. Refer to implementation in `src/sections` for patterns.
+- **MUI Sx Transitions**: Use the `sx` prop for clean hover states:
+  ```tsx
+  <Button
+    sx={{
+      transition: (theme) => theme.transitions.create(['transform']),
+      '&:hover': { transform: 'translateY(-2px)' },
+    }}
+  >
+    Action
+  </Button>
+  ```
+
+### 4. Refined Palettes
+
+- **Neutral Baselines**: Use soft grays and off-whites for backgrounds to make content pop.
+- **Intentional Color**: Use accent colors sparingly for high-impact CTAs.
+
+## MUI 6 Implementation Patterns
+
+- **Shared Components First**: **ALWAYS** prefer internal shared components (e.g., `Label`, `Iconify`, `Image`, `Scrollbar`) over raw MUI equivalents. This ensures consistent design tokens and established "WOW" factor patterns are applied.
+- **Avoid Generic Overrides**: Prefer local styling via the `sx` prop or custom `styled` components for unique section-specific designs.
+- **Custom Theme**: Reference `src/theme` for established design tokens (shadows, border-radius, color variants).
+- **Glassmorphism**: Use `backdropFilter: 'blur(10px)'` and semi-transparent backgrounds for modern overlays.
+
+## Interaction & Accessibility
+
+- **Loading States**: Always provide graceful skeletons or micro-loaders for async actions.
+- **Touch Targets**: Ensure interactive elements have a minimum size of 44x44px.
+- **Contrast**: Maintain AA/AAA readability levels.

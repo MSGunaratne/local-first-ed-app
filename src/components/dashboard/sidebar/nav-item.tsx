@@ -122,7 +122,7 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 					<button
 						type="button" // Important for accessibility
 						className={cn(
-							"flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=open]:text-foreground",
+							"flex w-full items-center gap-3 rounded-lg px-3 py-2 text-base font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=open]:text-foreground",
 							// Indentation for depth
 							depth > 0 && "ml-4",
 						)}
@@ -148,8 +148,8 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 		<Link
 			to={item.path ?? "#"}
 			className={cn(
-				"flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
-				isActive && "bg-accent text-accent-foreground",
+				"flex items-center gap-2 rounded-lg px-3 py-2 text-base font-medium text-muted-foreground transition-colors hover:text-foreground",
+				isActive && "bg-accent text-accent-foreground font-semibold shadow-sm",
 				depth > 0 && "ml-4",
 			)}
 		>
