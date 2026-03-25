@@ -122,7 +122,10 @@ function SignUpPage() {
 								/>
 							</div>
 							<div className="space-y-2">
-								<Label htmlFor="confirmPassword" className="text-base font-semibold">
+								<Label
+									htmlFor="confirmPassword"
+									className="text-base font-semibold"
+								>
 									{m.auth_confirm_password_label()}
 								</Label>
 								<Input
@@ -138,7 +141,11 @@ function SignUpPage() {
 							</div>
 						</CardContent>
 						<CardFooter className="flex flex-col space-y-4 pt-6">
-							<Button type="submit" className="w-full h-14 text-lg font-bold" disabled={isPending}>
+							<Button
+								type="submit"
+								className="w-full h-14 text-lg font-bold"
+								disabled={isPending}
+							>
 								{isPending
 									? m.auth_creating_account_button()
 									: m.auth_create_account_button()}

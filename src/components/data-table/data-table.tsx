@@ -31,7 +31,10 @@ export function DataTable<TData>({ table, isLoading }: DataTableProps<TData>) {
 								return (
 									<TableHead
 										key={header.id}
-										className={cn(canSort && "cursor-pointer select-none", "px-4 py-4")}
+										className={cn(
+											canSort && "cursor-pointer select-none",
+											"px-4 py-4",
+										)}
 										onClick={header.column.getToggleSortingHandler()}
 									>
 										{header.isPlaceholder ? null : (

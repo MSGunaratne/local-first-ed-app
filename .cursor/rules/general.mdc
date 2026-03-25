@@ -1,56 +1,62 @@
-# Tech Stack
+---
+description: Global project standards, TanStack Start architecture, local-first patterns, and code quality requirements.
+alwaysApply: true
+---
 
-- **Framework**: TanStack Start (Next.js-like full-stack framework on top of TanStack Router)
-- **Router**: TanStack Router (File-based routing in `src/routes`)
-- **Data Fetching**: TanStack Query
-- **UI library**: Shadcn UI + Tailwind CSS v4
-- **Database**: Drizzle ORM + Better SQLite3
-- **Validation**: Zod v4 (Use `zod` for all schema validation)
-- **Authentication**: Better Auth v1.5
-- **Forms**: TanStack Form (`@tanstack/react-form`)
-- **Tooling**: Biome (Linting & Formatting)
+# Local-First Ed App Project Standards
 
-# Architecture & Project Structure
+## Tech Stack Versions
 
+- **Framework**: [TanStack Start](https://tanstack.com/start) (Full-stack React)
+- **Routing**: [TanStack Router](https://tanstack.com/router) (File-based in `src/routes`)
+- **Data Fetching**: [TanStack Query](https://tanstack.com/query) v5+
+- **UI Architecture**: React 19 + Shadcn UI + [Base UI](https://base-ui.com)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com) (Modern engine)
+- **Forms**: [TanStack Form](https://tanstack.com/form) (using `standardSchemaValidator`)
+- **Database**: Drizzle ORM + Cloudflare D1 (SQLite)
+- **Auth**: [Better Auth](https://better-auth.com) v1.5+
+- **Tooling**: [Biome](https://biomejs.dev) (Linting & Formatting)
+- **Offline/Sync**: `idb-keyval` + Workbox (PWA)
+
+## Architectural Principles
+
+- **Local-First Consistency**: **ALWAYS** prioritize offline-ready data structures. Use `uuidv7` for primary keys to ensure collision-free sync.
+- **Server Functions**: Use `createServerFn` for all data mutations and sensitive logic. Reference `src/features/[module]/server/` for organization.
 - **Vertical Slice Architecture**: Organize complex domains in `src/features/<feature-name>`.
-  - Structure: `components/`, `server/` (functions), `types/`, `utils/`, `*.queries.ts`.
-- **Shared UI**: Reusable generic components go in `src/components/ui`.
-- **Routes**: All pages are defined in `src/routes`. Use `createFileRoute` for type safety.
-- **Server Functions**: Use `createServerFn` from `@tanstack/start` for API-like logic.
+  - Structure: `components/`, `server/`, `types/`, `utils/`, `*.queries.ts`, `*.schema.ts`.
+- **Type Safety**: **NEVER** use `any`. Use strict Zod schemas (v4+) for all API inputs/outputs and form validations.
+- **Exports**: **ALWAYS** use **Named Exports** (`export function MyComponent`) for everything. **NEVER** use default exports.
+- **Imports**: **ALWAYS** use project-relative imports with prefix `#/` (e.g., `#/features/auth/types`).
 
-# UI & Design Principles
+## UI & Design Principles
 
-- **Aesthetic Skill**: Follow the [frontend-design](https://github.com/anthropics/claude-code/blob/main/plugins/frontend-design/skills/frontend-design/SKILL.md) skill for all UI work.
-- **Styling**:
-  - Use Tailwind CSS v4 classes for the engine.
-  - Define theme variables in `src/styles.css` using `@theme inline`.
-  - Use `clsx` and `tailwind-merge` (via `cn` helper) for dynamic styles.
-- **Typography & Layout**: Prioritize high-impact typography and unique spatial compositions (asymmetry/negative space).
+- **Aesthetic Excellence**: Follow the [frontend.mdc](file:///.cursor/rules/frontend.mdc) for all UI work to ensure "WOW" factor.
+- **Tailwind v4**: **ALWAYS** use Tailwind v4 utility classes. Define variables in `src/styles.css` using `@theme`.
+- **Dynamic Styles**: Use the `cn` helper (`clsx` + `tailwind-merge`) for conditional classes.
 
-# Coding Standards
+## Specialized Patterns
 
-- **Imports**: Use `#/` alias for all internal imports.
-- **Exports**: Use **Named Exports** (`export function MyComponent`) for everything.
-- **Type Safety**: NO `any`. Use strict Zod schemas for all API inputs/outputs. Export types from `types/` files if they are large.
+### Data Fetching (TanStack Query)
 
-# Specialized Patterns
+- **Query Factories**: Define query/mutation options in `src/features/[module]/[module].queries.ts`.
+- **Persistence**: Query results are persisted via `idb-keyval` where appropriate for offline support.
 
-## Data Fetching (TanStack Query)
+### Forms (TanStack Form)
 
-- **Factories**: Define query/mutation options in `[feature].queries.ts`.
-- **Global Feedback**: The `query-client.ts` handles toasts and invalidation via `meta` (successMessage, errorMessage, invalidates).
+- **Field Pattern**: **ALWAYS** use `<form.AppField>` (nested children) for type inference.
+- **Validation**: Use `standardSchemaValidator` with Zod schemas defined in `src/features/[module]/[module].schema.ts`.
+- **Refer canonical example**: `src/hooks/use-app-form.tsx`.
 
-## Forms (TanStack Form)
+## Code Quality & Verification
 
-- **Field Pattern**: Always use `<form.AppField>` (nested children) for type inference.
-  - _Correct:_ `<form.AppField name="foo">{() => <TextField />}</form.AppField>`
-- **Reference**: Follow patterns in `src/components/form/field-components.tsx`.
-- **Validation**: Always try to define form/input validation in the feature module's schema file (`src/features/[module]/[module].schema.ts`) using `drizzle-zod`.
-  - Use `createInsertSchema` to derive Zod schemas from Drizzle tables.
-  - References: `src/features/users/users.schema.ts`, `src/features/lessons/lessons.schema.ts`.
+- **Linting & Formatting**: **ALWAYS** run `pnpm check` before committing. Biome is the source of truth for formatting (Tabs, Double Quotes).
+- **Type Safety**: Run `pnpm typecheck` to verify cross-module type integrity.
+- **Route Generation**: After adding/modifying routes, ensure `pnpm dev` is running to regenerate `src/routeTree.gen.ts`.
 
-# Tooling & Maintenance
+## Rule Delegation
 
-- **Formatting**: Biome (Tabs, Double quotes). Run `pnpm format` to resolve issues.
-- **Components**: Add via `pnpm dlx shadcn@latest add <component-name>`.
-- **Type Errors**: If TanStack Form properties are missing, run `pnpm run typecheck` to see the full error.
+For specific domain patterns, refer to:
+
+- **Frontend & Design**: [frontend.mdc](file:///.cursor/rules/frontend.mdc)
+- **Auth**: [better-auth.mdc](file:///.cursor/rules/better-auth.mdc)
+- **Feature Modules**: Check for `.mdc` files in `src/features/[module]/.cursor/rules/` (if present).

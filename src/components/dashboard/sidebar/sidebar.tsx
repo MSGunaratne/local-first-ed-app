@@ -72,7 +72,7 @@ export function Sidebar({
 							size="icon"
 							className={cn(
 								"h-8 w-8 text-muted-foreground hover:text-foreground",
-								isCollapsed && "mx-auto"
+								isCollapsed && "mx-auto",
 							)}
 							onClick={toggleSidebar}
 						>

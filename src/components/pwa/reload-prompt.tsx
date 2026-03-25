@@ -101,7 +101,10 @@ function useServiceWorker() {
 						bodySnippet: swBody.slice(0, 500),
 					});
 				} catch (diagnosticError) {
-					console.error("Failed to fetch service worker diagnostics:", diagnosticError);
+					console.error(
+						"Failed to fetch service worker diagnostics:",
+						diagnosticError,
+					);
 				}
 
 				toast.error("Offline support is unavailable right now.", {

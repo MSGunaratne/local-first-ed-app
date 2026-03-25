@@ -1,4 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+	BookOpen,
+	GraduationCap,
+	LayoutDashboard,
+	Plus,
+	Users,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
@@ -7,10 +15,6 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { m } from "@/paraglide/messages";
-
-import { BookOpen, Plus, Users, LayoutDashboard, GraduationCap } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_dashboard/")({
 	component: DashboardIndex,
@@ -97,12 +101,18 @@ function DashboardIndex() {
 					</CardHeader>
 					<CardContent className="pt-4 flex flex-wrap gap-4">
 						<Link to="/lessons/create">
-							<Button variant="default" className="h-12 px-6 text-base font-bold">
+							<Button
+								variant="default"
+								className="h-12 px-6 text-base font-bold"
+							>
 								{m.lessons_add_button()}
 							</Button>
 						</Link>
 						<Link to="/lessons">
-							<Button variant="outline" className="h-12 px-6 text-base font-semibold">
+							<Button
+								variant="outline"
+								className="h-12 px-6 text-base font-semibold"
+							>
 								View All Lessons
 							</Button>
 						</Link>
@@ -112,21 +122,31 @@ function DashboardIndex() {
 				<Card className="border-2 shadow-sm border-dashed">
 					<CardHeader>
 						<CardTitle className="text-xl font-bold">Getting Started</CardTitle>
-						<CardDescription>Follow these steps to set up your classroom.</CardDescription>
+						<CardDescription>
+							Follow these steps to set up your classroom.
+						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
 						<div className="flex items-start gap-4 p-3 rounded-lg bg-muted/50">
-							<div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-accent-foreground font-bold shrink-0">1</div>
+							<div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-accent-foreground font-bold shrink-0">
+								1
+							</div>
 							<div>
 								<p className="font-bold">Register your students</p>
-								<p className="text-sm text-muted-foreground">Add students to your dashboard to track their progress.</p>
+								<p className="text-sm text-muted-foreground">
+									Add students to your dashboard to track their progress.
+								</p>
 							</div>
 						</div>
 						<div className="flex items-start gap-4 p-3 rounded-lg bg-muted/50">
-							<div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-accent-foreground font-bold shrink-0">2</div>
+							<div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-accent-foreground font-bold shrink-0">
+								2
+							</div>
 							<div>
 								<p className="font-bold">Create your first lesson</p>
-								<p className="text-sm text-muted-foreground">Use our easy editor to create engaging lessons.</p>
+								<p className="text-sm text-muted-foreground">
+									Use our easy editor to create engaging lessons.
+								</p>
 							</div>
 						</div>
 					</CardContent>

@@ -114,7 +114,10 @@ export function CurationPanel({ subject, onMatchSelect }: CurationPanelProps) {
 								<CardTitle className="text-base font-bold flex justify-between items-center">
 									<span>{m.lessons_extracted_text_title()}</span>
 									{status === "loading" && (
-										<Badge variant="secondary" className="animate-pulse py-1 px-2">
+										<Badge
+											variant="secondary"
+											className="animate-pulse py-1 px-2"
+										>
 											<Loader2 className="mr-1 h-3 w-3 animate-spin" />
 											{m.lessons_extracted_text_processing({
 												progress: progress.toString(),
@@ -131,7 +134,10 @@ export function CurationPanel({ subject, onMatchSelect }: CurationPanelProps) {
 							</CardHeader>
 							<CardContent className="space-y-2">
 								{status === "loading" && (
-									<Progress value={progress} className="w-full h-3 rounded-full" />
+									<Progress
+										value={progress}
+										className="w-full h-3 rounded-full"
+									/>
 								)}
 								<Textarea
 									placeholder={m.lessons_extracted_text_placeholder()}

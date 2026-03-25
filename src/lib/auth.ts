@@ -3,8 +3,11 @@ import { betterAuth } from "better-auth/minimal";
 import { admin } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import {
+	accountRelations,
 	accounts,
+	sessionRelations,
 	sessions,
+	userRelations,
 	users,
 	verifications,
 } from "#/features/users/users.schema";
@@ -24,16 +27,21 @@ export const auth = betterAuth({
 	baseURL: betterAuthUrl,
 
 	trustedOrigins: [betterAuthUrl],
+	experimental: {
+		joins: true,
+	},
 
 	database: drizzleAdapter(db, {
 		provider: "sqlite",
 		schema: {
-			users,
-			sessions,
-			accounts,
-			verifications,
+			user: users,
+			session: sessions,
+			account: accounts,
+			verification: verifications,
+			userRelations: userRelations,
+			sessionRelations: sessionRelations,
+			accountRelations: accountRelations,
 		},
-		usePlural: true,
 	}),
 	// https://www.better-auth.com/docs/reference/options#emailandpassword
 	emailAndPassword: {

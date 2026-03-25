@@ -58,7 +58,10 @@ export default function ParaglideLocaleSwitcher({
 
 	return (
 		<div
-			className={cn("flex flex-col gap-2 p-2 w-full border rounded-lg bg-muted/30", className)}
+			className={cn(
+				"flex flex-col gap-2 p-2 w-full border rounded-lg bg-muted/30",
+				className,
+			)}
 		>
 			<div className="flex items-center gap-2 px-1">
 				<Globe className="h-4 w-4 text-muted-foreground" />

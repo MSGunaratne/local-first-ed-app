@@ -55,9 +55,9 @@ function SignInPage() {
 		<div className="flex min-h-screen flex-col bg-gradient-to-br from-background to-muted">
 			<AuthHeader />
 			<div className="flex flex-1 items-center justify-center p-4">
-				<Card className="w-full max-w-lg border-2 shadow-lg"> 
-					<CardHeader className="space-y-2 pb-8 text-center"> 
-						<CardTitle className="text-2xl font-bold"> 
+				<Card className="w-full max-w-lg border-2 shadow-lg">
+					<CardHeader className="space-y-2 pb-8 text-center">
+						<CardTitle className="text-2xl font-bold">
 							{m.auth_sign_in_title()}
 						</CardTitle>
 						<CardDescription className="text-base">
@@ -110,7 +110,11 @@ function SignInPage() {
 							</div>
 						</CardContent>
 						<CardFooter className="flex flex-col space-y-4 pt-6">
-							<Button type="submit" className="w-full h-14 text-lg font-bold" disabled={isPending}>
+							<Button
+								type="submit"
+								className="w-full h-14 text-lg font-bold"
+								disabled={isPending}
+							>
 								{isPending
 									? m.auth_signing_in_button()
 									: m.auth_sign_in_button()}

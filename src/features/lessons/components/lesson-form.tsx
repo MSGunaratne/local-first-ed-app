@@ -142,7 +142,7 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 	};
 
 	return (
-		<div className="space-y-4"> 
+		<div className="space-y-4">
 			<Breadcrumb className="px-1">
 				<BreadcrumbList>
 					<BreadcrumbItem>
@@ -188,7 +188,7 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 				<div className="md:col-span-1 lg:col-span-2 space-y-4">
 					<Card className="border-2 shadow-sm">
 						<CardHeader className="border-b bg-muted/30">
-							<CardTitle className="text-xl font-bold flex items-center gap-2"> 
+							<CardTitle className="text-xl font-bold flex items-center gap-2">
 								<BookOpen className="h-5 w-5 text-primary" />
 								{m.lessons_card_details()}
 							</CardTitle>
