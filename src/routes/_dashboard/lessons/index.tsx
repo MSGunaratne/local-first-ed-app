@@ -1,6 +1,10 @@
 import { rankItem } from "@tanstack/match-sorter-utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	stripSearchParams,
+} from "@tanstack/react-router";
 import type { FilterFn, Row } from "@tanstack/react-table";
 import {
 	type ColumnDef,
@@ -42,11 +46,40 @@ import {
 } from "@/features/lessons/lessons.queries";
 import type { Lesson } from "@/features/lessons/lessons.schema";
 import { useServerDataTable } from "@/hooks/use-server-data-table";
-import { dataTableSearchSchema } from "@/lib/dataTableSearchSchema";
+import {
+	DATA_TABLE_SEARCH_DEFAULTS,
+	dataTableSearchSchema,
+} from "@/lib/dataTableSearchSchema";
+import { ensureQueryDataAfterRestore } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/_dashboard/lessons/")({
 	validateSearch: dataTableSearchSchema,
+	search: {
+		middlewares: [stripSearchParams(DATA_TABLE_SEARCH_DEFAULTS)],
+	},
+	loaderDeps: ({
+		search: { pageIndex, pageSize, sorting, columnFilters, globalFilter },
+	}) => ({
+		pageIndex,
+		pageSize,
+		sorting,
+		columnFilters,
+		globalFilter,
+	}),
+	loader: ({ context: { queryClient }, deps }) =>
+		ensureQueryDataAfterRestore(
+			queryClient,
+			lessonQueries.list({
+				pagination: {
+					pageIndex: deps.pageIndex,
+					pageSize: deps.pageSize,
+				},
+				sorting: deps.sorting,
+				columnFilters: deps.columnFilters,
+				globalFilter: deps.globalFilter,
+			}),
+		),
 	component: LessonsPage,
 });
 
@@ -67,6 +100,7 @@ function LessonsPage() {
 		columnVisibility,
 		handlers,
 		queryParams,
+		isPending,
 	} = useServerDataTable();
 
 	const { data, isFetching } = useQuery(lessonQueries.list(queryParams));
@@ -235,7 +269,7 @@ function LessonsPage() {
 				</div>
 			</div>
 
-			<DataTable table={table} isLoading={isFetching} />
+			<DataTable table={table} isLoading={isFetching || isPending} />
 
 			<DataTablePagination
 				table={table}

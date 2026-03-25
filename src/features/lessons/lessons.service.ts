@@ -5,6 +5,7 @@ import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
 import { buildDrizzleFilter, DataType } from "@/db/utils/drizzle-filter";
 import { NotFoundError, ServerError } from "@/db/utils/errors";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
+import { throwIfAborted } from "@/lib/server-fn";
 import type { Lesson, LessonInsert } from "./lessons.schema";
 import { lessonInsertSchema, lessons } from "./lessons.schema";
 
@@ -19,7 +20,11 @@ const lessonQuickFilterConfig: QuickFilterConfig<typeof lessons> = {
 
 // ----------------------------------------------------------------------
 
-export async function getLessons(params: DataTableQueryParams) {
+export async function getLessons(
+	params: DataTableQueryParams,
+	abortSignal?: AbortSignal,
+) {
+	throwIfAborted(abortSignal);
 	const { pagination, sorting, columnFilters, globalFilter } = params;
 
 	const page = pagination?.pageIndex ?? 0;
@@ -51,6 +56,7 @@ export async function getLessons(params: DataTableQueryParams) {
 		.where(searchFilters);
 
 	const [data, totalResult] = await Promise.all([dataPromise, totalPromise]);
+	throwIfAborted(abortSignal);
 	const total = totalResult[0]?.total ?? 0;
 	const pageCount = Math.ceil(total / limit);
 

@@ -1,4 +1,8 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
+import {
+	keepPreviousData,
+	mutationOptions,
+	queryOptions,
+} from "@tanstack/react-query";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { m } from "@/paraglide/messages";
 import {
@@ -18,7 +22,8 @@ export const lessonQueries = {
 	list: (params: DataTableQueryParams) =>
 		queryOptions({
 			queryKey: [...lessonQueries.lists(), params],
-			queryFn: () => getLessonsFn({ data: params }),
+			queryFn: ({ signal }) => getLessonsFn({ data: params, signal }),
+			placeholderData: keepPreviousData,
 		}),
 	detail: (id: string) =>
 		queryOptions({

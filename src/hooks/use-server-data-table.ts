@@ -7,7 +7,7 @@ import type {
 	SortingState,
 	VisibilityState,
 } from "@tanstack/react-table";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import type { DataTableSearchParams } from "@/lib/dataTableSearchSchema";
 
 // ----------------------------------------------------------------------
@@ -51,41 +51,11 @@ export type ServerDataTableQueryParams = {
 // ----------------------------------------------------------------------
 
 /**
- * Cleans empty/default params from object before updating URL.
- * Keeps URLs clean by omitting default values.
- */
-function cleanEmptyParams<T extends Record<string, unknown>>(
-	params: T,
-	defaultPageSize: number,
-): T {
-	const cleaned = { ...params };
-	for (const key of Object.keys(cleaned)) {
-		const value = cleaned[key as keyof T];
-		if (
-			value === undefined ||
-			value === null ||
-			value === "" ||
-			(Array.isArray(value) && value.length === 0)
-		) {
-			delete cleaned[key as keyof T];
-		}
-		if (key === "pageIndex" && value === DEFAULT_PAGE_INDEX) {
-			delete cleaned[key as keyof T];
-		}
-		if (key === "pageSize" && value === defaultPageSize) {
-			delete cleaned[key as keyof T];
-		}
-	}
-	return cleaned;
-}
-
-/**
  * Cleans column filters for URL storage.
- * Removes filters with empty/null values, except for isEmpty/isNotEmpty operators.
+ * Removes filters with empty/null values.
  */
 function cleanColumnFilters(filters: ColumnFiltersState): ColumnFiltersState {
 	return filters.filter((item) => {
-		// Keep isEmpty/isNotEmpty operators even without a value
 		if (
 			typeof item.value === "object" &&
 			item.value !== null &&
@@ -96,7 +66,6 @@ function cleanColumnFilters(filters: ColumnFiltersState): ColumnFiltersState {
 				return true;
 			}
 		}
-		// Otherwise, require a non-empty value
 		return item.value != null && item.value !== "";
 	});
 }
@@ -106,36 +75,8 @@ function cleanColumnFilters(filters: ColumnFiltersState): ColumnFiltersState {
 // ----------------------------------------------------------------------
 
 /**
- * Hook that provides TanStack Table state synced with URL search params.
- *
- * ## Features
- * - **URL persistence**: Pagination, sorting, and filters are synced to URL
- * - **Immediate UI updates**: Local state ensures responsive UI
- * - **Browser history support**: Back/forward navigation works correctly
- * - **Configurable defaults**: Customize page size and default sorting
- * - **Row selection & column visibility**: Local state (not URL-persisted)
- *
- * ## Pattern
- * 1. Local state is the source of truth for UI rendering
- * 2. URL is updated in background for persistence/sharing
- * 3. URL changes (browser back/forward) sync back to local state
- *
- * @example
- * ```tsx
- * const { pagination, sorting, handlers, queryParams } = useServerDataTable({
- *   defaultPageSize: 20,
- *   defaultSorting: [{ id: 'createdAt', desc: true }],
- * });
- *
- * const { data } = useQuery(userQueries.list(queryParams));
- *
- * const table = useReactTable({
- *   data: data?.data ?? [],
- *   state: { pagination, sorting, ... },
- *   onPaginationChange: handlers.onPaginationChange,
- *   ...
- * });
- * ```
+ * Hook that provides TanStack Table state synced EXCLUSIVELY with URL search params.
+ * Following 2026 Best Practices: URL is the Single Source of Truth.
  */
 export function useServerDataTable(options: UseServerDataTableOptions = {}) {
 	const {
@@ -146,33 +87,37 @@ export function useServerDataTable(options: UseServerDataTableOptions = {}) {
 
 	const search = useSearch({ strict: false }) as Partial<DataTableSearchParams>;
 	const navigate = useNavigate();
-
-	// Track if we're currently syncing from URL to avoid loops
-	const isSyncingFromUrl = useRef(false);
+	const [isPending, startTransition] = useTransition();
 
 	// ---------------------------------------------------------------------------
-	// URL-Synced State (pagination, sorting, filters)
+	// Derived State from URL (The Source of Truth)
 	// ---------------------------------------------------------------------------
 
-	const [pagination, setPagination] = useState<PaginationState>({
-		pageIndex: search.pageIndex ?? DEFAULT_PAGE_INDEX,
-		pageSize: search.pageSize ?? defaultPageSize,
-	});
-
-	const [sorting, setSorting] = useState<SortingState>(
-		search.sorting ?? defaultSorting,
+	const pagination = useMemo(
+		() => ({
+			pageIndex: search.pageIndex ?? DEFAULT_PAGE_INDEX,
+			pageSize: search.pageSize ?? defaultPageSize,
+		}),
+		[search.pageIndex, search.pageSize, defaultPageSize],
 	);
 
-	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
-		search.columnFilters ?? [],
+	const sorting = useMemo(
+		() => search.sorting ?? defaultSorting,
+		[search.sorting, defaultSorting],
 	);
 
-	const [globalFilter, setGlobalFilter] = useState<string>(
-		search.globalFilter ?? "",
+	const columnFilters = useMemo(
+		() => search.columnFilters ?? [],
+		[search.columnFilters],
+	);
+
+	const globalFilter = useMemo(
+		() => search.globalFilter ?? "",
+		[search.globalFilter],
 	);
 
 	// ---------------------------------------------------------------------------
-	// Local-Only State (not persisted to URL)
+	// Local-Only State (UI-only, not persisted to URL)
 	// ---------------------------------------------------------------------------
 
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -181,240 +126,127 @@ export function useServerDataTable(options: UseServerDataTableOptions = {}) {
 	);
 
 	// ---------------------------------------------------------------------------
-	// URL Sync: From URL to Local State
+	// Handler Factory
 	// ---------------------------------------------------------------------------
-
-	const lastUrlRef = useRef({
-		pageIndex: search.pageIndex,
-		pageSize: search.pageSize,
-		sorting: search.sorting,
-		columnFilters: search.columnFilters,
-		globalFilter: search.globalFilter,
-	});
-
-	useEffect(() => {
-		// Check if URL actually changed (not from our own navigate calls)
-		const urlChanged =
-			lastUrlRef.current.pageIndex !== search.pageIndex ||
-			lastUrlRef.current.pageSize !== search.pageSize ||
-			JSON.stringify(lastUrlRef.current.sorting) !==
-				JSON.stringify(search.sorting) ||
-			JSON.stringify(lastUrlRef.current.columnFilters) !==
-				JSON.stringify(search.columnFilters) ||
-			lastUrlRef.current.globalFilter !== search.globalFilter;
-
-		if (urlChanged) {
-			isSyncingFromUrl.current = true;
-
-			setPagination({
-				pageIndex: search.pageIndex ?? DEFAULT_PAGE_INDEX,
-				pageSize: search.pageSize ?? defaultPageSize,
-			});
-			setSorting(search.sorting ?? defaultSorting);
-			setColumnFilters(search.columnFilters ?? []);
-			setGlobalFilter(search.globalFilter ?? "");
-
-			lastUrlRef.current = {
-				pageIndex: search.pageIndex,
-				pageSize: search.pageSize,
-				sorting: search.sorting,
-				columnFilters: search.columnFilters,
-				globalFilter: search.globalFilter,
-			};
-
-			// Reset sync flag after React processes the state updates
-			requestAnimationFrame(() => {
-				isSyncingFromUrl.current = false;
-			});
-		}
-	}, [
-		search.pageIndex,
-		search.pageSize,
-		search.sorting,
-		search.columnFilters,
-		search.globalFilter,
-		defaultPageSize,
-		defaultSorting,
-	]);
-
-	// ---------------------------------------------------------------------------
-	// URL Sync: From Local State to URL
-	// ---------------------------------------------------------------------------
-
-	const syncToUrl = useCallback(
-		(updates: Partial<DataTableSearchParams>) => {
-			// Update the lastUrlRef so we don't re-sync our own changes
-			Object.assign(lastUrlRef.current, updates);
-
-			navigate({
-				to: ".",
-				search: (prev) =>
-					cleanEmptyParams(
-						{
-							...prev,
-							...updates,
-						},
-						defaultPageSize,
-					),
-				replace: true,
-			});
-		},
-		[navigate, defaultPageSize],
-	);
 
 	/**
-	 * Update URL search params directly.
-	 * Useful for custom filter controls outside the table.
+	 * Shared navigation helper that uses React 19 transitions to keep UI responsive.
 	 */
-	const updateSearchParams = useCallback(
-		(newParams: Partial<DataTableSearchParams>) => {
-			syncToUrl(newParams);
+	const updateSearch = useCallback(
+		(
+			updater: (
+				prev: Partial<DataTableSearchParams>,
+			) => Partial<DataTableSearchParams>,
+		) => {
+			startTransition(async () => {
+				await navigate({
+					to: ".",
+					search: (prev) => updater(prev as Partial<DataTableSearchParams>),
+					replace: true,
+				});
+			});
 		},
-		[syncToUrl],
+		[navigate],
 	);
-
-	// ---------------------------------------------------------------------------
-	// Change Handlers
-	// ---------------------------------------------------------------------------
 
 	const onPaginationChange: OnChangeFn<PaginationState> = useCallback(
 		(updaterOrValue) => {
-			setPagination((old) => {
-				const newPagination =
+			updateSearch((prev) => {
+				const next =
 					typeof updaterOrValue === "function"
-						? updaterOrValue(old)
+						? updaterOrValue({
+								pageIndex: prev.pageIndex ?? DEFAULT_PAGE_INDEX,
+								pageSize: prev.pageSize ?? defaultPageSize,
+							})
 						: updaterOrValue;
 
-				if (!isSyncingFromUrl.current) {
-					syncToUrl({
-						pageIndex: newPagination.pageIndex,
-						pageSize: newPagination.pageSize,
-					});
-				}
-
-				return newPagination;
+				return {
+					...prev,
+					pageIndex:
+						next.pageIndex === DEFAULT_PAGE_INDEX ? undefined : next.pageIndex,
+					pageSize:
+						next.pageSize === defaultPageSize ? undefined : next.pageSize,
+				};
 			});
 		},
-		[syncToUrl],
+		[updateSearch, defaultPageSize],
 	);
 
 	const onSortingChange: OnChangeFn<SortingState> = useCallback(
 		(updaterOrValue) => {
-			setSorting((old) => {
-				const newSorting =
+			updateSearch((prev) => {
+				const next =
 					typeof updaterOrValue === "function"
-						? updaterOrValue(old)
+						? updaterOrValue(prev.sorting ?? defaultSorting)
 						: updaterOrValue;
 
-				if (!isSyncingFromUrl.current) {
-					syncToUrl({
-						sorting: newSorting.length > 0 ? newSorting : undefined,
-					});
-				}
-
-				return newSorting;
+				return {
+					...prev,
+					sorting: next.length > 0 ? next : undefined,
+				};
 			});
 		},
-		[syncToUrl],
+		[updateSearch, defaultSorting],
 	);
 
 	const onColumnFiltersChange: OnChangeFn<ColumnFiltersState> = useCallback(
 		(updaterOrValue) => {
-			setColumnFilters((old) => {
-				const newFilters =
+			updateSearch((prev) => {
+				const next =
 					typeof updaterOrValue === "function"
-						? updaterOrValue(old)
+						? updaterOrValue(prev.columnFilters ?? [])
 						: updaterOrValue;
 
-				if (!isSyncingFromUrl.current) {
-					const cleanedFilters = cleanColumnFilters(newFilters);
-					syncToUrl({
-						columnFilters:
-							cleanedFilters.length > 0 ? cleanedFilters : undefined,
-						pageIndex: undefined, // Reset to first page
-					});
-					// Also reset pagination locally
-					setPagination((p) => ({ ...p, pageIndex: DEFAULT_PAGE_INDEX }));
-				}
+				const cleaned = cleanColumnFilters(next);
 
-				return newFilters;
+				return {
+					...prev,
+					columnFilters: cleaned.length > 0 ? cleaned : undefined,
+					pageIndex: undefined, // Reset to first page
+				};
 			});
 		},
-		[syncToUrl],
+		[updateSearch],
 	);
 
 	const onGlobalFilterChange: OnChangeFn<string> = useCallback(
 		(updaterOrValue) => {
-			setGlobalFilter((old) => {
-				const newValue =
+			updateSearch((prev) => {
+				const next =
 					typeof updaterOrValue === "function"
-						? updaterOrValue(old)
+						? updaterOrValue(prev.globalFilter ?? "")
 						: updaterOrValue;
 
-				if (!isSyncingFromUrl.current) {
-					syncToUrl({
-						globalFilter: newValue || undefined,
-						pageIndex: undefined, // Reset to first page
-					});
-					// Also reset pagination locally
-					setPagination((p) => ({ ...p, pageIndex: DEFAULT_PAGE_INDEX }));
-				}
-
-				return newValue;
+				return {
+					...prev,
+					globalFilter: next || undefined,
+					pageIndex: undefined, // Reset to first page
+				};
 			});
 		},
-		[syncToUrl],
+		[updateSearch],
 	);
 
-	// ---------------------------------------------------------------------------
-	// Utilities
-	// ---------------------------------------------------------------------------
-
-	/**
-	 * Reset all filters and sorting to defaults.
-	 * Also clears row selection.
-	 */
 	const resetFilters = useCallback(() => {
-		setPagination({
-			pageIndex: DEFAULT_PAGE_INDEX,
-			pageSize: defaultPageSize,
-		});
-		setSorting(defaultSorting);
-		setColumnFilters([]);
-		setGlobalFilter("");
+		updateSearch(() => ({}));
 		setRowSelection({});
-		navigate({ to: ".", search: {}, replace: true });
-	}, [navigate, defaultPageSize, defaultSorting]);
+	}, [updateSearch]);
 
-	/**
-	 * Number of active filters (column filters + global filter if set).
-	 * Useful for showing filter badges in UI.
-	 */
 	const activeFilterCount = useMemo(() => {
 		let count = columnFilters.length;
 		if (globalFilter) count++;
 		return count;
 	}, [columnFilters, globalFilter]);
 
-	/**
-	 * Whether any filters are active.
-	 */
-	const hasActiveFilters = activeFilterCount > 0;
-
-	// ---------------------------------------------------------------------------
-	// Return
-	// ---------------------------------------------------------------------------
-
 	return {
-		// State values for useReactTable
 		pagination,
 		sorting,
 		columnFilters,
 		globalFilter,
 		rowSelection,
 		columnVisibility,
+		isPending, // Exposed for UI loading indicators during transitions
 
-		// Pre-wrapped handlers matching TanStack Table's On[State]Change signature
 		handlers: {
 			onPaginationChange,
 			onSortingChange,
@@ -424,13 +256,10 @@ export function useServerDataTable(options: UseServerDataTableOptions = {}) {
 			onColumnVisibilityChange: setColumnVisibility,
 		} satisfies ServerDataTableHandlers,
 
-		// Utilities
 		resetFilters,
-		updateSearchParams,
 		activeFilterCount,
-		hasActiveFilters,
+		hasActiveFilters: activeFilterCount > 0,
 
-		// Query params for server function / React Query
 		queryParams: {
 			pagination,
 			sorting,

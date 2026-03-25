@@ -9,6 +9,7 @@ import {
 	normalizeDataTableExportInput,
 	normalizeDataTableListInput,
 } from "@/lib/dataTableSearchSchema";
+import { baseMiddleware } from "@/lib/server-fn";
 import { userCreateClientSchema, userUpdateClientSchema } from "./users.schema";
 import {
 	createUser,
@@ -20,9 +21,10 @@ import {
 } from "./users.service";
 
 export const getUsersFn = createServerFn({ method: "GET" })
+	.middleware([baseMiddleware])
 	.inputValidator((data) => dataTableListInputSchema.parse(data))
-	.handler(async ({ data }) => {
-		return getUsers(normalizeDataTableListInput(data));
+	.handler(async ({ data, context }) => {
+		return getUsers(normalizeDataTableListInput(data), context.signal);
 	});
 
 export const exportUsersFn = createServerFn({ method: "GET" })

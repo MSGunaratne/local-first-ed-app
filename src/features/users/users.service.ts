@@ -6,6 +6,7 @@ import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
 import { buildDrizzleFilter, DataType } from "@/db/utils/drizzle-filter";
 import { NotFoundError, ServerError } from "@/db/utils/errors";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
+import { throwIfAborted } from "@/lib/server-fn";
 import type { User, UserCreateInput, UserUpdateInput } from "./users.schema";
 import {
 	userCreateServerSchema,
@@ -29,7 +30,11 @@ const userQuickFilterConfig: QuickFilterConfig<typeof users> = {
  * Used with TanStack Table for server-side data handling.
  */
 
-export async function getUsers(params: DataTableQueryParams) {
+export async function getUsers(
+	params: DataTableQueryParams,
+	abortSignal?: AbortSignal,
+) {
+	throwIfAborted(abortSignal);
 	const { pagination, sorting, columnFilters, globalFilter } = params;
 
 	const page = pagination?.pageIndex ?? 0;
@@ -63,6 +68,7 @@ export async function getUsers(params: DataTableQueryParams) {
 		.where(userFilters);
 
 	const [data, totalResult] = await Promise.all([dataPromise, totalPromise]);
+	throwIfAborted(abortSignal);
 	const total = totalResult[0]?.total ?? 0;
 
 	const pageCount = Math.ceil(total / limit);

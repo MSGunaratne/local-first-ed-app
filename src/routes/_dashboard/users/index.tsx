@@ -95,6 +95,7 @@ function UsersPage() {
 		columnVisibility,
 		handlers,
 		queryParams,
+		isPending,
 	} = useServerDataTable();
 
 	const { data, isFetching } = useQuery(userQueries.list(queryParams));
@@ -300,7 +301,7 @@ function UsersPage() {
 			</div>
 
 			{/* Table */}
-			<DataTable table={table} isLoading={isFetching} />
+			<DataTable table={table} isLoading={isFetching || isPending} />
 
 			{/* Pagination */}
 			<DataTablePagination

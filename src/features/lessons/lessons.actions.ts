@@ -7,6 +7,7 @@ import {
 	dataTableListInputSchema,
 	normalizeDataTableListInput,
 } from "@/lib/dataTableSearchSchema";
+import { baseMiddleware } from "@/lib/server-fn";
 import { lessonInsertSchema } from "./lessons.schema";
 import {
 	createLesson,
@@ -17,9 +18,10 @@ import {
 } from "./lessons.service";
 
 export const getLessonsFn = createServerFn({ method: "GET" })
+	.middleware([baseMiddleware])
 	.inputValidator((data) => dataTableListInputSchema.parse(data))
-	.handler(async ({ data }) => {
-		return getLessons(normalizeDataTableListInput(data));
+	.handler(async ({ data, context }) => {
+		return getLessons(normalizeDataTableListInput(data), context.signal);
 	});
 
 export const getLessonByIdFn = createServerFn({ method: "GET" })

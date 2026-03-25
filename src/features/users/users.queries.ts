@@ -23,7 +23,7 @@ export const userQueries = {
 	list: (params: DataTableQueryParams) =>
 		queryOptions({
 			queryKey: [...userQueries.lists(), params],
-			queryFn: () => getUsersFn({ data: params }),
+			queryFn: ({ signal }) => getUsersFn({ data: params, signal }),
 			placeholderData: keepPreviousData,
 		}),
 	detail: (id: string) =>

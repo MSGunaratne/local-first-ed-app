@@ -7,7 +7,6 @@ import { m } from "@/paraglide/messages";
 export function UnsavedChangesWarning() {
 	const form = useFormContext();
 
-
 	const isDirty = useStore(form.store, (s) => s.isDirty);
 	const isSubmitting = useStore(form.store, (s) => s.isSubmitting);
 

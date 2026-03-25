@@ -4,9 +4,7 @@ import {
 	ResetButton,
 	SubmitButton,
 } from "@/components/form/form-components";
-import {
-	UnsavedChangesWarning as AppUnsavedChangesWarning,
-} from "@/components/form/unsaved-changes-warning";
+import { UnsavedChangesWarning } from "@/components/form/unsaved-changes-warning";
 import {
 	Checkbox,
 	ComboboxField,
@@ -42,7 +40,7 @@ export const { useAppForm } = createFormHook({
 		SubmitButton,
 		ResetButton,
 		FormDebug,
-		UnsavedChangesWarning: AppUnsavedChangesWarning,
+		UnsavedChangesWarning,
 	},
 	fieldContext,
 	formContext,
