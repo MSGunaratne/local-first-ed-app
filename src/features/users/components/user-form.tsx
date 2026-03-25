@@ -87,6 +87,7 @@ export function UserCreateForm() {
 	return (
 		<UserFormLayout title={m.users_breadcrumb_new()}>
 			<form.AppForm>
+				<form.UnsavedChangesWarning />
 				<form
 					onSubmit={(e) => {
 						e.preventDefault();
@@ -179,6 +180,7 @@ export function UserEditForm({
 	return (
 		<UserFormLayout title={m.users_breadcrumb_edit()}>
 			<form.AppForm>
+				<form.UnsavedChangesWarning />
 				<form
 					onSubmit={(e) => {
 						e.preventDefault();

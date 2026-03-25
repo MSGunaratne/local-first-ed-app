@@ -173,5 +173,6 @@
   "common_file_upload_drop_active": "ගොනු මෙහි අතහරින්න",
   "common_file_upload_drop_idle": "ගොනු මෙහි ඇද දමන්න, හෝ ගොනු තෝරා ගැනීමට ක්ලික් කරන්න",
   "common_file_upload_rejected": "සමහර ගොනු ප්‍රතික්ෂේප විය",
-  "common_file_upload_remove": "ගොනුව ඉවත් කරන්න"
+  "common_file_upload_remove": "ගොනුව ඉවත් කරන්න",
+  "form_unsaved_changes_warning": "ඔබ සුරකින නොලද වෙනස්කම් සිදු කර ඇත. ඔබ පිටවීමට සහතිකද?"
 }

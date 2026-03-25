@@ -105,7 +105,7 @@ export async function exportUsers(
 }
 
 export async function getUserById(id: string) {
-	const selectedUser = await db.query.users.findFirst({
+	const selectedUser = await db.query.user.findFirst({
 		where: eq(users.id, id),
 	});
 	if (!selectedUser) {

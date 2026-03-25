@@ -195,6 +195,7 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 						</CardHeader>
 						<CardContent>
 							<form.AppForm>
+								<form.UnsavedChangesWarning />
 								<form
 									onSubmit={(e) => {
 										e.preventDefault();

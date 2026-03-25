@@ -73,8 +73,10 @@ export function TextField({
 	required,
 }: TextFieldProps) {
 	const field = useFieldContext<string | number>();
-	const errors = useStore(field.store, (state) => state.meta.errors);
-	const isTouched = useStore(field.store, (state) => state.meta.isTouched);
+	const { errors, isTouched } = useStore(field.store, (state) => ({
+		errors: state.meta.errors,
+		isTouched: state.meta.isTouched,
+	}));
 	const isInvalid = isTouched && errors.length > 0;
 
 	return (
@@ -131,8 +133,10 @@ export function TextArea({
 	required,
 }: TextAreaProps) {
 	const field = useFieldContext<string>();
-	const errors = useStore(field.store, (state) => state.meta.errors);
-	const isTouched = useStore(field.store, (state) => state.meta.isTouched);
+	const { errors, isTouched } = useStore(field.store, (state) => ({
+		errors: state.meta.errors,
+		isTouched: state.meta.isTouched,
+	}));
 	const isInvalid = isTouched && errors.length > 0;
 
 	return (
@@ -181,8 +185,10 @@ export function Select({
 	required,
 }: SelectProps) {
 	const field = useFieldContext<string>();
-	const errors = useStore(field.store, (state) => state.meta.errors);
-	const isTouched = useStore(field.store, (state) => state.meta.isTouched);
+	const { errors, isTouched } = useStore(field.store, (state) => ({
+		errors: state.meta.errors,
+		isTouched: state.meta.isTouched,
+	}));
 	const isInvalid = isTouched && errors.length > 0;
 
 	return (
@@ -227,8 +233,10 @@ interface SwitchProps {
 
 export function Switch({ label, description, className }: SwitchProps) {
 	const field = useFieldContext<boolean>();
-	const errors = useStore(field.store, (state) => state.meta.errors);
-	const isTouched = useStore(field.store, (state) => state.meta.isTouched);
+	const { errors, isTouched } = useStore(field.store, (state) => ({
+		errors: state.meta.errors,
+		isTouched: state.meta.isTouched,
+	}));
 	const isInvalid = isTouched && errors.length > 0;
 
 	return (
@@ -261,8 +269,10 @@ interface CheckboxProps {
 
 export function Checkbox({ label, description, className }: CheckboxProps) {
 	const field = useFieldContext<boolean>();
-	const errors = useStore(field.store, (state) => state.meta.errors);
-	const isTouched = useStore(field.store, (state) => state.meta.isTouched);
+	const { errors, isTouched } = useStore(field.store, (state) => ({
+		errors: state.meta.errors,
+		isTouched: state.meta.isTouched,
+	}));
 	const isInvalid = isTouched && errors.length > 0;
 
 	return (
@@ -309,8 +319,10 @@ export function Slider({
 	required,
 }: SliderProps) {
 	const field = useFieldContext<number>();
-	const errors = useStore(field.store, (state) => state.meta.errors);
-	const isTouched = useStore(field.store, (state) => state.meta.isTouched);
+	const { errors, isTouched } = useStore(field.store, (state) => ({
+		errors: state.meta.errors,
+		isTouched: state.meta.isTouched,
+	}));
 	const isInvalid = isTouched && errors.length > 0;
 
 	return (
@@ -355,8 +367,10 @@ export function PhoneInput({
 	required,
 }: PhoneInputProps) {
 	const field = useFieldContext<string>();
-	const errors = useStore(field.store, (state) => state.meta.errors);
-	const isTouched = useStore(field.store, (state) => state.meta.isTouched);
+	const { errors, isTouched } = useStore(field.store, (state) => ({
+		errors: state.meta.errors,
+		isTouched: state.meta.isTouched,
+	}));
 	const isInvalid = isTouched && errors.length > 0;
 
 	return (
@@ -404,8 +418,10 @@ export function NumberField({
 	...props
 }: NumberFieldProps) {
 	const field = useFieldContext<number>();
-	const errors = useStore(field.store, (state) => state.meta.errors);
-	const isTouched = useStore(field.store, (state) => state.meta.isTouched);
+	const { errors, isTouched } = useStore(field.store, (state) => ({
+		errors: state.meta.errors,
+		isTouched: state.meta.isTouched,
+	}));
 	const isInvalid = isTouched && errors.length > 0;
 
 	return (
@@ -464,8 +480,10 @@ export function DatePicker({
 	slotProps,
 }: DatePickerProps) {
 	const field = useFieldContext<Date>();
-	const errors = useStore(field.store, (state) => state.meta.errors);
-	const isTouched = useStore(field.store, (state) => state.meta.isTouched);
+	const { errors, isTouched } = useStore(field.store, (state) => ({
+		errors: state.meta.errors,
+		isTouched: state.meta.isTouched,
+	}));
 	const isInvalid = isTouched && errors.length > 0;
 
 	return (
@@ -544,8 +562,10 @@ export function ComboboxField<T extends string | number>({
 	slotProps,
 }: ComboboxProps<T>) {
 	const field = useFieldContext<T>();
-	const errors = useStore(field.store, (state) => state.meta.errors);
-	const isTouched = useStore(field.store, (state) => state.meta.isTouched);
+	const { errors, isTouched } = useStore(field.store, (state) => ({
+		errors: state.meta.errors,
+		isTouched: state.meta.isTouched,
+	}));
 	const isInvalid = isTouched && errors.length > 0;
 
 	return (
@@ -602,8 +622,10 @@ export function FileDropzone({
 	required,
 }: FileDropzoneProps) {
 	const field = useFieldContext<File[]>();
-	const errors = useStore(field.store, (state) => state.meta.errors);
-	const isTouched = useStore(field.store, (state) => state.meta.isTouched);
+	const { errors, isTouched } = useStore(field.store, (state) => ({
+		errors: state.meta.errors,
+		isTouched: state.meta.isTouched,
+	}));
 	const isInvalid = isTouched && errors.length > 0;
 
 	return (
@@ -645,8 +667,10 @@ export function EditorField({
 	required,
 }: EditorFieldProps) {
 	const field = useFieldContext<JSONContent | null>();
-	const errors = useStore(field.store, (state) => state.meta.errors);
-	const isTouched = useStore(field.store, (state) => state.meta.isTouched);
+	const { errors, isTouched } = useStore(field.store, (state) => ({
+		errors: state.meta.errors,
+		isTouched: state.meta.isTouched,
+	}));
 	const isInvalid = isTouched && errors.length > 0;
 
 	return (

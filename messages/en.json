@@ -173,6 +173,7 @@
   "common_file_upload_drop_active": "Drop the files here",
   "common_file_upload_drop_idle": "Drag & drop files here, or click to select files",
   "common_file_upload_rejected": "Some files were rejected",
-  "common_file_upload_remove": "Remove file"
+  "common_file_upload_remove": "Remove file",
+  "form_unsaved_changes_warning": "You have unsaved changes. Are you sure you want to leave?"
 }
 
