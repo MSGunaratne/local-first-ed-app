@@ -188,6 +188,23 @@ export interface QueuedMutation {
 	lastError?: string;
 }
 
+function isQueuedMutation(value: unknown): value is QueuedMutation {
+	if (!isRecord(value)) {
+		return false;
+	}
+
+	return (
+		typeof value.id === "string" &&
+		typeof value.scope === "string" &&
+		typeof value.type === "string" &&
+		typeof value.serverFn === "string" &&
+		typeof value.idempotencyKey === "string" &&
+		typeof value.status === "string" &&
+		typeof value.createdAt === "number" &&
+		typeof value.retryCount === "number"
+	);
+}
+
 export type EnqueueMutation<K extends MutationServerFnName> = Omit<
 	QueuedMutation,
 	"id" | "status" | "createdAt" | "retryCount" | "serverFn" | "payload"
@@ -217,13 +234,30 @@ export async function enqueue<K extends MutationServerFnName>(
 }
 
 export async function getAll(): Promise<QueuedMutation[]> {
-	const all = await entries<string, QueuedMutation>(STORE);
-	return all.map(([, v]) => v).sort((a, b) => a.createdAt - b.createdAt);
+	const all = await entries<string, unknown>(STORE);
+	const validMutations: QueuedMutation[] = [];
+
+	for (const [key, value] of all) {
+		if (isQueuedMutation(value)) {
+			validMutations.push(value);
+			continue;
+		}
+
+		console.warn(
+			`[MutationQueue] Dropping malformed queue entry "${key}" from IndexedDB`,
+			value,
+		);
+		await del(key, STORE);
+	}
+
+	return validMutations.sort((a, b) => a.createdAt - b.createdAt);
 }
 
 export async function getPending(): Promise<QueuedMutation[]> {
 	const all = await getAll();
-	return all.filter((m) => m.status === "pending" || m.status === "failed");
+	return all.filter(
+		(mutation) => mutation.status === "pending" || mutation.status === "failed",
+	);
 }
 
 export async function remove(id: string): Promise<void> {
@@ -276,11 +310,16 @@ async function ensureServerFnRegistry() {
 	}
 
 	try {
-		const { registerAllMutations } = await import("@/lib/mutation-registration");
+		const { registerAllMutations } = await import(
+			"@/lib/mutation-registration"
+		);
 		registerAllMutations();
 		registryBootstrapped = true;
 	} catch (error) {
-		console.error("[MutationQueue] Failed to initialize server function registry", error);
+		console.error(
+			"[MutationQueue] Failed to initialize server function registry",
+			error,
+		);
 	}
 }
 

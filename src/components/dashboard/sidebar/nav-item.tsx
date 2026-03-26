@@ -44,14 +44,17 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 			return pathname === "/";
 		}
 
-		return pathname === candidatePath || pathname.startsWith(`${candidatePath}/`);
+		return (
+			pathname === candidatePath || pathname.startsWith(`${candidatePath}/`)
+		);
 	};
 
 	const isActive = useRouterState({
 		select: () => matchesPath(item.path),
 	});
 	const isGroupActive = useRouterState({
-		select: () => item.items?.some((subItem) => matchesPath(subItem.path)) ?? false,
+		select: () =>
+			item.items?.some((subItem) => matchesPath(subItem.path)) ?? false,
 	});
 	const isCurrent = isActive || isGroupActive;
 	const [isOpen, setIsOpen] = React.useState(isCurrent);
