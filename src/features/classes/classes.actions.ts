@@ -48,7 +48,11 @@ export const updateClassFn = createServerFn({ method: "POST" })
 		updateByIdInputSchema(classInsertSchema.partial()).parse(data),
 	)
 	.handler(async ({ data }) => {
-		return updateClass(data.id, data.data);
+		return updateClass(
+			data.id,
+			data.data,
+			data.expectedUpdatedAt ? new Date(data.expectedUpdatedAt) : undefined,
+		);
 	});
 
 export const deleteClassFn = createServerFn({ method: "POST" })

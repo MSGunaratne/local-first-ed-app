@@ -24,6 +24,7 @@ type SqliteError = {
 type AppErrorCode =
 	| "VALIDATION_ERROR"
 	| "NOT_FOUND"
+	| "CONFLICT"
 	| "UNIQUE_CONSTRAINT_VIOLATION"
 	| "FOREIGN_KEY_VIOLATION"
 	| "NOT_NULL_VIOLATION"
@@ -33,7 +34,7 @@ type AppErrorCode =
 	| "UNAUTHORIZED"
 	| "DATABASE_ERROR"
 	| "INTERNAL_SERVER_ERROR"
-	| "UNKNOWN_ERROR"; //Expand with more error codes if needed for frontend conditional logic
+	| "UNKNOWN_ERROR";
 
 export interface AppError {
 	status: number;
@@ -127,6 +128,21 @@ export class ServerError extends Error implements AppError {
 	) {
 		super(message, options);
 		this.name = "ServerError";
+	}
+}
+
+export class ConflictError extends Error implements AppError {
+	public status = 409;
+	public code = "CONFLICT";
+	public field: string | null = null;
+	public details?: string;
+
+	constructor(
+		message: string = "This record was modified by another user",
+		public serverRecord?: unknown,
+	) {
+		super(message);
+		this.name = "ConflictError";
 	}
 }
 

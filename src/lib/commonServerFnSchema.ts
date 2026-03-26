@@ -10,5 +10,6 @@ export function updateByIdInputSchema<T extends ZodType>(dataSchema: T) {
 		id: z.string(),
 		data: dataSchema,
 		idempotencyKey: z.string().optional(),
+		expectedUpdatedAt: z.string().optional(),
 	});
 }

@@ -3,7 +3,7 @@ import { requireTeacherOrAdminSession } from "#/lib/auth/access";
 import { db } from "@/db";
 import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
 import { buildDrizzleFilter, DataType } from "@/db/utils/drizzle-filter";
-import { NotFoundError, ServerError } from "@/db/utils/errors";
+import { ConflictError, NotFoundError, ServerError } from "@/db/utils/errors";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { throwIfAborted } from "@/lib/server-fn";
 import type { Lesson, LessonInsert } from "./lessons.schema";
@@ -100,7 +100,11 @@ export async function createLesson(data: LessonInsert) {
 	return newLesson;
 }
 
-export async function updateLesson(id: string, data: Partial<LessonInsert>) {
+export async function updateLesson(
+	id: string,
+	data: Partial<LessonInsert>,
+	expectedUpdatedAt?: Date | null,
+) {
 	await requireTeacherOrAdminSession(
 		"Only teachers and admins can update lessons",
 	);
@@ -110,6 +114,16 @@ export async function updateLesson(id: string, data: Partial<LessonInsert>) {
 	});
 	if (!existingLesson) {
 		throw new NotFoundError("Lesson", id);
+	}
+
+	if (
+		expectedUpdatedAt &&
+		existingLesson.updatedAt.getTime() !== new Date(expectedUpdatedAt).getTime()
+	) {
+		throw new ConflictError(
+			"This lesson was modified by another user. Please refresh and try again.",
+			existingLesson,
+		);
 	}
 
 	const [updatedLesson] = await db

@@ -1,11 +1,10 @@
 /// <reference lib="webworker" />
-import { BackgroundSyncPlugin } from "workbox-background-sync";
 import { clientsClaim } from "workbox-core";
 import { ExpirationPlugin } from "workbox-expiration";
 import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 import { offlineFallback } from "workbox-recipes";
 import { NavigationRoute, registerRoute } from "workbox-routing";
-import { CacheFirst, NetworkFirst, NetworkOnly } from "workbox-strategies";
+import { CacheFirst, NetworkFirst } from "workbox-strategies";
 
 declare let self: ServiceWorkerGlobalScope;
 const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";
@@ -38,42 +37,16 @@ cleanupOutdatedCaches();
 // Take control immediately
 clientsClaim();
 
-// Skip waiting when requested
+// Message handler: skip waiting + flush mutation queue
 self.addEventListener("message", (event) => {
 	if (event.data && event.data.type === "SKIP_WAITING") {
 		self.skipWaiting();
 	}
+
+	if (event.data && event.data.type === "MUTATIONS_FLUSHED") {
+		void notifyReplaySuccess();
+	}
 });
-
-const bgSyncPlugin = new BackgroundSyncPlugin("offline-mutations", {
-	maxRetentionTime: 24 * 60, // Retry for 24 hours
-	onSync: async ({ queue }) => {
-		await queue.replayRequests();
-		await notifyReplaySuccess();
-	},
-});
-
-// ----------------------------------------------------------------------
-// Mutations: Queue failed non-GET requests for background sync
-// Single consolidated route for POST, PUT, DELETE, PATCH
-// ----------------------------------------------------------------------
-
-const MUTATION_METHODS = ["POST", "PUT", "DELETE", "PATCH"] as const;
-
-function isMutationRequest(request: Request, url: URL): boolean {
-	return (
-		request.method !== "GET" &&
-		(url.pathname.startsWith("/_server") || url.pathname.includes("/api/"))
-	);
-}
-
-for (const method of MUTATION_METHODS) {
-	registerRoute(
-		({ request, url }) => isMutationRequest(request, url),
-		new NetworkOnly({ plugins: [bgSyncPlugin] }),
-		method,
-	);
-}
 
 // ----------------------------------------------------------------------
 // Navigation requests: NetworkFirst with offline fallback

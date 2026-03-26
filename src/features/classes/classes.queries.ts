@@ -49,8 +49,25 @@ export const classMutations = {
 		}),
 	update: () =>
 		mutationOptions({
-			mutationFn: ({ id, data }: { id: string; data: Partial<ClassInsert> }) =>
-				updateClassFn({ data: { id, data, idempotencyKey: uuidv7() } }),
+			mutationFn: async ({
+				id,
+				data,
+			}: {
+				id: string;
+				data: Partial<ClassInsert>;
+			}) => {
+				const { getQueryClient } = await import("@/lib/query-client");
+				const cached = getQueryClient().getQueryData(
+					classQueries.detail(id).queryKey,
+				);
+				const expectedUpdatedAt =
+					cached && "updatedAt" in cached
+						? new Date(cached.updatedAt as Date).toISOString()
+						: undefined;
+				return updateClassFn({
+					data: { id, data, idempotencyKey: uuidv7(), expectedUpdatedAt },
+				});
+			},
 			onMutate: async ({ id, data: updatedData }) => {
 				const queryClient = (
 					await import("@/lib/query-client")

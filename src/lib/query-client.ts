@@ -41,7 +41,13 @@ const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";
 const REPLAYED_DEFAULT_SCOPES = ["users", "lessons", "classes"] as const;
 
 /** Query scopes that should be persisted to IDB */
-const PERSISTED_SCOPES = ["lessons", "classes", "users", "students"] as const;
+const PERSISTED_SCOPES = [
+	"lessons",
+	"classes",
+	"users",
+	"students",
+	"auth",
+] as const;
 
 // Storage budget in bytes (50 MB)
 const STORAGE_BUDGET_BYTES = 50 * 1024 * 1024;
@@ -60,7 +66,7 @@ function getQueryScope(
 	query: Parameters<typeof defaultShouldDehydrateQuery>[0],
 ): string | null {
 	const [scope] = query.queryKey;
-	if (typeof scope === "string" && scope !== AUTH_QUERY_KEY) {
+	if (typeof scope === "string") {
 		return scope;
 	}
 	return null;

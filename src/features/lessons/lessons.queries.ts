@@ -54,8 +54,19 @@ export const lessonMutations = {
 		}),
 	update: (id: string) =>
 		mutationOptions({
-			mutationFn: (data: LessonInsert) =>
-				updateLessonFn({ data: { id, data, idempotencyKey: uuidv7() } }),
+			mutationFn: async (data: LessonInsert) => {
+				const { getQueryClient } = await import("@/lib/query-client");
+				const cached = getQueryClient().getQueryData(
+					lessonQueries.detail(id).queryKey,
+				);
+				const expectedUpdatedAt =
+					cached && "updatedAt" in cached
+						? new Date(cached.updatedAt as Date).toISOString()
+						: undefined;
+				return updateLessonFn({
+					data: { id, data, idempotencyKey: uuidv7(), expectedUpdatedAt },
+				});
+			},
 			onMutate: async (updatedData) => {
 				const queryClient = (
 					await import("@/lib/query-client")

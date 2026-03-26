@@ -1,5 +1,6 @@
 import { environmentManager, onlineManager } from "@tanstack/react-query";
 import { useEffect, useSyncExternalStore } from "react";
+import * as mutationQueue from "@/lib/mutation-queue";
 import {
 	formatBytes,
 	getQueryClient,
@@ -12,6 +13,7 @@ import {
 
 interface SyncState {
 	pendingMutationCount: number /** Number of mutations currently pending (in-flight or queued) */;
+	queuedMutationCount: number;
 	lastSyncAt: number | null;
 	isOnline: boolean;
 	storageUsageBytes: number;
@@ -20,6 +22,7 @@ interface SyncState {
 
 let currentState: SyncState = {
 	pendingMutationCount: 0,
+	queuedMutationCount: 0,
 	lastSyncAt: null,
 	isOnline: true,
 	storageUsageBytes: 0,
@@ -56,6 +59,7 @@ function getSnapshot(): SyncState {
 /** Cached server snapshot — must return the same reference every call */
 const SERVER_SNAPSHOT: SyncState = {
 	pendingMutationCount: 0,
+	queuedMutationCount: 0,
 	lastSyncAt: null,
 	isOnline: true,
 	storageUsageBytes: 0,
@@ -84,10 +88,12 @@ function initializeSyncStatus() {
 		updateState({ isOnline });
 		if (isOnline) {
 			updateState({ lastSyncAt: Date.now() });
+			// Auto-flush mutation queue on reconnect
+			void flushMutationQueue();
 		}
 	});
 
-	// Track pending mutations
+	// Track pending mutations (TanStack Query in-flight)
 	const queryClient = getQueryClient();
 	const mutationCache = queryClient.getMutationCache();
 
@@ -109,6 +115,12 @@ function initializeSyncStatus() {
 		}
 	});
 
+	// Track queued mutations (offline queue)
+	mutationQueue.subscribe(() => {
+		void refreshQueuedCount();
+	});
+	void refreshQueuedCount();
+
 	// Periodically update storage usage (every 30 seconds)
 	void refreshStorageUsage();
 	setInterval(() => {
@@ -125,6 +137,29 @@ async function refreshStorageUsage() {
 		});
 	} catch {
 		// Silently ignore
+	}
+}
+
+async function refreshQueuedCount() {
+	try {
+		const pending = await mutationQueue.getPending();
+		updateState({ queuedMutationCount: pending.length });
+	} catch {
+		// Silently ignore
+	}
+}
+
+async function flushMutationQueue() {
+	try {
+		const result = await mutationQueue.flush();
+		if (result.succeeded > 0) {
+			// Notify SW to broadcast invalidation to all tabs
+			navigator.serviceWorker?.controller?.postMessage({
+				type: "MUTATIONS_FLUSHED",
+			});
+		}
+	} catch (error) {
+		console.error("[SyncStatus] Failed to flush mutation queue:", error);
 	}
 }
 
@@ -145,8 +180,11 @@ export function useSyncStatus() {
 		...state,
 		/** Human-readable storage usage */
 		storageUsageFormatted: formatBytes(state.storageUsageBytes),
-		/** Whether there are pending mutations */
-		hasPendingMutations: state.pendingMutationCount > 0,
+		/** Whether there are pending mutations (in-flight or queued) */
+		hasPendingMutations:
+			state.pendingMutationCount > 0 || state.queuedMutationCount > 0,
+		/** Total pending: in-flight + queued */
+		totalPending: state.pendingMutationCount + state.queuedMutationCount,
 		/** Human-readable last sync time */
 		lastSyncFormatted: state.lastSyncAt
 			? formatRelativeTime(state.lastSyncAt)

@@ -49,7 +49,11 @@ export const updateLessonFn = createServerFn({ method: "POST" })
 		updateByIdInputSchema(lessonInsertSchema.partial()).parse(data),
 	)
 	.handler(async ({ data }) => {
-		return updateLesson(data.id, data.data);
+		return updateLesson(
+			data.id,
+			data.data,
+			data.expectedUpdatedAt ? new Date(data.expectedUpdatedAt) : undefined,
+		);
 	});
 
 export const deleteLessonFn = createServerFn({ method: "POST" })

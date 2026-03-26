@@ -6,7 +6,7 @@ import {
 import { db } from "@/db";
 import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
 import { buildDrizzleFilter, DataType } from "@/db/utils/drizzle-filter";
-import { NotFoundError, ServerError } from "@/db/utils/errors";
+import { ConflictError, NotFoundError, ServerError } from "@/db/utils/errors";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import type { Class, ClassInsert } from "./classes.schema";
 import { classes, classInsertSchema } from "./classes.schema";
@@ -109,7 +109,11 @@ export async function createClass(data: ClassInsert) {
 	// });
 }
 
-export async function updateClass(id: string, data: Partial<ClassInsert>) {
+export async function updateClass(
+	id: string,
+	data: Partial<ClassInsert>,
+	expectedUpdatedAt?: Date | null,
+) {
 	const session = await requireTeacherOrAdminSession(
 		"Only teachers and admins can update classes",
 	);
@@ -127,6 +131,16 @@ export async function updateClass(id: string, data: Partial<ClassInsert>) {
 		session.user.role,
 		"You can only update classes assigned to you",
 	);
+
+	if (
+		expectedUpdatedAt &&
+		existingClass.updatedAt.getTime() !== new Date(expectedUpdatedAt).getTime()
+	) {
+		throw new ConflictError(
+			"This class was modified by another user. Please refresh and try again.",
+			existingClass,
+		);
+	}
 
 	const { teacherId: _ignoredTeacherId, ...safeUpdateData } = data;
 
