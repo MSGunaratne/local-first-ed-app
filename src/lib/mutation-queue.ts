@@ -16,11 +16,170 @@ export type MutationScope = "lessons" | "classes" | "users" | "students";
 export type MutationType = "create" | "update" | "delete";
 export type MutationStatus = "pending" | "in-flight" | "failed";
 
+type MutationDataRecord = Record<string, unknown>;
+
+type ScopedCreatePayload = MutationDataRecord & {
+	id: string;
+	idempotencyKey?: string;
+};
+
+type ScopedUpdatePayload = {
+	id: string;
+	data: MutationDataRecord;
+	expectedUpdatedAt?: string;
+	idempotencyKey?: string;
+};
+
+type ScopedDeletePayload = {
+	id: string;
+	idempotencyKey?: string;
+};
+
+export interface MutationServerFnPayloadMap {
+	createLesson: ScopedCreatePayload;
+	updateLesson: ScopedUpdatePayload;
+	deleteLesson: ScopedDeletePayload;
+	createClass: ScopedCreatePayload;
+	updateClass: ScopedUpdatePayload;
+	deleteClass: ScopedDeletePayload;
+	createUser: MutationDataRecord;
+	updateUser: {
+		id: string;
+		data: MutationDataRecord;
+		idempotencyKey?: string;
+	};
+	deleteUser: ScopedDeletePayload;
+}
+
+export type MutationServerFnName = keyof MutationServerFnPayloadMap;
+
+function isRecord(payload: unknown): payload is Record<string, unknown> {
+	return typeof payload === "object" && payload !== null;
+}
+
+function hasStringId(
+	payload: unknown,
+): payload is Record<string, unknown> & { id: string } {
+	return (
+		isRecord(payload) && typeof payload.id === "string" && payload.id.length > 0
+	);
+}
+
+function isScopedUpdatePayload(
+	payload: unknown,
+): payload is ScopedUpdatePayload {
+	if (!isRecord(payload)) {
+		return false;
+	}
+
+	if (!hasStringId(payload) || !isRecord(payload.data)) {
+		return false;
+	}
+
+	if (
+		"expectedUpdatedAt" in payload &&
+		typeof payload.expectedUpdatedAt !== "undefined" &&
+		typeof payload.expectedUpdatedAt !== "string"
+	) {
+		return false;
+	}
+
+	if (
+		"idempotencyKey" in payload &&
+		typeof payload.idempotencyKey !== "undefined" &&
+		typeof payload.idempotencyKey !== "string"
+	) {
+		return false;
+	}
+
+	return true;
+}
+
+function isScopedDeletePayload(
+	payload: unknown,
+): payload is ScopedDeletePayload {
+	if (!hasStringId(payload)) {
+		return false;
+	}
+
+	if (
+		"idempotencyKey" in payload &&
+		typeof payload.idempotencyKey !== "undefined" &&
+		typeof payload.idempotencyKey !== "string"
+	) {
+		return false;
+	}
+
+	return true;
+}
+
+function isScopedCreatePayload(
+	payload: unknown,
+): payload is ScopedCreatePayload {
+	if (!hasStringId(payload)) {
+		return false;
+	}
+
+	if (
+		"idempotencyKey" in payload &&
+		typeof payload.idempotencyKey !== "undefined" &&
+		typeof payload.idempotencyKey !== "string"
+	) {
+		return false;
+	}
+
+	return true;
+}
+
+function isUserUpdatePayload(
+	payload: unknown,
+): payload is MutationServerFnPayloadMap["updateUser"] {
+	if (!isRecord(payload)) {
+		return false;
+	}
+
+	if (!hasStringId(payload) || !isRecord(payload.data)) {
+		return false;
+	}
+
+	if (
+		"idempotencyKey" in payload &&
+		typeof payload.idempotencyKey !== "undefined" &&
+		typeof payload.idempotencyKey !== "string"
+	) {
+		return false;
+	}
+
+	return true;
+}
+
+function isValidPayloadForServerFn<K extends MutationServerFnName>(
+	name: K,
+	payload: unknown,
+): payload is MutationServerFnPayloadMap[K] {
+	switch (name) {
+		case "createLesson":
+		case "createClass":
+			return isScopedCreatePayload(payload);
+		case "updateLesson":
+		case "updateClass":
+			return isScopedUpdatePayload(payload);
+		case "deleteLesson":
+		case "deleteClass":
+		case "deleteUser":
+			return isScopedDeletePayload(payload);
+		case "createUser":
+			return isRecord(payload);
+		case "updateUser":
+			return isUserUpdatePayload(payload);
+	}
+}
+
 export interface QueuedMutation {
 	id: string;
 	scope: MutationScope;
 	type: MutationType;
-	serverFn: string;
+	serverFn: MutationServerFnName;
 	payload: unknown;
 	idempotencyKey: string;
 	status: MutationStatus;
@@ -29,12 +188,20 @@ export interface QueuedMutation {
 	lastError?: string;
 }
 
+export type EnqueueMutation<K extends MutationServerFnName> = Omit<
+	QueuedMutation,
+	"id" | "status" | "createdAt" | "retryCount" | "serverFn" | "payload"
+> & {
+	serverFn: K;
+	payload: MutationServerFnPayloadMap[K];
+};
+
 // ----------------------------------------------------------------------
 // Queue Operations
 // ----------------------------------------------------------------------
 
-export async function enqueue(
-	mutation: Omit<QueuedMutation, "id" | "status" | "createdAt" | "retryCount">,
+export async function enqueue<K extends MutationServerFnName>(
+	mutation: EnqueueMutation<K>,
 ): Promise<string> {
 	const id = uuidv7();
 	const entry: QueuedMutation = {
@@ -91,20 +258,45 @@ export async function markFailed(id: string, error: string): Promise<void> {
 }
 
 // ----------------------------------------------------------------------
-// Flush — replay all pending mutations in FIFO order
+// Flush Logic
 // ----------------------------------------------------------------------
 
 /** Registry of server functions that can be invoked during flush */
 const serverFnRegistry = new Map<
-	string,
+	MutationServerFnName,
 	(payload: unknown) => Promise<unknown>
 >();
 
-export function registerServerFn(
-	name: string,
-	fn: (payload: unknown) => Promise<unknown>,
+let registryBootstrapped = false;
+
+async function ensureServerFnRegistry() {
+	if (registryBootstrapped || serverFnRegistry.size > 0) {
+		registryBootstrapped = true;
+		return;
+	}
+
+	try {
+		const { registerAllMutations } = await import("@/lib/mutation-registration");
+		registerAllMutations();
+		registryBootstrapped = true;
+	} catch (error) {
+		console.error("[MutationQueue] Failed to initialize server function registry", error);
+	}
+}
+
+export function registerServerFn<K extends MutationServerFnName>(
+	name: K,
+	fn: (payload: MutationServerFnPayloadMap[K]) => Promise<unknown>,
 ) {
-	serverFnRegistry.set(name, fn);
+	serverFnRegistry.set(name, async (payload) => {
+		if (!isValidPayloadForServerFn(name, payload)) {
+			throw new Error(
+				`Invalid payload for server function "${name}" during replay`,
+			);
+		}
+
+		return fn(payload);
+	});
 }
 
 export interface FlushResult {
@@ -113,7 +305,59 @@ export interface FlushResult {
 	skipped: number;
 }
 
-export async function flush(): Promise<FlushResult> {
+function getStringField(
+	record: Record<string, unknown>,
+	field: string,
+): string | null {
+	const value = record[field];
+	return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function getMutationEntityId(mutation: QueuedMutation): string | null {
+	if (!isRecord(mutation.payload)) {
+		return null;
+	}
+
+	switch (mutation.serverFn) {
+		case "createLesson":
+		case "updateLesson":
+		case "deleteLesson":
+		case "createClass":
+		case "updateClass":
+		case "deleteClass":
+		case "updateUser":
+		case "deleteUser":
+			return getStringField(mutation.payload, "id");
+		case "createUser":
+			return null;
+	}
+}
+
+async function reconcileLocalStateOnSuccess(mutation: QueuedMutation) {
+	if (mutation.scope !== "lessons" && mutation.scope !== "classes") {
+		return;
+	}
+
+	const id = getMutationEntityId(mutation);
+	if (!id) {
+		return;
+	}
+
+	const { markSynced, purgeSynced } = await import("@/lib/local-db");
+	if (mutation.type === "delete") {
+		await purgeSynced(mutation.scope, [id]);
+		return;
+	}
+
+	await markSynced(mutation.scope, [id]);
+}
+
+/**
+ * Replays all pending mutations in the queue.
+ */
+export async function flushMutationQueue(): Promise<FlushResult> {
+	await ensureServerFnRegistry();
+
 	const pending = await getPending();
 	const result: FlushResult = { succeeded: 0, failed: 0, skipped: 0 };
 
@@ -139,6 +383,12 @@ export async function flush(): Promise<FlushResult> {
 		try {
 			await markInFlight(mutation.id);
 			await fn(mutation.payload);
+			await reconcileLocalStateOnSuccess(mutation).catch((error) => {
+				console.error(
+					`[MutationQueue] Failed to reconcile local state for ${mutation.scope}:${mutation.type}`,
+					error,
+				);
+			});
 			await remove(mutation.id);
 			result.succeeded++;
 		} catch (error) {

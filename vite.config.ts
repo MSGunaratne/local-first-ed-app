@@ -27,6 +27,9 @@ const config = defineConfig({
 			},
 		}),
 	],
+	optimizeDeps: {
+		exclude: ["wa-sqlite"],
+	},
 });
 
 export default config;

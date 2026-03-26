@@ -20,6 +20,10 @@ interface SyncState {
 	storageQuotaBytes: number;
 }
 
+interface HotModuleApi {
+	dispose(callback: () => void): void;
+}
+
 let currentState: SyncState = {
 	pendingMutationCount: 0,
 	queuedMutationCount: 0,
@@ -75,6 +79,7 @@ function getServerSnapshot(): SyncState {
 // ----------------------------------------------------------------------
 
 let initialized = false;
+let storageRefreshIntervalId: ReturnType<typeof setInterval> | null = null;
 
 function initializeSyncStatus() {
 	if (initialized || environmentManager.isServer()) {
@@ -122,10 +127,25 @@ function initializeSyncStatus() {
 	void refreshQueuedCount();
 
 	// Periodically update storage usage (every 30 seconds)
+	if (storageRefreshIntervalId !== null) {
+		clearInterval(storageRefreshIntervalId);
+	}
+
 	void refreshStorageUsage();
-	setInterval(() => {
+	storageRefreshIntervalId = setInterval(() => {
 		void refreshStorageUsage();
 	}, 30_000);
+}
+
+const hotModule = (import.meta as { hot?: HotModuleApi }).hot;
+if (hotModule) {
+	hotModule.dispose(() => {
+		if (storageRefreshIntervalId !== null) {
+			clearInterval(storageRefreshIntervalId);
+			storageRefreshIntervalId = null;
+		}
+		initialized = false;
+	});
 }
 
 async function refreshStorageUsage() {
@@ -151,7 +171,11 @@ async function refreshQueuedCount() {
 
 async function flushMutationQueue() {
 	try {
-		const result = await mutationQueue.flush();
+		const { flushMutationQueue } = await import("@/lib/mutation-queue");
+		const result = await flushMutationQueue();
+		if (result.succeeded > 0) {
+			updateState({ lastSyncAt: Date.now() });
+		}
 		if (result.succeeded > 0) {
 			// Notify SW to broadcast invalidation to all tabs
 			navigator.serviceWorker?.controller?.postMessage({

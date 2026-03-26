@@ -18,6 +18,7 @@ import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
 import { Route as DashboardUsersIndexRouteImport } from './routes/_dashboard/users/index'
 import { Route as DashboardLessonsIndexRouteImport } from './routes/_dashboard/lessons/index'
 import { Route as StudentLessonsLessonIdRouteImport } from './routes/student/lessons/$lessonId'
+import { Route as ApiSyncSplatRouteImport } from './routes/api/sync/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DashboardUsersCreateRouteImport } from './routes/_dashboard/users/create'
 import { Route as DashboardLessonsCreateRouteImport } from './routes/_dashboard/lessons/create'
@@ -68,6 +69,11 @@ const StudentLessonsLessonIdRoute = StudentLessonsLessonIdRouteImport.update({
   path: '/lessons/$lessonId',
   getParentRoute: () => StudentRoute,
 } as any)
+const ApiSyncSplatRoute = ApiSyncSplatRouteImport.update({
+  id: '/api/sync/$',
+  path: '/api/sync/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/lessons/create': typeof DashboardLessonsCreateRoute
   '/users/create': typeof DashboardUsersCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/sync/$': typeof ApiSyncSplatRoute
   '/student/lessons/$lessonId': typeof StudentLessonsLessonIdRoute
   '/lessons/': typeof DashboardLessonsIndexRoute
   '/users/': typeof DashboardUsersIndexRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/lessons/create': typeof DashboardLessonsCreateRoute
   '/users/create': typeof DashboardUsersCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/sync/$': typeof ApiSyncSplatRoute
   '/student/lessons/$lessonId': typeof StudentLessonsLessonIdRoute
   '/lessons': typeof DashboardLessonsIndexRoute
   '/users': typeof DashboardUsersIndexRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/_dashboard/lessons/create': typeof DashboardLessonsCreateRoute
   '/_dashboard/users/create': typeof DashboardUsersCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/sync/$': typeof ApiSyncSplatRoute
   '/student/lessons/$lessonId': typeof StudentLessonsLessonIdRoute
   '/_dashboard/lessons/': typeof DashboardLessonsIndexRoute
   '/_dashboard/users/': typeof DashboardUsersIndexRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/lessons/create'
     | '/users/create'
     | '/api/auth/$'
+    | '/api/sync/$'
     | '/student/lessons/$lessonId'
     | '/lessons/'
     | '/users/'
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/lessons/create'
     | '/users/create'
     | '/api/auth/$'
+    | '/api/sync/$'
     | '/student/lessons/$lessonId'
     | '/lessons'
     | '/users'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/_dashboard/lessons/create'
     | '/_dashboard/users/create'
     | '/api/auth/$'
+    | '/api/sync/$'
     | '/student/lessons/$lessonId'
     | '/_dashboard/lessons/'
     | '/_dashboard/users/'
@@ -196,6 +208,7 @@ export interface RootRouteChildren {
   SignUpRoute: typeof SignUpRoute
   StudentRoute: typeof StudentRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiSyncSplatRoute: typeof ApiSyncSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -262,6 +275,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/student/lessons/$lessonId'
       preLoaderRoute: typeof StudentLessonsLessonIdRouteImport
       parentRoute: typeof StudentRoute
+    }
+    '/api/sync/$': {
+      id: '/api/sync/$'
+      path: '/api/sync/$'
+      fullPath: '/api/sync/$'
+      preLoaderRoute: typeof ApiSyncSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -344,6 +364,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   StudentRoute: StudentRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiSyncSplatRoute: ApiSyncSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,57 +1,94 @@
-/**
- * Server-side idempotency key cache.
- *
- * For now uses an in-memory Map with TTL. This means:
- * - Keys are lost on Worker cold start
- * - Duplicate detection works within a single Worker instance lifetime
- *
- * TODO : replace with a D1 `idempotency_keys` table for durability.
- */
+import { env } from "cloudflare:workers";
 
-// TTL: 24 hours (matches Workbox bgSync maxRetentionTime)
-const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
+const IDEMPOTENCY_TTL_SECONDS = 24 * 60 * 60;
 
-interface IdempotencyEntry {
-	createdAt: number;
-	responseBody: unknown;
+let ensureTablePromise: Promise<void> | null = null;
+
+async function ensureIdempotencyTable() {
+	if (!ensureTablePromise) {
+		ensureTablePromise = (async () => {
+			await env.ed_app_db
+				.prepare(
+					`CREATE TABLE IF NOT EXISTS idempotency_keys (
+						key TEXT PRIMARY KEY NOT NULL,
+						response_body TEXT,
+						created_at INTEGER NOT NULL DEFAULT (unixepoch())
+					);`,
+				)
+				.run();
+
+			await env.ed_app_db
+				.prepare(
+					"CREATE INDEX IF NOT EXISTS idx_idempotency_keys_created_at ON idempotency_keys(created_at);",
+				)
+				.run();
+		})();
+	}
+
+	await ensureTablePromise;
 }
 
-const cache = new Map<string, IdempotencyEntry>();
+export async function checkIdempotencyKey(
+	key: string,
+): Promise<unknown | undefined> {
+	await ensureIdempotencyTable();
 
-/**
- * Check if a mutation with this idempotency key has already been processed.
- * Returns the cached response body if it has, or `undefined` if it hasn't.
- */
-export function checkIdempotencyKey(key: string): unknown | undefined {
-	const entry = cache.get(key);
-	if (!entry) {
+	const row = await env.ed_app_db
+		.prepare(
+			"SELECT response_body AS responseBody, created_at AS createdAt FROM idempotency_keys WHERE key = ? LIMIT 1;",
+		)
+		.bind(key)
+		.first<{ responseBody: string | null; createdAt: number }>();
+
+	if (!row) {
 		return undefined;
 	}
 
-	if (Date.now() - entry.createdAt > IDEMPOTENCY_TTL_MS) {
-		cache.delete(key);
+	const nowSec = Math.floor(Date.now() / 1000);
+	if (nowSec - row.createdAt > IDEMPOTENCY_TTL_SECONDS) {
+		await env.ed_app_db
+			.prepare("DELETE FROM idempotency_keys WHERE key = ?;")
+			.bind(key)
+			.run();
 		return undefined;
 	}
 
-	return entry.responseBody;
-}
-
-/**
- * Record that a mutation with this idempotency key has been processed.
- */
-export function recordIdempotencyKey(key: string, responseBody: unknown): void {
-	// Opportunistic cleanup of expired entries
-	if (cache.size > 100) {
-		const now = Date.now();
-		for (const [k, v] of cache) {
-			if (now - v.createdAt > IDEMPOTENCY_TTL_MS) {
-				cache.delete(k);
-			}
-		}
+	if (row.responseBody == null) {
+		return null;
 	}
 
-	cache.set(key, {
-		createdAt: Date.now(),
-		responseBody,
-	});
+	try {
+		return JSON.parse(row.responseBody);
+	} catch {
+		return undefined;
+	}
+}
+
+export async function recordIdempotencyKey(
+	key: string,
+	responseBody: unknown,
+): Promise<void> {
+	await ensureIdempotencyTable();
+
+	let serialized: string | null = null;
+	try {
+		serialized = JSON.stringify(responseBody);
+	} catch {
+		serialized = null;
+	}
+
+	await env.ed_app_db
+		.prepare(
+			"INSERT OR REPLACE INTO idempotency_keys (key, response_body, created_at) VALUES (?, ?, unixepoch());",
+		)
+		.bind(key, serialized)
+		.run();
+
+	// Opportunistic cleanup to keep table bounded.
+	await env.ed_app_db
+		.prepare(
+			"DELETE FROM idempotency_keys WHERE created_at < (unixepoch() - ?);",
+		)
+		.bind(IDEMPOTENCY_TTL_SECONDS)
+		.run();
 }

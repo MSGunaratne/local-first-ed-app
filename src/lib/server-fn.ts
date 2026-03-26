@@ -53,7 +53,7 @@ export const idempotentMiddleware = createMiddleware().server(
 		}
 
 		if (idempotencyKey) {
-			const cached = checkIdempotencyKey(idempotencyKey);
+			const cached = await checkIdempotencyKey(idempotencyKey);
 			if (cached !== undefined) {
 				// This mutation was already processed — return the cached result
 				return cached as never;
@@ -68,7 +68,7 @@ export const idempotentMiddleware = createMiddleware().server(
 
 		// Record the successful result for deduplication
 		if (idempotencyKey) {
-			recordIdempotencyKey(idempotencyKey, result);
+			await recordIdempotencyKey(idempotencyKey, result);
 		}
 
 		return result;

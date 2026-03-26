@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
+import * as React from "react";
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -30,17 +31,34 @@ interface NavItemProps {
 export function NavItem({ item, depth = 0 }: NavItemProps) {
 	const { state, isMobile } = useSidebar();
 	const isCollapsed = state === "collapsed" && !isMobile;
+	const pathname = useRouterState({
+		select: (routerState) => routerState.location?.pathname ?? "",
+	});
+
+	const matchesPath = (candidatePath: string | undefined) => {
+		if (!candidatePath) {
+			return false;
+		}
+
+		if (candidatePath === "/") {
+			return pathname === "/";
+		}
+
+		return pathname === candidatePath || pathname.startsWith(`${candidatePath}/`);
+	};
+
 	const isActive = useRouterState({
-		select: (routerState) =>
-			item.path ? (routerState.location?.pathname ?? "") === item.path : false,
+		select: () => matchesPath(item.path),
 	});
 	const isGroupActive = useRouterState({
-		select: (routerState) =>
-			item.items?.some(
-				(subItem) => subItem.path === (routerState.location?.pathname ?? ""),
-			) ?? false,
+		select: () => item.items?.some((subItem) => matchesPath(subItem.path)) ?? false,
 	});
 	const isCurrent = isActive || isGroupActive;
+	const [isOpen, setIsOpen] = React.useState(isCurrent);
+
+	React.useEffect(() => {
+		setIsOpen(isCurrent);
+	}, [isCurrent]);
 
 	//TODO: find a better pattern later
 	// @ts-expect-error - dynamic key access
@@ -131,7 +149,11 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 	// If has children, use Collapsible
 	if (item.items && item.items.length > 0) {
 		return (
-			<Collapsible defaultOpen={isCurrent} className="group/collapsible">
+			<Collapsible
+				open={isOpen}
+				onOpenChange={setIsOpen}
+				className="group/collapsible"
+			>
 				<CollapsibleTrigger asChild>
 					<button
 						type="button" // Important for accessibility

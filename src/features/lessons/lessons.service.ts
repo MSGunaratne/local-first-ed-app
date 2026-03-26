@@ -83,7 +83,7 @@ export async function getLessonById(id: string) {
 	return selectedLesson;
 }
 
-export async function createLesson(data: LessonInsert) {
+export async function createLesson(data: LessonInsert & { id?: string }) {
 	await requireTeacherOrAdminSession(
 		"Only teachers and admins can create lessons",
 	);

@@ -16,7 +16,7 @@ export function ConnectionModeToggle({
 	const { mode, isOnline, isForced } = useConnectionMode();
 	const {
 		hasPendingMutations,
-		pendingMutationCount,
+		totalPending,
 		lastSyncFormatted,
 		storageUsageFormatted,
 	} = useSyncStatus();
@@ -77,7 +77,7 @@ export function ConnectionModeToggle({
 						{hasPendingMutations ? (
 							<>
 								<CloudOff className="h-3 w-3" />
-								<span>{pendingMutationCount} pending</span>
+								<span>{totalPending} pending</span>
 							</>
 						) : lastSyncFormatted ? (
 							<span>Synced {lastSyncFormatted}</span>

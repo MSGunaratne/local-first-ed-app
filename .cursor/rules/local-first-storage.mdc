@@ -1,0 +1,37 @@
+---
+description: Rules and patterns for the Local-First SQLite + Cloudflare D1 dual-database architecture.
+globs: src/lib/local-db/**/*, src/**/*.queries.ts, src/lib/query-client.ts, src/lib/mutation-queue.ts
+---
+
+# Local-First Architecture & Sync Patterns
+
+This project uses a **Local-First** synchronization architecture. Data is stored primarily in a main-thread SQLite database (via `@vlcn.io/wa-sqlite` and `IDBBatchAtomicVFS`) and synchronized with a remote Cloudflare D1 database.
+
+## 1. Core Principles
+- **Instant Success**: Mutations must resolve as soon as the local SQLite write and IDB Mutation Queue enqueue are successful. Never `await` the network sync in the UI mutation function.
+- **Offline Reliability**: The application must remain fully functional in "Forced Offline" mode.
+- **Single Source of Truth (Query)**: Queries (`useQuery`) should attempt to read from local SQLite if available (`isReady()`), fallback to cache, and only fetch from server on demand.
+
+## 2. Global Database Management (`src/lib/local-db/init.ts`)
+- **Serial Operation Queue**: ALL SQLite operations (exec, query, transaction) MUST be enqueued through the global `dbQueue`. This prevents "Disk I/O" errors and concurrency contention.
+- **Re-entrant Transactions**: The `transaction` function provides internal, non-queuing execution helpers (`_internalExecWithParams`, `_internalQuery`) to its callback. Use these for atomic workflows to avoid deadlocking the queue.
+- **WASM Singletons**: The SQLite WASM module and library factory are persisted as session-level variables to prevent pointer invalidation during HMR or network state shifts.
+
+## 3. Data Integrity & Sync (`src/lib/local-db/sync.ts`)
+- **Column Mapping**: All database interactions must use the `COLUMN_MAP` to translate between application `camelCase` and database `snake_case`.
+- **Automatic Hydration**:
+    - **Dates**: Fields ending in `At`, `Expires`, or named `lastModified` must be hydrated from SQLite unix timestamps (seconds) or ISO strings into Javascript `Date` objects.
+    - **Booleans**: SQLite's `0/1` integers must be hydrated to `true/false` for fields starting with `is` or other boolean-mode keys.
+- **IDempotency**: Every mutation must include an `idempotencyKey` (usually the record ID) to prevent duplicate processing on the server during sync retries.
+
+## 4. Mutation Patterns (`src/**/*.queries.ts`)
+- **Network Mode**: All mutations and related queries MUST set `networkMode: "always"`. This prevents TanStack Query from pauses actions in "offline" mode.
+- **Background Sync**: Trigger `flushMutationQueue()` as a fire-and-forget task after a successful local write. Do not `await` it.
+
+## 5. VFS Safety
+- **Handle Continuity**: Use `GLOBAL_VFS_FILE_MAP` to track open file handles across VFS re-registrations.
+- **Type Safety**: VFS methods should wrap native calls in `try/catch` and return `SQLITE_IOERR` (10) for stale handles rather than throwing `TypeError`, allowing SQLite to retry gracefully.
+
+## 6. Development & HMR
+- **Cleanup**: Always use the `closeLocalDb()` helper to free up VFS locks during component unmounting or HMR reloads.
+- **Logging**: Enable verbose sync logging (`[Sync:Pull]`, `[Sync:Push]`) to debug the bidirectional flow during connectivity shifts.

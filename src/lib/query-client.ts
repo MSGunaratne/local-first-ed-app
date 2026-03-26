@@ -30,17 +30,13 @@ declare module "@tanstack/react-query" {
 }
 
 // ----------------------------------------------------------------------
-// Constants
-// ----------------------------------------------------------------------
 
-/** Cache time: 7 days for offline-first support */
-const CACHE_TIME = 1000 * 60 * 60 * 24 * 7;
+const CACHE_TIME = 1000 * 60 * 60 * 24 * 7; // 7 days
 const PERSISTENCE_BUSTER = "rq-cache-v2";
 const AUTH_QUERY_KEY = "auth";
 const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";
 const REPLAYED_DEFAULT_SCOPES = ["users", "lessons", "classes"] as const;
 
-/** Query scopes that should be persisted to IDB */
 const PERSISTED_SCOPES = [
 	"lessons",
 	"classes",
@@ -49,10 +45,9 @@ const PERSISTED_SCOPES = [
 	"auth",
 ] as const;
 
-// Storage budget in bytes (50 MB)
-const STORAGE_BUDGET_BYTES = 50 * 1024 * 1024;
-// Warning threshold (40 MB)
-const STORAGE_WARNING_BYTES = 40 * 1024 * 1024;
+const STORAGE_BUDGET_BYTES = 50 * 1024 * 1024; // 50 MB
+
+const STORAGE_WARNING_BYTES = 40 * 1024 * 1024; // (40 MB)
 
 // ----------------------------------------------------------------------
 // Scoped IDB Persister – one IDB key per query scope
@@ -338,6 +333,7 @@ function makeQueryClient() {
 				},
 			},
 			mutations: {
+				networkMode: "offlineFirst",
 				retry: false,
 			},
 			dehydrate: {

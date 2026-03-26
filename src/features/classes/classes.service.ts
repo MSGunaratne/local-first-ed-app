@@ -86,7 +86,7 @@ export async function getClassById(id: string) {
 	return selectedClass;
 }
 
-export async function createClass(data: ClassInsert) {
+export async function createClass(data: ClassInsert & { id?: string }) {
 	const session = await requireTeacherOrAdminSession(
 		"Only teachers and admins can create classes",
 	);

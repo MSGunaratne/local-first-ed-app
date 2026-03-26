@@ -19,6 +19,7 @@ import {
 } from "./lessons.service";
 
 const createLessonInputSchema = lessonInsertSchema.extend({
+	id: z.string().optional(),
 	idempotencyKey: z.string().optional(),
 });
 

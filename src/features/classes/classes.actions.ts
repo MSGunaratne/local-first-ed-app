@@ -19,6 +19,7 @@ import {
 } from "./classes.service";
 
 const createClassInputSchema = classInsertSchema.extend({
+	id: z.string().optional(),
 	idempotencyKey: z.string().optional(),
 });
 

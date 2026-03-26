@@ -5,15 +5,9 @@ import {
 } from "@tanstack/react-query";
 import { uuidv7 } from "uuidv7";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
+import { getQueryClient } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
-import {
-	createUserFn,
-	deleteUserFn,
-	exportUsersFn,
-	getUserByIdFn,
-	getUsersFn,
-	updateUserFn,
-} from "./users.actions";
+import { exportUsersFn, getUserByIdFn, getUsersFn } from "./users.actions";
 import type { UserCreateInput, UserUpdateInput } from "./users.schema";
 
 // ----------------------------------------------------------------------
@@ -47,12 +41,29 @@ export const userQueries = {
 export const userMutations = {
 	create: () =>
 		mutationOptions({
-			mutationFn: (data: UserCreateInput) =>
-				createUserFn({ data: { ...data, idempotencyKey: uuidv7() } }),
+			mutationFn: async (data: UserCreateInput) => {
+				const { enqueue, flushMutationQueue } = await import(
+					"@/lib/mutation-queue"
+				);
+				const idempotencyKey = uuidv7();
+
+				await enqueue({
+					scope: "users",
+					type: "create",
+					serverFn: "createUser",
+					payload: { ...data, idempotencyKey },
+					idempotencyKey,
+				});
+
+				const { onlineManager } = await import("@tanstack/react-query");
+				if (onlineManager.isOnline()) {
+					void flushMutationQueue();
+				}
+
+				return { queued: true };
+			},
 			onMutate: async (newUser) => {
-				const queryClient = (
-					await import("@/lib/query-client")
-				).getQueryClient();
+				const queryClient = getQueryClient();
 				await queryClient.cancelQueries({ queryKey: userQueries.lists() });
 
 				return { optimistic: true, data: newUser };
@@ -65,12 +76,29 @@ export const userMutations = {
 		}),
 	update: (id: string) =>
 		mutationOptions({
-			mutationFn: (data: UserUpdateInput) =>
-				updateUserFn({ data: { id, data, idempotencyKey: uuidv7() } }),
+			mutationFn: async (data: UserUpdateInput) => {
+				const { enqueue, flushMutationQueue } = await import(
+					"@/lib/mutation-queue"
+				);
+				const idempotencyKey = uuidv7();
+
+				await enqueue({
+					scope: "users",
+					type: "update",
+					serverFn: "updateUser",
+					payload: { id, data, idempotencyKey },
+					idempotencyKey,
+				});
+
+				const { onlineManager } = await import("@tanstack/react-query");
+				if (onlineManager.isOnline()) {
+					void flushMutationQueue();
+				}
+
+				return { queued: true };
+			},
 			onMutate: async (updatedData) => {
-				const queryClient = (
-					await import("@/lib/query-client")
-				).getQueryClient();
+				const queryClient = getQueryClient();
 				const detailKey = userQueries.detail(id).queryKey;
 
 				await queryClient.cancelQueries({ queryKey: detailKey });
@@ -97,8 +125,6 @@ export const userMutations = {
 			},
 			onError: (_error, _variables, context) => {
 				if (context?.previous && context?.detailKey) {
-					const { getQueryClient } =
-						require("@/lib/query-client") as typeof import("@/lib/query-client");
 					getQueryClient().setQueryData(context.detailKey, context.previous);
 				}
 			},
@@ -110,12 +136,29 @@ export const userMutations = {
 		}),
 	delete: () =>
 		mutationOptions({
-			mutationFn: (id: string) =>
-				deleteUserFn({ data: { id, idempotencyKey: uuidv7() } }),
+			mutationFn: async (id: string) => {
+				const { enqueue, flushMutationQueue } = await import(
+					"@/lib/mutation-queue"
+				);
+				const idempotencyKey = uuidv7();
+
+				await enqueue({
+					scope: "users",
+					type: "delete",
+					serverFn: "deleteUser",
+					payload: { id, idempotencyKey },
+					idempotencyKey,
+				});
+
+				const { onlineManager } = await import("@tanstack/react-query");
+				if (onlineManager.isOnline()) {
+					void flushMutationQueue();
+				}
+
+				return { queued: true };
+			},
 			onMutate: async (deletedId) => {
-				const queryClient = (
-					await import("@/lib/query-client")
-				).getQueryClient();
+				const queryClient = getQueryClient();
 				await queryClient.cancelQueries({ queryKey: userQueries.lists() });
 
 				return { deletedId };

@@ -1,5 +1,4 @@
 /// <reference lib="webworker" />
-import { clientsClaim } from "workbox-core";
 import { ExpirationPlugin } from "workbox-expiration";
 import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 import { offlineFallback } from "workbox-recipes";
@@ -34,8 +33,10 @@ const filteredManifest = fullManifest.filter((entry) => {
 precacheAndRoute(filteredManifest);
 cleanupOutdatedCaches();
 
-// Take control immediately
-clientsClaim();
+// Prefer explicit activation claim for predictable update behavior across tabs.
+self.addEventListener("activate", (event) => {
+	event.waitUntil(self.clients.claim());
+});
 
 // Message handler: skip waiting + flush mutation queue
 self.addEventListener("message", (event) => {

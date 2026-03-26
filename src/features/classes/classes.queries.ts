@@ -1,15 +1,28 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import { uuidv7 } from "uuidv7";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
+import { getQueryClient } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
-import {
-	createClassFn,
-	deleteClassFn,
-	getClassByIdFn,
-	getClassesFn,
-	updateClassFn,
-} from "./classes.actions";
+import { getClassByIdFn, getClassesFn } from "./classes.actions";
 import type { ClassInsert } from "./classes.schema";
+
+function getExpectedUpdatedAt(value: unknown): string | undefined {
+	if (typeof value !== "object" || value === null) {
+		return undefined;
+	}
+
+	const maybeUpdatedAt = (value as { updatedAt?: unknown }).updatedAt;
+	if (maybeUpdatedAt instanceof Date) {
+		return maybeUpdatedAt.toISOString();
+	}
+
+	if (typeof maybeUpdatedAt === "string") {
+		const parsed = new Date(maybeUpdatedAt);
+		return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+	}
+
+	return undefined;
+}
 
 // ----------------------------------------------------------------------
 
@@ -31,12 +44,44 @@ export const classQueries = {
 export const classMutations = {
 	create: () =>
 		mutationOptions({
-			mutationFn: (data: ClassInsert) =>
-				createClassFn({ data: { ...data, idempotencyKey: uuidv7() } }),
+			mutationFn: async (data: ClassInsert) => {
+				const { insertLocal, isReady } = await import("@/lib/local-db");
+				const { enqueue, flushMutationQueue } = await import(
+					"@/lib/mutation-queue"
+				);
+
+				const id = uuidv7();
+				const now = Math.floor(Date.now() / 1000);
+				const completeData = {
+					...data,
+					id,
+					createdAt: now,
+					updatedAt: now,
+					syncStatus: "pending",
+					isDeleted: 0,
+				};
+
+				if (isReady()) {
+					await insertLocal("classes", completeData);
+				}
+
+				await enqueue({
+					scope: "classes",
+					type: "create",
+					serverFn: "createClass",
+					payload: { ...data, id, idempotencyKey: id },
+					idempotencyKey: id,
+				});
+
+				const { onlineManager } = await import("@tanstack/react-query");
+				if (onlineManager.isOnline()) {
+					void flushMutationQueue();
+				}
+
+				return { id };
+			},
 			onMutate: async (newClass) => {
-				const queryClient = (
-					await import("@/lib/query-client")
-				).getQueryClient();
+				const queryClient = getQueryClient();
 				await queryClient.cancelQueries({ queryKey: classQueries.lists() });
 
 				return { optimistic: true, data: newClass };
@@ -56,22 +101,38 @@ export const classMutations = {
 				id: string;
 				data: Partial<ClassInsert>;
 			}) => {
-				const { getQueryClient } = await import("@/lib/query-client");
+				const { updateLocal, isReady } = await import("@/lib/local-db");
+				const { enqueue, flushMutationQueue } = await import(
+					"@/lib/mutation-queue"
+				);
+
 				const cached = getQueryClient().getQueryData(
 					classQueries.detail(id).queryKey,
 				);
-				const expectedUpdatedAt =
-					cached && "updatedAt" in cached
-						? new Date(cached.updatedAt as Date).toISOString()
-						: undefined;
-				return updateClassFn({
-					data: { id, data, idempotencyKey: uuidv7(), expectedUpdatedAt },
+				const expectedUpdatedAt = getExpectedUpdatedAt(cached);
+
+				if (isReady()) {
+					await updateLocal("classes", id, { ...data });
+				}
+
+				const idempotencyKey = uuidv7();
+				await enqueue({
+					scope: "classes",
+					type: "update",
+					serverFn: "updateClass",
+					payload: { id, data, idempotencyKey, expectedUpdatedAt },
+					idempotencyKey,
 				});
+
+				const { onlineManager } = await import("@tanstack/react-query");
+				if (onlineManager.isOnline()) {
+					void flushMutationQueue();
+				}
+
+				return { success: true };
 			},
 			onMutate: async ({ id, data: updatedData }) => {
-				const queryClient = (
-					await import("@/lib/query-client")
-				).getQueryClient();
+				const queryClient = getQueryClient();
 				const detailKey = classQueries.detail(id).queryKey;
 
 				await queryClient.cancelQueries({ queryKey: detailKey });
@@ -90,8 +151,6 @@ export const classMutations = {
 			},
 			onError: (_error, _variables, context) => {
 				if (context?.previous && context?.detailKey) {
-					const { getQueryClient } =
-						require("@/lib/query-client") as typeof import("@/lib/query-client");
 					getQueryClient().setQueryData(context.detailKey, context.previous);
 				}
 			},
@@ -103,12 +162,34 @@ export const classMutations = {
 		}),
 	delete: () =>
 		mutationOptions({
-			mutationFn: (id: string) =>
-				deleteClassFn({ data: { id, idempotencyKey: uuidv7() } }),
+			mutationFn: async (id: string) => {
+				const { deleteLocal, isReady } = await import("@/lib/local-db");
+				const { enqueue, flushMutationQueue } = await import(
+					"@/lib/mutation-queue"
+				);
+
+				if (isReady()) {
+					await deleteLocal("classes", id);
+				}
+
+				const idempotencyKey = uuidv7();
+				await enqueue({
+					scope: "classes",
+					type: "delete",
+					serverFn: "deleteClass",
+					payload: { id, idempotencyKey },
+					idempotencyKey,
+				});
+
+				const { onlineManager } = await import("@tanstack/react-query");
+				if (onlineManager.isOnline()) {
+					void flushMutationQueue();
+				}
+
+				return { id };
+			},
 			onMutate: async (deletedId) => {
-				const queryClient = (
-					await import("@/lib/query-client")
-				).getQueryClient();
+				const queryClient = getQueryClient();
 				await queryClient.cancelQueries({ queryKey: classQueries.lists() });
 
 				return { deletedId };
