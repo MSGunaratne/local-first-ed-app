@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Editor } from "@/components/ui/editor";
 import { lessonQueries } from "@/features/lessons/lessons.queries";
 import { useLocalProgress } from "@/hooks/use-local-progress";
-import { m } from "@/paraglide/messages";
 import { ensureQueryDataAfterRestore } from "@/lib/query-client";
+import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/student/lessons/$lessonId")({
 	component: LessonPlayer,
@@ -47,7 +47,9 @@ function LessonPlayer() {
 			<div className="space-y-4">
 				<div className="flex items-center gap-2">
 					<Badge className="capitalize">{lesson.subject}</Badge>
-					<Badge variant="outline">{m.lessons_grade({ grade: lesson.gradeLevel })}</Badge>
+					<Badge variant="outline">
+						{m.lessons_grade({ grade: lesson.gradeLevel })}
+					</Badge>
 					{isCompleted && (
 						<Badge
 							variant="secondary"
@@ -63,7 +65,9 @@ function LessonPlayer() {
 				<div className="flex items-center gap-6 text-sm text-muted-foreground">
 					<div className="flex items-center gap-2">
 						<ClockIcon className="h-4 w-4" />
-						<span>{m.common_mins({ count: lesson.estimatedDuration ?? 0 })}</span>
+						<span>
+							{m.common_mins({ count: lesson.estimatedDuration ?? 0 })}
+						</span>
 					</div>
 					<div className="flex items-center gap-2">
 						<Calendar className="h-4 w-4" />

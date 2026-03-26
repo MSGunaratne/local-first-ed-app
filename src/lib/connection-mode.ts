@@ -34,7 +34,7 @@ function getEffectiveOnlineState(mode = getStoredConnectionMode()) {
 		return false;
 	}
 
-	return typeof navigator !== "undefined" ? navigator.onLine : true;
+	return onlineManager.isOnline();
 }
 
 function getSnapshot() {
@@ -57,6 +57,8 @@ export function initializeConnectionMode() {
 
 	connectionModeInitialized = true;
 
+	// When mode is "auto", delegate to browser online/offline events.
+	// When forced, override with the selected state.
 	onlineManager.setEventListener((setOnline) => {
 		const syncOnlineState = () => {
 			setOnline(getEffectiveOnlineState());

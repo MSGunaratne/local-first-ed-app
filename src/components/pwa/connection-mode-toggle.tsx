@@ -1,6 +1,7 @@
-import { Wifi, WifiOff } from "lucide-react";
+import { CloudOff, Loader2, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cycleConnectionMode, useConnectionMode } from "@/lib/connection-mode";
+import { useSyncStatus } from "@/lib/sync-status";
 import { cn } from "@/lib/utils";
 
 interface ConnectionModeToggleProps {
@@ -13,48 +14,80 @@ export function ConnectionModeToggle({
 	compact = false,
 }: ConnectionModeToggleProps) {
 	const { mode, isOnline, isForced } = useConnectionMode();
+	const {
+		hasPendingMutations,
+		pendingMutationCount,
+		lastSyncFormatted,
+		storageUsageFormatted,
+	} = useSyncStatus();
+
 	const displayedStatus = isOnline ? "Online" : "Offline";
 	const modeLabel =
 		mode === "auto" ? "Auto" : mode === "offline" ? "Forced off" : "Forced on";
-	const Icon = isOnline ? Wifi : WifiOff;
+
+	const Icon = hasPendingMutations ? Loader2 : isOnline ? Wifi : WifiOff;
 
 	return (
-		<Button
-			type="button"
-			variant="outline"
-			size={compact ? "icon" : "default"}
-			className={cn(
-				"border-dashed bg-background/80 hover:bg-accent/50",
-				compact ? "h-9 w-9" : "w-full justify-between gap-3 px-3",
-				className,
-			)}
-			onClick={cycleConnectionMode}
-			title="Cycle connection mode"
-			aria-label={`Connection ${displayedStatus}, mode ${modeLabel}. Click to cycle mode.`}
-		>
-			<span className="flex items-center gap-2 min-w-0">
-				<Icon className="h-4 w-4 shrink-0" />
-				{!compact && (
-					<span className="truncate font-medium">
-						{displayedStatus}
-						<span className="ml-2 text-muted-foreground font-normal">
-							({modeLabel})
+		<div className={cn("flex flex-col gap-1", className)}>
+			<Button
+				type="button"
+				variant="outline"
+				size={compact ? "icon" : "default"}
+				className={cn(
+					"border-dashed bg-background/80 hover:bg-accent/50",
+					compact ? "h-9 w-9" : "w-full justify-between gap-3 px-3",
+				)}
+				onClick={cycleConnectionMode}
+				title="Cycle connection mode"
+				aria-label={`Connection ${displayedStatus}, mode ${modeLabel}. Click to cycle mode.`}
+			>
+				<span className="flex items-center gap-2 min-w-0">
+					<Icon
+						className={cn(
+							"h-4 w-4 shrink-0",
+							hasPendingMutations && "animate-spin",
+						)}
+					/>
+					{!compact && (
+						<span className="truncate font-medium">
+							{displayedStatus}
+							<span className="ml-2 text-muted-foreground font-normal">
+								({modeLabel})
+							</span>
 						</span>
+					)}
+				</span>
+				{!compact && (
+					<span
+						className={cn(
+							"rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider",
+							isForced
+								? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+								: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
+						)}
+					>
+						{modeLabel}
 					</span>
 				)}
-			</span>
+			</Button>
+
 			{!compact && (
-				<span
-					className={cn(
-						"rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider",
-						isForced
-							? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
-							: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
-					)}
-				>
-					{modeLabel}
-				</span>
+				<div className="flex items-center justify-between px-1 text-[10px] text-muted-foreground">
+					<div className="flex items-center gap-1">
+						{hasPendingMutations ? (
+							<>
+								<CloudOff className="h-3 w-3" />
+								<span>{pendingMutationCount} pending</span>
+							</>
+						) : lastSyncFormatted ? (
+							<span>Synced {lastSyncFormatted}</span>
+						) : (
+							<span>No sync yet</span>
+						)}
+					</div>
+					<span>{storageUsageFormatted}</span>
+				</div>
 			)}
-		</Button>
+		</div>
 	);
 }

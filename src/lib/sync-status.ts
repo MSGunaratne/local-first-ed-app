@@ -1,0 +1,175 @@
+import { environmentManager, onlineManager } from "@tanstack/react-query";
+import { useEffect, useSyncExternalStore } from "react";
+import {
+	formatBytes,
+	getQueryClient,
+	getStorageEstimate,
+} from "@/lib/query-client";
+
+// ----------------------------------------------------------------------
+// Sync Status Store – tracks pending mutations, last sync, and storage
+// ----------------------------------------------------------------------
+
+interface SyncState {
+	pendingMutationCount: number /** Number of mutations currently pending (in-flight or queued) */;
+	lastSyncAt: number | null;
+	isOnline: boolean;
+	storageUsageBytes: number;
+	storageQuotaBytes: number;
+}
+
+let currentState: SyncState = {
+	pendingMutationCount: 0,
+	lastSyncAt: null,
+	isOnline: true,
+	storageUsageBytes: 0,
+	storageQuotaBytes: 0,
+};
+
+const listeners = new Set<() => void>();
+
+function emitChange() {
+	// Defer notification to avoid updates during another component's render.
+	queueMicrotask(() => {
+		for (const listener of listeners) {
+			listener();
+		}
+	});
+}
+
+function updateState(partial: Partial<SyncState>) {
+	currentState = { ...currentState, ...partial };
+	emitChange();
+}
+
+function subscribe(listener: () => void) {
+	listeners.add(listener);
+	return () => {
+		listeners.delete(listener);
+	};
+}
+
+function getSnapshot(): SyncState {
+	return currentState;
+}
+
+/** Cached server snapshot — must return the same reference every call */
+const SERVER_SNAPSHOT: SyncState = {
+	pendingMutationCount: 0,
+	lastSyncAt: null,
+	isOnline: true,
+	storageUsageBytes: 0,
+	storageQuotaBytes: 0,
+};
+
+function getServerSnapshot(): SyncState {
+	return SERVER_SNAPSHOT;
+}
+
+// ----------------------------------------------------------------------
+// Initialization – wire up to QueryClient and OnlineManager
+// ----------------------------------------------------------------------
+
+let initialized = false;
+
+function initializeSyncStatus() {
+	if (initialized || environmentManager.isServer()) {
+		return;
+	}
+	initialized = true;
+
+	// Set initial online state without emitting (avoids setState during render)
+	currentState = { ...currentState, isOnline: onlineManager.isOnline() };
+	onlineManager.subscribe((isOnline) => {
+		updateState({ isOnline });
+		if (isOnline) {
+			updateState({ lastSyncAt: Date.now() });
+		}
+	});
+
+	// Track pending mutations
+	const queryClient = getQueryClient();
+	const mutationCache = queryClient.getMutationCache();
+
+	mutationCache.subscribe((event) => {
+		const allMutations = mutationCache.getAll();
+		const pending = allMutations.filter(
+			(m) => m.state.status === "pending",
+		).length;
+
+		updateState({ pendingMutationCount: pending });
+
+		// Update last sync time when a mutation succeeds while online
+		if (
+			event.type === "updated" &&
+			event.mutation.state.status === "success" &&
+			onlineManager.isOnline()
+		) {
+			updateState({ lastSyncAt: Date.now() });
+		}
+	});
+
+	// Periodically update storage usage (every 30 seconds)
+	void refreshStorageUsage();
+	setInterval(() => {
+		void refreshStorageUsage();
+	}, 30_000);
+}
+
+async function refreshStorageUsage() {
+	try {
+		const { usageBytes, quotaBytes } = await getStorageEstimate();
+		updateState({
+			storageUsageBytes: usageBytes,
+			storageQuotaBytes: quotaBytes,
+		});
+	} catch {
+		// Silently ignore
+	}
+}
+
+// ----------------------------------------------------------------------
+// React Hook
+// ----------------------------------------------------------------------
+
+export function useSyncStatus() {
+	// Initialize outside the render pass to avoid triggering state updates
+	// during another component's render
+	useEffect(() => {
+		initializeSyncStatus();
+	}, []);
+
+	const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+	return {
+		...state,
+		/** Human-readable storage usage */
+		storageUsageFormatted: formatBytes(state.storageUsageBytes),
+		/** Whether there are pending mutations */
+		hasPendingMutations: state.pendingMutationCount > 0,
+		/** Human-readable last sync time */
+		lastSyncFormatted: state.lastSyncAt
+			? formatRelativeTime(state.lastSyncAt)
+			: null,
+	};
+}
+
+// ----------------------------------------------------------------------
+// Helpers
+// ----------------------------------------------------------------------
+
+function formatRelativeTime(timestamp: number): string {
+	const diffMs = Date.now() - timestamp;
+	const diffSec = Math.floor(diffMs / 1000);
+
+	if (diffSec < 10) return "just now";
+	if (diffSec < 60) return `${diffSec}s ago`;
+
+	const diffMin = Math.floor(diffSec / 60);
+	if (diffMin < 60) return `${diffMin}m ago`;
+
+	const diffHr = Math.floor(diffMin / 60);
+	if (diffHr < 24) return `${diffHr}h ago`;
+
+	return `${Math.floor(diffHr / 24)}d ago`;
+}

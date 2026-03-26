@@ -23,9 +23,9 @@ import {
 	SORT_OPTIONS,
 	studentSearchSchema,
 } from "@/features/lessons/student-search";
+import { m } from "@/paraglide/messages";
 import type { Subject } from "@/types/lesson";
 import { SUBJECT_METADATA } from "@/types/lesson";
-import { m } from "@/paraglide/messages";
 
 // ----------------------------------------------------------------------
 

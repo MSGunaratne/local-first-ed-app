@@ -9,7 +9,6 @@ import {
 import {
 	type PersistedClient,
 	type Persister,
-	persistQueryClientRestore,
 	persistQueryClientSave,
 } from "@tanstack/react-query-persist-client";
 import { del, get, set } from "idb-keyval";
@@ -25,39 +24,229 @@ declare module "@tanstack/react-query" {
 			invalidates?: Array<readonly string[]>;
 			getInvalidates?: (data: unknown) => Array<readonly string[]>;
 			onSettledCallback?: () => void;
+			idempotencyKey?: string;
 		};
 	}
 }
 
 // ----------------------------------------------------------------------
-// IndexedDB Persister for offline-first support
+// Constants
 // ----------------------------------------------------------------------
 
-function createIDBPersister(
-	idbValidKey: IDBValidKey = "reactQuery",
-): Persister {
+/** Cache time: 7 days for offline-first support */
+const CACHE_TIME = 1000 * 60 * 60 * 24 * 7;
+const PERSISTENCE_BUSTER = "rq-cache-v2";
+const AUTH_QUERY_KEY = "auth";
+const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";
+const REPLAYED_DEFAULT_SCOPES = ["users", "lessons", "classes"] as const;
+
+/** Query scopes that should be persisted to IDB */
+const PERSISTED_SCOPES = ["lessons", "classes", "users", "students"] as const;
+
+// Storage budget in bytes (50 MB)
+const STORAGE_BUDGET_BYTES = 50 * 1024 * 1024;
+// Warning threshold (40 MB)
+const STORAGE_WARNING_BYTES = 40 * 1024 * 1024;
+
+// ----------------------------------------------------------------------
+// Scoped IDB Persister – one IDB key per query scope
+// ----------------------------------------------------------------------
+
+function getScopeKey(scope: string) {
+	return `rq:${scope}`;
+}
+
+function getQueryScope(
+	query: Parameters<typeof defaultShouldDehydrateQuery>[0],
+): string | null {
+	const [scope] = query.queryKey;
+	if (typeof scope === "string" && scope !== AUTH_QUERY_KEY) {
+		return scope;
+	}
+	return null;
+}
+
+function shouldPersistQuery(
+	query: Parameters<typeof defaultShouldDehydrateQuery>[0],
+) {
+	const scope = getQueryScope(query);
+	if (!scope) {
+		return false;
+	}
+	return defaultShouldDehydrateQuery(query);
+}
+
+/**
+ * Creates a scoped IDB persister that stores each query scope as a separate
+ * IDB key. This prevents a single corrupt entry from destroying the entire
+ * cache and enables independent eviction per scope.
+ */
+function createScopedIDBPersister(): Persister {
 	return {
 		persistClient: async (client: PersistedClient) => {
-			try {
-				await set(idbValidKey, client);
-			} catch (error) {
-				console.error("Failed to persist query client to IDB", error);
+			const queries = client.clientState.queries;
+			const mutations = client.clientState.mutations;
+
+			// Group queries by their first key segment (scope)
+			const grouped = new Map<string, typeof queries>();
+			for (const query of queries) {
+				const [rawScope] = query.queryKey;
+				const scope = typeof rawScope === "string" ? rawScope : "__other";
+				const existing = grouped.get(scope);
+				if (existing) {
+					existing.push(query);
+				} else {
+					grouped.set(scope, [query]);
+				}
 			}
+
+			const writes: Promise<void>[] = [];
+
+			for (const [scope, scopeQueries] of grouped) {
+				const scopedClient: PersistedClient = {
+					timestamp: client.timestamp,
+					buster: client.buster,
+					clientState: {
+						queries: scopeQueries,
+						// Only store mutations in the first scope to avoid duplication
+						mutations:
+							scope === (grouped.keys().next().value ?? scope) ? mutations : [],
+					},
+				};
+
+				writes.push(
+					set(getScopeKey(scope), scopedClient).catch((error) => {
+						console.error(`Failed to persist scope "${scope}" to IDB`, error);
+					}),
+				);
+			}
+
+			await Promise.all(writes);
 		},
+
 		restoreClient: async () => {
-			try {
-				return await get<PersistedClient>(idbValidKey);
-			} catch (error) {
-				console.error("Failed to restore query client from IDB", error);
+			const allScopes = [...PERSISTED_SCOPES, "__other"];
+			const entries = await Promise.all(
+				allScopes.map(async (scope) => {
+					try {
+						return await get<PersistedClient>(getScopeKey(scope));
+					} catch (error) {
+						console.error(
+							`Failed to restore scope "${scope}" from IDB, clearing it`,
+							error,
+						);
+						// Nuke the corrupt entry rather than crashing
+						await del(getScopeKey(scope)).catch(() => {});
+						return undefined;
+					}
+				}),
+			);
+
+			const validEntries = entries.filter(
+				(e): e is PersistedClient => e != null,
+			);
+
+			if (validEntries.length === 0) {
 				return undefined;
 			}
+
+			// Merge all scoped entries back into a single PersistedClient
+			const mergedQueries = validEntries.flatMap((e) => e.clientState.queries);
+			const mergedMutations = validEntries.flatMap(
+				(e) => e.clientState.mutations,
+			);
+
+			return {
+				// Use the latest timestamp among all entries
+				timestamp: Math.max(...validEntries.map((e) => e.timestamp)),
+				buster: validEntries[0].buster,
+				clientState: {
+					queries: mergedQueries,
+					mutations: mergedMutations,
+				},
+			};
 		},
+
 		removeClient: async () => {
-			await del(idbValidKey);
+			const allScopes = [...PERSISTED_SCOPES, "__other"];
+			await Promise.all(
+				allScopes.map((scope) => del(getScopeKey(scope)).catch(() => {})),
+			);
 		},
 	};
 }
 
+// ----------------------------------------------------------------------
+// Storage Quota Monitoring
+// ----------------------------------------------------------------------
+
+export async function getStorageEstimate(): Promise<{
+	usageBytes: number;
+	quotaBytes: number;
+	usagePercent: number;
+}> {
+	if (typeof navigator === "undefined" || !navigator.storage?.estimate) {
+		return { usageBytes: 0, quotaBytes: 0, usagePercent: 0 };
+	}
+
+	const estimate = await navigator.storage.estimate();
+	const usageBytes = estimate.usage ?? 0;
+	const quotaBytes = estimate.quota ?? 0;
+	const usagePercent = quotaBytes > 0 ? (usageBytes / quotaBytes) * 100 : 0;
+
+	return { usageBytes, quotaBytes, usagePercent };
+}
+
+export function formatBytes(bytes: number): string {
+	if (bytes < 1024) return `${bytes} B`;
+	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/**
+ * Evict stale query cache entries when storage exceeds budget.
+ * Evicts oldest stale queries first.
+ */
+export async function enforceStorageBudget(queryClient: QueryClient) {
+	try {
+		const { usageBytes } = await getStorageEstimate();
+
+		if (
+			usageBytes > STORAGE_WARNING_BYTES &&
+			usageBytes <= STORAGE_BUDGET_BYTES
+		) {
+			console.warn(
+				`[Storage] Usage (${formatBytes(usageBytes)}) approaching budget (${formatBytes(STORAGE_BUDGET_BYTES)})`,
+			);
+		}
+
+		if (usageBytes > STORAGE_BUDGET_BYTES) {
+			console.warn(
+				`[Storage] Budget exceeded (${formatBytes(usageBytes)} > ${formatBytes(STORAGE_BUDGET_BYTES)}). Evicting stale queries.`,
+			);
+
+			const queries = queryClient.getQueryCache().getAll();
+			const stale = queries
+				.filter((q) => q.isStale())
+				.sort((a, b) => a.state.dataUpdatedAt - b.state.dataUpdatedAt);
+
+			// Evict the oldest half of stale queries
+			const evictCount = Math.max(1, Math.ceil(stale.length / 2));
+			for (const q of stale.slice(0, evictCount)) {
+				queryClient.removeQueries({ queryKey: q.queryKey, exact: true });
+			}
+
+			toast.warning("Storage space is low", {
+				description: "Some cached data was cleared to free up space.",
+			});
+		}
+	} catch {
+		// Silently ignore — storage API may not be available
+	}
+}
+
+// ----------------------------------------------------------------------
+// Error helpers
 // ----------------------------------------------------------------------
 
 function getErrorMessage(error: unknown) {
@@ -79,23 +268,9 @@ function getErrorMessage(error: unknown) {
 	return `Unknown error: ${error}`;
 }
 
-// Cache time: 7 days for offline-first support
-const CACHE_TIME = 1000 * 60 * 60 * 24 * 7;
-const PERSISTENCE_BUSTER = "rq-cache-v1";
-const AUTH_QUERY_KEY = "auth";
-const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";
-const REPLAYED_DEFAULT_SCOPES = ["users", "lessons", "classes"] as const;
-
-function shouldPersistQuery(
-	query: Parameters<typeof defaultShouldDehydrateQuery>[0],
-) {
-	const [scope] = query.queryKey;
-	if (scope === AUTH_QUERY_KEY) {
-		return false;
-	}
-
-	return defaultShouldDehydrateQuery(query);
-}
+// ----------------------------------------------------------------------
+// Query Client Factory
+// ----------------------------------------------------------------------
 
 function makeQueryClient() {
 	// eslint-disable-next-line prefer-const
@@ -171,13 +346,12 @@ function makeQueryClient() {
 }
 
 let browserQueryClient: QueryClient | undefined;
-let restorePromise: Promise<void> | undefined;
 let browserPersister: Persister | undefined;
 let replayListenerInstalled = false;
 
 function getBrowserPersister() {
 	if (!browserPersister) {
-		browserPersister = createIDBPersister();
+		browserPersister = createScopedIDBPersister();
 	}
 
 	return browserPersister;
@@ -225,23 +399,15 @@ function installReplayInvalidationListener(queryClient: QueryClient) {
 	});
 }
 
-function startPersistence(queryClient: QueryClient) {
-	if (!restorePromise) {
-		const persister = getBrowserPersister();
-		restorePromise = persistQueryClientRestore({
-			queryClient,
-			persister,
-			maxAge: CACHE_TIME,
-			buster: PERSISTENCE_BUSTER,
-		}).then(() => {
-			// Discard any auth data from older persisted snapshots.
-			queryClient.removeQueries({ queryKey: [AUTH_QUERY_KEY] });
-		});
+function startPersistenceServices(queryClient: QueryClient) {
+	if (replayListenerInstalled || environmentManager.isServer()) {
+		return;
 	}
 
 	installReplayInvalidationListener(queryClient);
 
-	return restorePromise;
+	// Log storage usage and enforce budget on startup
+	void enforceStorageBudget(queryClient);
 }
 
 export function initializeQueryPersistence(queryClient: QueryClient) {
@@ -249,7 +415,7 @@ export function initializeQueryPersistence(queryClient: QueryClient) {
 		return;
 	}
 
-	void startPersistence(queryClient);
+	startPersistenceServices(queryClient);
 }
 
 export function getQueryPersistenceOptions() {
@@ -273,7 +439,7 @@ export async function ensureQueryCacheRestored() {
 	}
 
 	const queryClient = getQueryClient();
-	await startPersistence(queryClient);
+	startPersistenceServices(queryClient);
 }
 
 export async function ensureQueryDataAfterRestore<
@@ -314,6 +480,28 @@ export async function clearAuthQueryState() {
 			shouldDehydrateQuery: shouldPersistQuery,
 		},
 	});
+}
+
+let context:
+	| {
+			queryClient: QueryClient;
+	  }
+	| undefined;
+
+export function getContext() {
+	if (context) {
+		return context;
+	}
+
+	const queryClient = getQueryClient();
+
+	initializeQueryPersistence(queryClient);
+
+	context = {
+		queryClient,
+	};
+
+	return context;
 }
 
 export function getQueryClient() {

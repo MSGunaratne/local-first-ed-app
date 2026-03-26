@@ -1,37 +1,8 @@
-import {
-	environmentManager,
-	type QueryClient,
-	QueryClientProvider,
-} from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { initializeConnectionMode } from "@/lib/connection-mode";
-import {
-	getQueryClient,
-	getQueryPersistenceOptions,
-	initializeQueryPersistence,
-} from "@/lib/query-client";
-
-let context:
-	| {
-			queryClient: QueryClient;
-	  }
-	| undefined;
-
-export function getContext() {
-	if (context) {
-		return context;
-	}
-
-	const queryClient = getQueryClient();
-	initializeQueryPersistence(queryClient);
-
-	context = {
-		queryClient,
-	};
-
-	return context;
-}
+import { getContext, getQueryPersistenceOptions } from "@/lib/query-client";
 
 export default function TanStackQueryProvider({
 	children,
@@ -39,10 +10,13 @@ export default function TanStackQueryProvider({
 	children: ReactNode;
 }) {
 	const { queryClient } = getContext();
-	const persistenceOptions = getQueryPersistenceOptions();
-	initializeConnectionMode();
+	const persistOptions = getQueryPersistenceOptions();
 
-	if (environmentManager.isServer() || !persistenceOptions) {
+	useEffect(() => {
+		initializeConnectionMode();
+	}, []);
+
+	if (!persistOptions) {
 		return (
 			<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 		);
@@ -51,7 +25,7 @@ export default function TanStackQueryProvider({
 	return (
 		<PersistQueryClientProvider
 			client={queryClient}
-			persistOptions={persistenceOptions}
+			persistOptions={persistOptions}
 		>
 			{children}
 		</PersistQueryClientProvider>

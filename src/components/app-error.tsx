@@ -20,7 +20,9 @@ export function AppError({ error }: { error: Error }) {
 					<div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
 						<AlertCircle className="h-6 w-6 text-destructive" />
 					</div>
-					<CardTitle className="text-xl">{m.error_something_went_wrong()}</CardTitle>
+					<CardTitle className="text-xl">
+						{m.error_something_went_wrong()}
+					</CardTitle>
 				</CardHeader>
 				<CardContent className="text-center text-muted-foreground space-y-2">
 					<p>{m.error_unexpected_desc()}</p>

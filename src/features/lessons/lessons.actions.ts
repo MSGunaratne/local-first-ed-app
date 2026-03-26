@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import {
 	idInputSchema,
 	updateByIdInputSchema,
@@ -7,7 +8,7 @@ import {
 	dataTableListInputSchema,
 	normalizeDataTableListInput,
 } from "@/lib/dataTableSearchSchema";
-import { baseMiddleware } from "@/lib/server-fn";
+import { baseMiddleware, idempotentMiddleware } from "@/lib/server-fn";
 import { lessonInsertSchema } from "./lessons.schema";
 import {
 	createLesson,
@@ -16,6 +17,10 @@ import {
 	getLessons,
 	updateLesson,
 } from "./lessons.service";
+
+const createLessonInputSchema = lessonInsertSchema.extend({
+	idempotencyKey: z.string().optional(),
+});
 
 export const getLessonsFn = createServerFn({ method: "GET" })
 	.middleware([baseMiddleware])
@@ -31,12 +36,15 @@ export const getLessonByIdFn = createServerFn({ method: "GET" })
 	});
 
 export const createLessonFn = createServerFn({ method: "POST" })
-	.inputValidator((data) => lessonInsertSchema.parse(data))
+	.middleware([idempotentMiddleware])
+	.inputValidator((data) => createLessonInputSchema.parse(data))
 	.handler(async ({ data }) => {
-		return createLesson(data);
+		const { idempotencyKey: _key, ...lessonData } = data;
+		return createLesson(lessonData);
 	});
 
 export const updateLessonFn = createServerFn({ method: "POST" })
+	.middleware([idempotentMiddleware])
 	.inputValidator((data) =>
 		updateByIdInputSchema(lessonInsertSchema.partial()).parse(data),
 	)
@@ -45,6 +53,7 @@ export const updateLessonFn = createServerFn({ method: "POST" })
 	});
 
 export const deleteLessonFn = createServerFn({ method: "POST" })
+	.middleware([idempotentMiddleware])
 	.inputValidator((data) => idInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		return deleteLesson(data.id);

@@ -3,6 +3,7 @@ import {
 	mutationOptions,
 	queryOptions,
 } from "@tanstack/react-query";
+import { uuidv7 } from "uuidv7";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { m } from "@/paraglide/messages";
 import {
@@ -35,7 +36,16 @@ export const lessonQueries = {
 export const lessonMutations = {
 	create: () =>
 		mutationOptions({
-			mutationFn: (data: LessonInsert) => createLessonFn({ data }),
+			mutationFn: (data: LessonInsert) =>
+				createLessonFn({ data: { ...data, idempotencyKey: uuidv7() } }),
+			onMutate: async (newLesson) => {
+				const queryClient = (
+					await import("@/lib/query-client")
+				).getQueryClient();
+				await queryClient.cancelQueries({ queryKey: lessonQueries.lists() });
+
+				return { optimistic: true, data: newLesson };
+			},
 			meta: {
 				invalidates: [lessonQueries.lists()],
 				successMessage: m.toast_lesson_create_success(),
@@ -45,7 +55,34 @@ export const lessonMutations = {
 	update: (id: string) =>
 		mutationOptions({
 			mutationFn: (data: LessonInsert) =>
-				updateLessonFn({ data: { id, data } }),
+				updateLessonFn({ data: { id, data, idempotencyKey: uuidv7() } }),
+			onMutate: async (updatedData) => {
+				const queryClient = (
+					await import("@/lib/query-client")
+				).getQueryClient();
+				const detailKey = lessonQueries.detail(id).queryKey;
+
+				await queryClient.cancelQueries({ queryKey: detailKey });
+
+				const previous = queryClient.getQueryData(detailKey);
+
+				if (previous) {
+					queryClient.setQueryData(detailKey, {
+						...previous,
+						...updatedData,
+						updatedAt: new Date(),
+					});
+				}
+
+				return { previous, detailKey };
+			},
+			onError: (_error, _variables, context) => {
+				if (context?.previous && context?.detailKey) {
+					const { getQueryClient } =
+						require("@/lib/query-client") as typeof import("@/lib/query-client");
+					getQueryClient().setQueryData(context.detailKey, context.previous);
+				}
+			},
 			meta: {
 				invalidates: [lessonQueries.lists(), lessonQueries.detail(id).queryKey],
 				successMessage: m.toast_lesson_update_success(),
@@ -54,7 +91,16 @@ export const lessonMutations = {
 		}),
 	delete: () =>
 		mutationOptions({
-			mutationFn: (id: string) => deleteLessonFn({ data: { id } }),
+			mutationFn: (id: string) =>
+				deleteLessonFn({ data: { id, idempotencyKey: uuidv7() } }),
+			onMutate: async (deletedId) => {
+				const queryClient = (
+					await import("@/lib/query-client")
+				).getQueryClient();
+				await queryClient.cancelQueries({ queryKey: lessonQueries.lists() });
+
+				return { deletedId };
+			},
 			meta: {
 				invalidates: [lessonQueries.lists()],
 				successMessage: m.toast_lesson_delete_success(),

@@ -1,4 +1,5 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
+import { uuidv7 } from "uuidv7";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { m } from "@/paraglide/messages";
 import {
@@ -30,7 +31,16 @@ export const classQueries = {
 export const classMutations = {
 	create: () =>
 		mutationOptions({
-			mutationFn: (data: ClassInsert) => createClassFn({ data }),
+			mutationFn: (data: ClassInsert) =>
+				createClassFn({ data: { ...data, idempotencyKey: uuidv7() } }),
+			onMutate: async (newClass) => {
+				const queryClient = (
+					await import("@/lib/query-client")
+				).getQueryClient();
+				await queryClient.cancelQueries({ queryKey: classQueries.lists() });
+
+				return { optimistic: true, data: newClass };
+			},
 			meta: {
 				invalidates: [classQueries.lists()],
 				successMessage: m.toast_class_create_success(),
@@ -40,7 +50,34 @@ export const classMutations = {
 	update: () =>
 		mutationOptions({
 			mutationFn: ({ id, data }: { id: string; data: Partial<ClassInsert> }) =>
-				updateClassFn({ data: { id, data } }),
+				updateClassFn({ data: { id, data, idempotencyKey: uuidv7() } }),
+			onMutate: async ({ id, data: updatedData }) => {
+				const queryClient = (
+					await import("@/lib/query-client")
+				).getQueryClient();
+				const detailKey = classQueries.detail(id).queryKey;
+
+				await queryClient.cancelQueries({ queryKey: detailKey });
+
+				const previous = queryClient.getQueryData(detailKey);
+
+				if (previous) {
+					queryClient.setQueryData(detailKey, {
+						...previous,
+						...updatedData,
+						updatedAt: new Date(),
+					});
+				}
+
+				return { previous, detailKey };
+			},
+			onError: (_error, _variables, context) => {
+				if (context?.previous && context?.detailKey) {
+					const { getQueryClient } =
+						require("@/lib/query-client") as typeof import("@/lib/query-client");
+					getQueryClient().setQueryData(context.detailKey, context.previous);
+				}
+			},
 			meta: {
 				invalidates: [classQueries.lists()],
 				successMessage: m.toast_class_update_success(),
@@ -49,7 +86,16 @@ export const classMutations = {
 		}),
 	delete: () =>
 		mutationOptions({
-			mutationFn: (id: string) => deleteClassFn({ data: { id } }),
+			mutationFn: (id: string) =>
+				deleteClassFn({ data: { id, idempotencyKey: uuidv7() } }),
+			onMutate: async (deletedId) => {
+				const queryClient = (
+					await import("@/lib/query-client")
+				).getQueryClient();
+				await queryClient.cancelQueries({ queryKey: classQueries.lists() });
+
+				return { deletedId };
+			},
 			meta: {
 				invalidates: [classQueries.lists()],
 				successMessage: m.toast_class_delete_success(),

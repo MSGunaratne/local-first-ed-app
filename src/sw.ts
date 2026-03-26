@@ -25,8 +25,14 @@ async function notifyReplaySuccess() {
 	}
 }
 
-// Precache static assets (injected by workbox-build)
-precacheAndRoute(self.__WB_MANIFEST);
+// Precache: filter out large OCR data files for lazy loading
+
+const fullManifest = self.__WB_MANIFEST;
+const filteredManifest = fullManifest.filter((entry) => {
+	const url = typeof entry === "string" ? entry : entry.url;
+	return !url.includes("ocr-data/");
+});
+precacheAndRoute(filteredManifest);
 cleanupOutdatedCaches();
 
 // Take control immediately
@@ -47,46 +53,27 @@ const bgSyncPlugin = new BackgroundSyncPlugin("offline-mutations", {
 	},
 });
 
-// Queue failed mutations (POST, PUT, DELETE, PATCH) for background sync
-registerRoute(
-	({ request, url }) =>
-		request.method !== "GET" &&
-		(url.pathname.startsWith("/_server") || url.pathname.includes("/api/")),
-	new NetworkOnly({
-		plugins: [bgSyncPlugin],
-	}),
-	"POST",
-);
+// ----------------------------------------------------------------------
+// Mutations: Queue failed non-GET requests for background sync
+// Single consolidated route for POST, PUT, DELETE, PATCH
+// ----------------------------------------------------------------------
 
-registerRoute(
-	({ request, url }) =>
-		request.method !== "GET" &&
-		(url.pathname.startsWith("/_server") || url.pathname.includes("/api/")),
-	new NetworkOnly({
-		plugins: [bgSyncPlugin],
-	}),
-	"PUT",
-);
+const MUTATION_METHODS = ["POST", "PUT", "DELETE", "PATCH"] as const;
 
-registerRoute(
-	({ request, url }) =>
+function isMutationRequest(request: Request, url: URL): boolean {
+	return (
 		request.method !== "GET" &&
-		(url.pathname.startsWith("/_server") || url.pathname.includes("/api/")),
-	new NetworkOnly({
-		plugins: [bgSyncPlugin],
-	}),
-	"DELETE",
-);
+		(url.pathname.startsWith("/_server") || url.pathname.includes("/api/"))
+	);
+}
 
-registerRoute(
-	({ request, url }) =>
-		request.method !== "GET" &&
-		(url.pathname.startsWith("/_server") || url.pathname.includes("/api/")),
-	new NetworkOnly({
-		plugins: [bgSyncPlugin],
-	}),
-	"PATCH",
-);
+for (const method of MUTATION_METHODS) {
+	registerRoute(
+		({ request, url }) => isMutationRequest(request, url),
+		new NetworkOnly({ plugins: [bgSyncPlugin] }),
+		method,
+	);
+}
 
 // ----------------------------------------------------------------------
 // Navigation requests: NetworkFirst with offline fallback
@@ -116,9 +103,7 @@ registerRoute(
 registerRoute(
 	({ request, url }) =>
 		request.method === "GET" &&
-		(url.pathname.startsWith("/_server") ||
-			url.pathname.includes("/api/") ||
-			url.hostname.includes(".convex.cloud")),
+		(url.pathname.startsWith("/_server") || url.pathname.includes("/api/")),
 	new NetworkFirst({
 		cacheName: "api-cache",
 		networkTimeoutSeconds: 3,
@@ -161,8 +146,25 @@ registerRoute(
 		cacheName: "images-cache",
 		plugins: [
 			new ExpirationPlugin({
-				maxEntries: 50,
+				maxEntries: 20,
 				maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+			}),
+		],
+	}),
+);
+
+// ----------------------------------------------------------------------
+// OCR data: CacheFirst, loaded on-demand (not precached)
+// ----------------------------------------------------------------------
+
+registerRoute(
+	({ url }) => url.pathname.includes("/ocr-data/"),
+	new CacheFirst({
+		cacheName: "ocr-data-cache",
+		plugins: [
+			new ExpirationPlugin({
+				maxEntries: 10,
+				maxAgeSeconds: 90 * 24 * 60 * 60, // 90 days
 			}),
 		],
 	}),

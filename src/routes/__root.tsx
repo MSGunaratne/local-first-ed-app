@@ -41,11 +41,41 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "TanStack Start Starter",
+				title: "Local First Ed",
+			},
+			{
+				name: "description",
+				content:
+					"An offline-first education platform for teachers and students in Sri Lanka. Create, manage, and share lessons — even without internet.",
 			},
 			{
 				name: "theme-color",
 				content: "#000000",
+			},
+			{
+				property: "og:title",
+				content: "Local First Ed",
+			},
+			{
+				property: "og:description",
+				content:
+					"An offline-first education platform for teachers and students in Sri Lanka.",
+			},
+			{
+				property: "og:type",
+				content: "website",
+			},
+			{
+				name: "mobile-web-app-capable",
+				content: "yes",
+			},
+			{
+				name: "apple-mobile-web-app-capable",
+				content: "yes",
+			},
+			{
+				name: "apple-mobile-web-app-status-bar-style",
+				content: "black-translucent",
 			},
 		],
 		links: [
