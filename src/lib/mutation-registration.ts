@@ -1,4 +1,8 @@
 import {
+	ingestAnalyticsBatchFn,
+	submitLessonFeedbackFn,
+} from "@/features/analytics/analytics.actions";
+import {
 	createClassFn,
 	deleteClassFn,
 	updateClassFn,
@@ -83,5 +87,14 @@ export function registerAllMutations() {
 		return deleteUserFn({
 			data: { id: payload.id, idempotencyKey: payload.idempotencyKey },
 		});
+	});
+
+	// Analytics
+	registerServerFn("ingestAnalyticsBatch", async (payload) => {
+		return ingestAnalyticsBatchFn({ data: payload });
+	});
+
+	registerServerFn("submitLessonFeedback", async (payload) => {
+		return submitLessonFeedbackFn({ data: payload });
 	});
 }

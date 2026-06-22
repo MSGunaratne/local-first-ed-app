@@ -117,7 +117,11 @@ export async function pullRecords(
 	await transaction(async (exec) => {
 		for (const record of records) {
 			try {
-				const snakeRecord = camelToSnake(record, colMap);
+				const mutableRecord =
+					scope === "lessons" || scope === "classes"
+						? { ...record, syncStatus: "synced" }
+						: record;
+				const snakeRecord = camelToSnake(mutableRecord, colMap);
 				const columns = Object.keys(snakeRecord);
 				const values = Object.values(snakeRecord).map(serializeValue);
 				const placeholders = columns.map(() => "?").join(", ");

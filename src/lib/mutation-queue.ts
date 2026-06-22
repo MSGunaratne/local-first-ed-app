@@ -1,5 +1,9 @@
-import { createStore, del, entries, set, update } from "idb-keyval";
+import { createStore, del, entries, get, set } from "idb-keyval";
 import { uuidv7 } from "uuidv7";
+import type {
+	AnalyticsBatchIngest,
+	LessonFeedbackInput,
+} from "@/features/analytics/analytics.schema";
 
 // ----------------------------------------------------------------------
 // Application-level mutation queue
@@ -12,7 +16,12 @@ import { uuidv7 } from "uuidv7";
 const STORE = createStore("mutation-queue", "mutations");
 const MAX_RETRIES = 5;
 
-export type MutationScope = "lessons" | "classes" | "users" | "students";
+export type MutationScope =
+	| "lessons"
+	| "classes"
+	| "users"
+	| "students"
+	| "analytics";
 export type MutationType = "create" | "update" | "delete";
 export type MutationStatus = "pending" | "in-flight" | "failed";
 
@@ -49,6 +58,8 @@ export interface MutationServerFnPayloadMap {
 		idempotencyKey?: string;
 	};
 	deleteUser: ScopedDeletePayload;
+	ingestAnalyticsBatch: AnalyticsBatchIngest;
+	submitLessonFeedback: LessonFeedbackInput;
 }
 
 export type MutationServerFnName = keyof MutationServerFnPayloadMap;
@@ -157,6 +168,31 @@ function isValidPayloadForServerFn<K extends MutationServerFnName>(
 	name: K,
 	payload: unknown,
 ): payload is MutationServerFnPayloadMap[K] {
+	if (name === "ingestAnalyticsBatch") {
+		if (!isRecord(payload)) {
+			return false;
+		}
+
+		return (
+			typeof payload.idempotencyKey === "string" &&
+			Array.isArray(payload.sessions) &&
+			Array.isArray(payload.events)
+		);
+	}
+
+	if (name === "submitLessonFeedback") {
+		if (!isRecord(payload)) {
+			return false;
+		}
+
+		return (
+			typeof payload.idempotencyKey === "string" &&
+			typeof payload.lessonId === "string" &&
+			typeof payload.pseudonymousActorId === "string" &&
+			typeof payload.rating === "number"
+		);
+	}
+
 	switch (name) {
 		case "createLesson":
 		case "createClass":
@@ -172,6 +208,8 @@ function isValidPayloadForServerFn<K extends MutationServerFnName>(
 			return isRecord(payload);
 		case "updateUser":
 			return isUserUpdatePayload(payload);
+		default:
+			return false;
 	}
 }
 
@@ -260,32 +298,59 @@ export async function getPending(): Promise<QueuedMutation[]> {
 	);
 }
 
+/**
+ * Checks if there is an existing pending or in-flight mutation for a specific entity.
+ */
+export async function hasExistingMutation(
+	scope: MutationScope,
+	entityId: string,
+): Promise<boolean> {
+	const all = await getAll();
+	return all.some((m) => {
+		const mEntityId = getMutationEntityId(m);
+		return (
+			m.scope === scope &&
+			mEntityId === entityId &&
+			(m.status === "pending" || m.status === "in-flight")
+		);
+	});
+}
+
 export async function remove(id: string): Promise<void> {
 	await del(id, STORE);
 	emitChange();
 }
 
 export async function markInFlight(id: string): Promise<void> {
-	await update<QueuedMutation>(
+	const current = await get<QueuedMutation>(id, STORE);
+	if (!current) {
+		return;
+	}
+
+	await set(
 		id,
-		(prev) =>
-			prev ? { ...prev, status: "in-flight" as const } : (undefined as never),
+		{
+			...current,
+			status: "in-flight" as const,
+		},
 		STORE,
 	);
 }
 
 export async function markFailed(id: string, error: string): Promise<void> {
-	await update<QueuedMutation>(
+	const current = await get<QueuedMutation>(id, STORE);
+	if (!current) {
+		return;
+	}
+
+	await set(
 		id,
-		(prev) =>
-			prev
-				? {
-						...prev,
-						status: "failed" as const,
-						retryCount: prev.retryCount + 1,
-						lastError: error,
-					}
-				: (undefined as never),
+		{
+			...current,
+			status: "failed" as const,
+			retryCount: current.retryCount + 1,
+			lastError: error,
+		},
 		STORE,
 	);
 	emitChange();
@@ -300,6 +365,7 @@ const serverFnRegistry = new Map<
 	MutationServerFnName,
 	(payload: unknown) => Promise<unknown>
 >();
+let flushInFlight: Promise<FlushResult> | null = null;
 
 let registryBootstrapped = false;
 
@@ -368,6 +434,8 @@ function getMutationEntityId(mutation: QueuedMutation): string | null {
 		case "deleteUser":
 			return getStringField(mutation.payload, "id");
 		case "createUser":
+		case "ingestAnalyticsBatch":
+		case "submitLessonFeedback":
 			return null;
 	}
 }
@@ -395,6 +463,20 @@ async function reconcileLocalStateOnSuccess(mutation: QueuedMutation) {
  * Replays all pending mutations in the queue.
  */
 export async function flushMutationQueue(): Promise<FlushResult> {
+	if (flushInFlight) {
+		return flushInFlight;
+	}
+
+	flushInFlight = flushMutationQueueInternal();
+
+	try {
+		return await flushInFlight;
+	} finally {
+		flushInFlight = null;
+	}
+}
+
+async function flushMutationQueueInternal(): Promise<FlushResult> {
 	await ensureServerFnRegistry();
 
 	const pending = await getPending();
@@ -402,6 +484,7 @@ export async function flushMutationQueue(): Promise<FlushResult> {
 
 	for (const mutation of pending) {
 		if (mutation.retryCount >= MAX_RETRIES) {
+			await remove(mutation.id);
 			result.skipped++;
 			continue;
 		}
@@ -445,14 +528,14 @@ export async function flushMutationQueue(): Promise<FlushResult> {
 				const status = (error as { status: number }).status;
 				if (status >= 400 && status < 500) {
 					// Mark as permanently failed by maxing retries
-					await update<QueuedMutation>(
-						mutation.id,
-						(prev) =>
-							prev
-								? { ...prev, retryCount: MAX_RETRIES }
-								: (undefined as never),
-						STORE,
-					);
+					const current = await get<QueuedMutation>(mutation.id, STORE);
+					if (current) {
+						await set(
+							mutation.id,
+							{ ...current, retryCount: MAX_RETRIES },
+							STORE,
+						);
+					}
 				}
 			}
 		}

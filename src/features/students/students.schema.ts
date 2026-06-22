@@ -24,6 +24,17 @@ export const studentProfiles = sqliteTable("student_profile", {
 
 export type StudentProfile = InferSelectModel<typeof studentProfiles>;
 
+// export const studentProfileRelations = relations(
+// 	studentProfiles,
+// 	({ one, many }) => ({
+// 		user: one(users, {
+// 			fields: [studentProfiles.userId],
+// 			references: [users.id],
+// 		}),
+// 		enrollments: many(enrollments),
+// 	}),
+// );
+
 export const studentProfileInsertSchema = createInsertSchema(studentProfiles, {
 	gradeLevel: z.number().min(6).max(12),
 }).omit({

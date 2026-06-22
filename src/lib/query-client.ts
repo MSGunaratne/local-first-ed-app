@@ -74,6 +74,10 @@ function shouldPersistQuery(
 	if (!scope) {
 		return false;
 	}
+	if (!PERSISTED_SCOPES.includes(scope as (typeof PERSISTED_SCOPES)[number])) {
+		return false;
+	}
+
 	return defaultShouldDehydrateQuery(query);
 }
 

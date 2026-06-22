@@ -3,6 +3,7 @@ import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { uuidv7 } from "uuidv7";
 import { z } from "zod";
+
 import { schemaHelper } from "@/db/utils/schema-helper";
 import { Role } from "@/types/user";
 
@@ -104,6 +105,8 @@ export const verifications = sqliteTable("verification", {
 export const userRelations = relations(users, ({ many }) => ({
 	sessions: many(sessions),
 	accounts: many(accounts),
+	// classes: many(classes),
+	// studentProfile: one(studentProfiles),
 }));
 
 export const sessionRelations = relations(sessions, ({ one }) => ({

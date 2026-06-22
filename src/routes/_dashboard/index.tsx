@@ -1,11 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
 	BookOpen,
+	CheckCircle2,
 	GraduationCap,
 	LayoutDashboard,
 	Plus,
 	Users,
 } from "lucide-react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -14,13 +17,211 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { analyticsQueries } from "@/features/analytics/analytics.queries";
+import { LessonFeedbackInsights } from "@/features/analytics/components/lesson-feedback-insights";
+import { getSessionRole, isAdminRole } from "@/lib/auth/roles";
 import { m } from "@/paraglide/messages";
+import { Subject } from "@/types/lesson";
+
+const dashboardSearchSchema = z.object({
+	feedbackSubject: z
+		.enum([Subject.MATH, Subject.ENGLISH, Subject.ICT])
+		.optional(),
+	feedbackGrade: z.coerce.number().int().min(6).max(12).optional(),
+});
 
 export const Route = createFileRoute("/_dashboard/")({
+	validateSearch: (search) => {
+		const parsed = dashboardSearchSchema.safeParse(search);
+		return parsed.success ? parsed.data : {};
+	},
 	component: DashboardIndex,
 });
 
 function DashboardIndex() {
+	const { session } = Route.useRouteContext();
+	const role = getSessionRole(session);
+
+	if (isAdminRole(role)) {
+		return <AdminDashboardView />;
+	}
+
+	return <TeacherDashboardView />;
+}
+
+function AdminDashboardView() {
+	const search = Route.useSearch();
+	const navigate = useNavigate({ from: Route.fullPath });
+	const { data, isLoading } = useQuery(analyticsQueries.overview(7));
+	const kpis = data?.kpis;
+
+	const subjectFilter = search.feedbackSubject ?? "all";
+	const gradeFilter = search.feedbackGrade
+		? String(search.feedbackGrade)
+		: "all";
+
+	return (
+		<div className="space-y-4 p-1">
+			<div className="flex items-center justify-between">
+				<h1 className="text-4xl font-extrabold tracking-tight">
+					Admin Analytics
+				</h1>
+				<Link to="/users">
+					<Button className="h-12 px-6 text-base font-bold gap-2 shadow-md">
+						<Users className="h-5 w-5" />
+						Manage Users
+					</Button>
+				</Link>
+			</div>
+
+			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+				<Card className="border-2 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+					<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+						<Users className="h-12 w-12" />
+					</div>
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-base font-bold text-muted-foreground uppercase tracking-wider">
+							Daily Active Users
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className="text-4xl font-black">{kpis?.dau ?? 0}</div>
+						<p className="text-sm font-medium text-muted-foreground mt-1">
+							Last 7 days
+						</p>
+					</CardContent>
+				</Card>
+				<Card className="border-2 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+					<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+						<BookOpen className="h-12 w-12" />
+					</div>
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-base font-bold text-muted-foreground uppercase tracking-wider">
+							Sessions
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className="text-4xl font-black">{kpis?.sessions ?? 0}</div>
+						<p className="text-sm font-medium text-muted-foreground mt-1">
+							Avg duration {kpis?.avgSessionDurationSeconds ?? 0}s
+						</p>
+					</CardContent>
+				</Card>
+				<Card className="border-2 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow bg-primary text-primary-foreground">
+					<div className="absolute top-0 right-0 p-4 opacity-20">
+						<GraduationCap className="h-12 w-12" />
+					</div>
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-base font-bold uppercase tracking-wider text-primary-foreground/80">
+							Page Views / Session
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className="text-4xl font-black">
+							{kpis?.pageViewsPerSession ?? 0}
+						</div>
+						<p className="text-sm font-medium text-primary-foreground/70 mt-1">
+							Total page views {kpis?.pageViews ?? 0}
+						</p>
+					</CardContent>
+				</Card>
+				<Card className="border-2 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+					<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+						<CheckCircle2 className="h-12 w-12" />
+					</div>
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-base font-bold text-muted-foreground uppercase tracking-wider">
+							Lesson Feedback
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className="text-4xl font-black">
+							{kpis?.avgLessonRating ?? 0}
+						</div>
+						<p className="text-sm font-medium text-muted-foreground mt-1">
+							{kpis?.feedbackCount ?? 0} ratings
+						</p>
+					</CardContent>
+				</Card>
+			</div>
+
+			<div className="grid gap-6 md:grid-cols-2">
+				<Card className="border-2 border-primary/20 shadow-lg bg-gradient-to-br from-primary/5 to-background">
+					<CardHeader className="pb-4">
+						<CardTitle className="text-2xl font-bold flex items-center gap-3">
+							<div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-inner">
+								<LayoutDashboard className="h-5 w-5" />
+							</div>
+							Most Visited Routes
+						</CardTitle>
+					</CardHeader>
+					<CardContent className="space-y-3">
+						{(data?.topRoutes ?? []).slice(0, 5).map((route) => (
+							<div
+								key={route.routeTemplate}
+								className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2"
+							>
+								<p className="font-medium">{route.routeTemplate}</p>
+								<p className="text-sm text-muted-foreground">
+									{route.views} views
+								</p>
+							</div>
+						))}
+					</CardContent>
+				</Card>
+
+				<Card className="border-2 shadow-sm border-dashed">
+					<CardHeader>
+						<CardTitle className="text-xl font-bold">Drop-off Routes</CardTitle>
+						<CardDescription>
+							Most common exit pages in the selected window.
+						</CardDescription>
+					</CardHeader>
+					<CardContent className="space-y-4">
+						{(data?.dropOffRoutes ?? []).slice(0, 5).map((route) => (
+							<div
+								key={route.routeTemplate}
+								className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2"
+							>
+								<p className="font-medium">{route.routeTemplate}</p>
+								<p className="text-sm text-muted-foreground">
+									{route.exits} exits
+								</p>
+							</div>
+						))}
+					</CardContent>
+				</Card>
+			</div>
+
+			<LessonFeedbackInsights
+				feedbackInsights={data?.feedbackInsights}
+				isLoading={isLoading}
+				subjectFilter={subjectFilter}
+				gradeFilter={gradeFilter}
+				onSubjectFilterChange={(value) => {
+					navigate({
+						replace: true,
+						search: (prev) => ({
+							...prev,
+							feedbackSubject: value === "all" ? undefined : value,
+						}),
+					});
+				}}
+				onGradeFilterChange={(value) => {
+					navigate({
+						replace: true,
+						search: (prev) => ({
+							...prev,
+							feedbackGrade: value === "all" ? undefined : Number(value),
+						}),
+					});
+				}}
+			/>
+		</div>
+	);
+}
+
+function TeacherDashboardView() {
 	return (
 		<div className="space-y-4 p-1">
 			<div className="flex items-center justify-between">

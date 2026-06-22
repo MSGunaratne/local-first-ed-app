@@ -22,6 +22,7 @@ export function DataTableRowActions<TData>({
 	table,
 	onDeleteSelected,
 }: DataTableRowActionsProps<TData>) {
+	"use no memo";
 	const selectedRows = table.getSelectedRowModel().rows;
 	const hasSelection = selectedRows.length > 0;
 

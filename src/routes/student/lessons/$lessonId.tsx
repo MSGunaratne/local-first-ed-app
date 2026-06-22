@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Editor } from "@/components/ui/editor";
+import { LessonFeedbackPrompt } from "@/features/analytics/components/lesson-feedback-prompt";
 import { lessonQueries } from "@/features/lessons/lessons.queries";
 import { useLocalProgress } from "@/hooks/use-local-progress";
 import { ensureQueryDataAfterRestore } from "@/lib/query-client";
@@ -34,6 +35,12 @@ function LessonPlayer() {
 
 	return (
 		<div className="max-w-4xl mx-auto space-y-8 pb-10">
+			<LessonFeedbackPrompt
+				lessonId={lesson.id}
+				lessonTitle={lesson.title}
+				openOnComplete={isCompleted}
+			/>
+
 			{/* Navigation */}
 			<Link
 				to="/student"

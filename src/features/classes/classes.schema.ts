@@ -53,6 +53,25 @@ export const enrollments = sqliteTable(
 
 export type Enrollment = InferSelectModel<typeof enrollments>;
 
+// export const classRelations = relations(classes, ({ one, many }) => ({
+// 	teacher: one(users, {
+// 		fields: [classes.teacherId],
+// 		references: [users.id],
+// 	}),
+// 	enrollments: many(enrollments),
+// }));
+
+// export const enrollmentRelations = relations(enrollments, ({ one }) => ({
+// 	class: one(classes, {
+// 		fields: [enrollments.classId],
+// 		references: [classes.id],
+// 	}),
+// 	student: one(studentProfiles, {
+// 		fields: [enrollments.studentId],
+// 		references: [studentProfiles.id],
+// 	}),
+// }));
+
 export const classInsertSchema = createInsertSchema(classes, {
 	gradeLevel: z.number().min(6).max(12),
 }).omit({

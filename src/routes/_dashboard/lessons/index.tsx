@@ -11,7 +11,7 @@ import {
 	getCoreRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
-import { Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { Edit, Eye, MoreHorizontal, Plus, Share, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
 	DataTable,
@@ -47,6 +47,7 @@ import {
 } from "@/features/lessons/lessons.queries";
 import type { Lesson } from "@/features/lessons/lessons.schema";
 import { useServerDataTable } from "@/hooks/use-server-data-table";
+import { useConnectionMode } from "@/lib/connection-mode";
 import {
 	DATA_TABLE_SEARCH_DEFAULTS,
 	dataTableSearchSchema,
@@ -112,6 +113,7 @@ function LessonsPage() {
 		queryParams,
 		isPending,
 	} = useServerDataTable();
+	const { isOnline } = useConnectionMode();
 
 	const { data, isFetching } = useQuery(lessonQueries.list(queryParams));
 
@@ -188,6 +190,17 @@ function LessonsPage() {
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end">
+							{row.original.isPublished && (
+								<DropdownMenuItem asChild>
+									<Link
+										to="/student/lessons/$lessonId"
+										params={{ lessonId: row.original.id }}
+									>
+										<Eye className="mr-2 h-4 w-4" />
+										{m.common_preview()}
+									</Link>
+								</DropdownMenuItem>
+							)}
 							<DropdownMenuItem asChild>
 								<Link
 									to="/lessons/$lessonId/edit"
@@ -196,6 +209,38 @@ function LessonsPage() {
 									<Edit className="mr-2 h-4 w-4" />
 									{m.common_edit()}
 								</Link>
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								disabled={!row.original.isPublished || !isOnline}
+								onClick={() => {
+									const shareUrl = `${window.location.origin}/student/lessons/${row.original.id}`;
+									const shareText = `Check out this lesson: ${row.original.title}`;
+
+									if (navigator.share) {
+										navigator
+											.share({
+												title: row.original.title,
+												text: shareText,
+												url: shareUrl,
+											})
+											.catch((error) => {
+												if (error.name !== "AbortError") {
+													window.open(
+														`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
+														"_blank",
+													);
+												}
+											});
+									} else {
+										window.open(
+											`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
+											"_blank",
+										);
+									}
+								}}
+							>
+								<Share className="mr-2 h-4 w-4" />
+								Share
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								className="text-destructive"
@@ -214,7 +259,7 @@ function LessonsPage() {
 				enableHiding: false,
 			},
 		],
-		[],
+		[isOnline],
 	);
 
 	const table = useReactTable({

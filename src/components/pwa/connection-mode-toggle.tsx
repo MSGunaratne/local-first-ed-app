@@ -16,7 +16,9 @@ export function ConnectionModeToggle({
 	const { mode, isOnline, isForced } = useConnectionMode();
 	const {
 		hasPendingMutations,
+		hasFailedMutations,
 		totalPending,
+		totalFailed,
 		lastSyncFormatted,
 		storageUsageFormatted,
 	} = useSyncStatus();
@@ -25,7 +27,7 @@ export function ConnectionModeToggle({
 	const modeLabel =
 		mode === "auto" ? "Auto" : mode === "offline" ? "Forced off" : "Forced on";
 
-	const Icon = hasPendingMutations ? Loader2 : isOnline ? Wifi : WifiOff;
+	const Icon = hasFailedMutations ? CloudOff : hasPendingMutations ? Loader2 : isOnline ? Wifi : WifiOff;
 
 	return (
 		<div className={cn("flex flex-col gap-1", className)}>
@@ -74,9 +76,14 @@ export function ConnectionModeToggle({
 			{!compact && (
 				<div className="flex items-center justify-between px-1 text-[10px] text-muted-foreground">
 					<div className="flex items-center gap-1">
-						{hasPendingMutations ? (
-							<>
+						{hasFailedMutations ? (
+							<div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
 								<CloudOff className="h-3 w-3" />
+								<span>{totalFailed} failed</span>
+							</div>
+						) : hasPendingMutations ? (
+							<>
+								<Loader2 className="h-3 w-3 animate-spin" />
 								<span>{totalPending} pending</span>
 							</>
 						) : lastSyncFormatted ? (

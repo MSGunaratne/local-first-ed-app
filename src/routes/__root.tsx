@@ -10,6 +10,7 @@ import { getLocale } from "#/paraglide/runtime";
 import { AppError } from "@/components/app-error";
 import { ReloadPrompt } from "@/components/pwa/reload-prompt";
 import { Toaster } from "@/components/ui/sonner";
+import { AnalyticsProvider } from "@/features/analytics/components/analytics-provider";
 
 import { NotFound } from "../components/not-found";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
@@ -118,21 +119,23 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
 				<TanStackQueryProvider>
-					{children}
-					<Toaster />
-					<ReloadPrompt />
-					<TanStackDevtools
-						config={{
-							position: "bottom-right",
-						}}
-						plugins={[
-							{
-								name: "Tanstack Router",
-								render: <TanStackRouterDevtoolsPanel />,
-							},
-							TanStackQueryDevtools,
-						]}
-					/>
+					<AnalyticsProvider>
+						{children}
+						<Toaster />
+						<ReloadPrompt />
+						<TanStackDevtools
+							config={{
+								position: "bottom-right",
+							}}
+							plugins={[
+								{
+									name: "Tanstack Router",
+									render: <TanStackRouterDevtoolsPanel />,
+								},
+								TanStackQueryDevtools,
+							]}
+						/>
+					</AnalyticsProvider>
 				</TanStackQueryProvider>
 				<Scripts />
 			</body>

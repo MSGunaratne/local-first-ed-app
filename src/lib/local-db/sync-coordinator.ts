@@ -7,7 +7,7 @@ import { uuidv7 } from "uuidv7";
 import { getClassByIdFn } from "@/features/classes/classes.actions";
 import { getLessonByIdFn } from "@/features/lessons/lessons.actions";
 import type { MutationServerFnName } from "@/lib/mutation-queue";
-import { enqueue, flushMutationQueue } from "@/lib/mutation-queue";
+import { enqueue, flushMutationQueue, hasExistingMutation } from "@/lib/mutation-queue";
 import {
 	getPendingDeleteRecords,
 	getPendingPushRecords,
@@ -196,6 +196,13 @@ async function pushScope(scope: SyncScope) {
 			}
 
 			const idempotencyKey = uuidv7();
+			
+			// Check if already in queue to avoid duplicates
+			if (await hasExistingMutation(scope, id)) {
+				console.debug(`[Sync:${scope}] Skipping record ${id}, already in mutation queue.`);
+				continue;
+			}
+
 			const operation = await resolveRecordOperation(scope, id);
 
 			if (operation === "create") {
@@ -232,6 +239,12 @@ async function pushScope(scope: SyncScope) {
 	if (pendingDeletes.length > 0) {
 		console.info(`[Sync:${scope}] Pushing ${pendingDeletes.length} deletes...`);
 		for (const id of pendingDeletes) {
+			// Check if already in queue to avoid duplicates
+			if (await hasExistingMutation(scope, id)) {
+				console.debug(`[Sync:${scope}] Skipping delete for ${id}, already in mutation queue.`);
+				continue;
+			}
+
 			const idempotencyKey = uuidv7();
 			const serverFn: MutationServerFnName = getDeleteServerFn(scope);
 			await enqueue({

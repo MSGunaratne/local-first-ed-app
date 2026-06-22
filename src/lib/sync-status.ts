@@ -12,8 +12,9 @@ import {
 // ----------------------------------------------------------------------
 
 interface SyncState {
-	pendingMutationCount: number /** Number of mutations currently pending (in-flight or queued) */;
+	pendingMutationCount: number /** Number of mutations currently pending in TanStack Query */;
 	queuedMutationCount: number;
+	failedMutationCount: number;
 	lastSyncAt: number | null;
 	isOnline: boolean;
 	storageUsageBytes: number;
@@ -27,6 +28,7 @@ interface HotModuleApi {
 let currentState: SyncState = {
 	pendingMutationCount: 0,
 	queuedMutationCount: 0,
+	failedMutationCount: 0,
 	lastSyncAt: null,
 	isOnline: true,
 	storageUsageBytes: 0,
@@ -64,6 +66,7 @@ function getSnapshot(): SyncState {
 const SERVER_SNAPSHOT: SyncState = {
 	pendingMutationCount: 0,
 	queuedMutationCount: 0,
+	failedMutationCount: 0,
 	lastSyncAt: null,
 	isOnline: true,
 	storageUsageBytes: 0,
@@ -162,8 +165,14 @@ async function refreshStorageUsage() {
 
 async function refreshQueuedCount() {
 	try {
-		const pending = await mutationQueue.getPending();
-		updateState({ queuedMutationCount: pending.length });
+		const all = await mutationQueue.getAll();
+		const pending = all.filter((m) => m.status === "pending" || m.status === "in-flight");
+		const failed = all.filter((m) => m.status === "failed");
+		
+		updateState({ 
+			queuedMutationCount: pending.length,
+			failedMutationCount: failed.length
+		});
 	} catch {
 		// Silently ignore
 	}
@@ -204,11 +213,15 @@ export function useSyncStatus() {
 		...state,
 		/** Human-readable storage usage */
 		storageUsageFormatted: formatBytes(state.storageUsageBytes),
-		/** Whether there are pending mutations (in-flight or queued) */
+		/** Whether there are active pending mutations (in-flight or queued) */
 		hasPendingMutations:
 			state.pendingMutationCount > 0 || state.queuedMutationCount > 0,
-		/** Total pending: in-flight + queued */
+		/** Whether there are failed mutations that need attention */
+		hasFailedMutations: state.failedMutationCount > 0,
+		/** Total active pending: in-flight + queued (excluding failed) */
 		totalPending: state.pendingMutationCount + state.queuedMutationCount,
+		/** Total failed mutations */
+		totalFailed: state.failedMutationCount,
 		/** Human-readable last sync time */
 		lastSyncFormatted: state.lastSyncAt
 			? formatRelativeTime(state.lastSyncAt)
