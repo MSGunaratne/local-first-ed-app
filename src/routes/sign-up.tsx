@@ -25,7 +25,7 @@ function SignUpPage() {
 	const { mutateAsync, isPending } = useMutation(authMutations.signUp());
 	const [error, setError] = useState("");
 
-	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setError("");
 

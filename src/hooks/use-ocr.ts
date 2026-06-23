@@ -4,6 +4,12 @@ import type { PSM, Worker } from "tesseract.js";
 interface UseOCROptions {
 	/** Page segmentation mode - affects how Tesseract interprets the image layout */
 	pageSegmentationMode?: PSM;
+	/** Preprocess image (convert to grayscale & increase contrast) before scanning */
+	preprocess?: boolean;
+	/** Contrast adjustment level (-255 to 255, defaults to 80) */
+	contrast?: number;
+	/** Language for OCR (e.g. 'eng', 'sin', or 'eng+sin') */
+	language?: string;
 }
 
 interface UseOCRResult {
@@ -13,6 +19,76 @@ interface UseOCRResult {
 	scanImage: (file: File) => Promise<void>;
 	setText: (text: string) => void;
 	reset: () => void;
+}
+
+/**
+ * Preprocesses an image by converting to grayscale and increasing contrast using Canvas.
+ * This is critical to boost Tesseract OCR accuracy on shadowy or low-contrast paper documents.
+ */
+function preprocessImage(file: File, contrast: number = 80): Promise<File> {
+	return new Promise((resolve) => {
+		const img = new Image();
+		img.onload = () => {
+			const canvas = document.createElement("canvas");
+			const ctx = canvas.getContext("2d");
+			if (!ctx) {
+				resolve(file);
+				return;
+			}
+
+			canvas.width = img.width;
+			canvas.height = img.height;
+			ctx.drawImage(img, 0, 0);
+
+			try {
+				const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+				const data = imageData.data;
+
+				// Apply grayscale + contrast filter
+				const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+
+				for (let i = 0; i < data.length; i += 4) {
+					const r = data[i];
+					const g = data[i + 1];
+					const b = data[i + 2];
+
+					// 1. Grayscale conversion
+					const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+
+					// 2. High contrast adjustment
+					let cGray = factor * (gray - 128) + 128;
+					cGray = Math.max(0, Math.min(255, cGray));
+
+					// Set RGB values
+					data[i] = cGray;
+					data[i + 1] = cGray;
+					data[i + 2] = cGray;
+				}
+
+				ctx.putImageData(imageData, 0, 0);
+
+				canvas.toBlob((blob) => {
+					if (blob) {
+						resolve(new File([blob], file.name, { type: file.type }));
+					} else {
+						resolve(file);
+					}
+				}, file.type);
+			} catch (e) {
+				console.warn(
+					"Image preprocessing failed, falling back to raw image:",
+					e,
+				);
+				resolve(file);
+			}
+		};
+
+		img.onerror = () => {
+			resolve(file); // Fallback
+		};
+
+		img.src = URL.createObjectURL(file);
+	});
 }
 
 /**
@@ -34,6 +110,9 @@ export function useOCR(options?: UseOCROptions): UseOCRResult {
 	>("idle");
 
 	const psm = (options?.pageSegmentationMode ?? 3) as unknown as PSM;
+	const preprocess = options?.preprocess ?? true;
+	const contrast = options?.contrast ?? 80;
+	const language = options?.language ?? "sin";
 
 	/**
 	 * Tesseract Configuration Guide for Future Enhancements:
@@ -57,6 +136,7 @@ export function useOCR(options?: UseOCROptions): UseOCRResult {
 
 	// Reuse worker instance to avoid repeated initialization
 	const workerRef = useRef<Worker | null>(null);
+	const workerLangRef = useRef<string | null>(null);
 
 	useEffect(() => {
 		// Cleanup worker on unmount
@@ -79,20 +159,35 @@ export function useOCR(options?: UseOCROptions): UseOCRResult {
 			setText("");
 
 			try {
+				let fileToScan = file;
+				if (preprocess) {
+					setProgress(2); // Initial progress showing preprocessing started
+					fileToScan = await preprocessImage(file, contrast);
+				}
+
 				const { createWorker } = await import("tesseract.js");
+
+				// If language has changed, terminate the old worker
+				if (workerRef.current && workerLangRef.current !== language) {
+					await workerRef.current.terminate();
+					workerRef.current = null;
+				}
 
 				if (!workerRef.current) {
 					// Create worker with offline config (WASM from public/ocr-data)
-					workerRef.current = await createWorker("eng+sin", 1, {
+					workerRef.current = await createWorker(language, 1, {
 						workerPath: "/ocr-data/worker.min.js",
 						corePath: "/ocr-data/tesseract-core.wasm.js",
 						langPath: "/ocr-data/",
 						logger: (m) => {
 							if (m.status === "recognizing text") {
-								setProgress(Math.round(m.progress * 100));
+								// Tesseract progress starts at 0, map to 5% - 100% range
+								const p = Math.round(m.progress * 95) + 5;
+								setProgress(p);
 							}
 						},
 					});
+					workerLangRef.current = language;
 				}
 
 				const worker = workerRef.current;
@@ -104,7 +199,7 @@ export function useOCR(options?: UseOCROptions): UseOCRResult {
 
 				const {
 					data: { text: extractedText },
-				} = await worker.recognize(file);
+				} = await worker.recognize(fileToScan);
 
 				setText(extractedText);
 				setStatus("success");
@@ -114,7 +209,7 @@ export function useOCR(options?: UseOCROptions): UseOCRResult {
 				setStatus("error");
 			}
 		},
-		[psm],
+		[psm, preprocess, contrast, language],
 	);
 
 	const reset = useCallback(() => {

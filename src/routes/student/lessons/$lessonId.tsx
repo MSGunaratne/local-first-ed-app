@@ -10,6 +10,7 @@ import { lessonQueries } from "@/features/lessons/lessons.queries";
 import { useLocalProgress } from "@/hooks/use-local-progress";
 import { ensureQueryDataAfterRestore } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
+import { fDate } from "@/utils/format-time";
 
 export const Route = createFileRoute("/student/lessons/$lessonId")({
 	component: LessonPlayer,
@@ -78,7 +79,7 @@ function LessonPlayer() {
 					</div>
 					<div className="flex items-center gap-2">
 						<Calendar className="h-4 w-4" />
-						<span>{new Date(lesson.updatedAt).toLocaleDateString()}</span>
+						<span>{fDate(lesson.updatedAt)}</span>
 					</div>
 				</div>
 			</div>

@@ -4,6 +4,7 @@ import { type DropzoneOptions, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { fData } from "@/utils/format-number";
 import { Button } from "./button";
 
 interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -108,7 +109,7 @@ export function FileUploader({
 											{file.name}
 										</p>
 										<p className="text-xs text-muted-foreground">
-											{(file.size / 1024).toFixed(2)} KB
+											{fData(file.size)}
 										</p>
 									</div>
 								</div>

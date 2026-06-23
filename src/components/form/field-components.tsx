@@ -1,6 +1,5 @@
-import { useStore } from "@tanstack/react-form";
+import { useSelector } from "@tanstack/react-store";
 import type { JSONContent } from "@tiptap/core";
-import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import type * as React from "react";
 import type { DropzoneOptions } from "react-dropzone";
@@ -36,6 +35,7 @@ import { Switch as ShadcnSwitch } from "@/components/ui/switch";
 import { Textarea as ShadcnTextarea } from "@/components/ui/textarea";
 import { useFieldContext } from "@/hooks/use-form-context";
 import { cn } from "@/lib/utils";
+import { fDate } from "@/utils/format-time";
 
 // ----------------------------------------------------------------------
 // Helper for displaying errors
@@ -73,7 +73,7 @@ export function TextField({
 	required,
 }: TextFieldProps) {
 	const field = useFieldContext<string | number>();
-	const { errors, isTouched } = useStore(field.store, (state) => ({
+	const { errors, isTouched } = useSelector(field.store, (state) => ({
 		errors: state.meta.errors,
 		isTouched: state.meta.isTouched,
 	}));
@@ -133,7 +133,7 @@ export function TextArea({
 	required,
 }: TextAreaProps) {
 	const field = useFieldContext<string>();
-	const { errors, isTouched } = useStore(field.store, (state) => ({
+	const { errors, isTouched } = useSelector(field.store, (state) => ({
 		errors: state.meta.errors,
 		isTouched: state.meta.isTouched,
 	}));
@@ -185,7 +185,7 @@ export function Select({
 	required,
 }: SelectProps) {
 	const field = useFieldContext<string>();
-	const { errors, isTouched } = useStore(field.store, (state) => ({
+	const { errors, isTouched } = useSelector(field.store, (state) => ({
 		errors: state.meta.errors,
 		isTouched: state.meta.isTouched,
 	}));
@@ -233,7 +233,7 @@ interface SwitchProps {
 
 export function Switch({ label, description, className }: SwitchProps) {
 	const field = useFieldContext<boolean>();
-	const { errors, isTouched } = useStore(field.store, (state) => ({
+	const { errors, isTouched } = useSelector(field.store, (state) => ({
 		errors: state.meta.errors,
 		isTouched: state.meta.isTouched,
 	}));
@@ -269,7 +269,7 @@ interface CheckboxProps {
 
 export function Checkbox({ label, description, className }: CheckboxProps) {
 	const field = useFieldContext<boolean>();
-	const { errors, isTouched } = useStore(field.store, (state) => ({
+	const { errors, isTouched } = useSelector(field.store, (state) => ({
 		errors: state.meta.errors,
 		isTouched: state.meta.isTouched,
 	}));
@@ -319,7 +319,7 @@ export function Slider({
 	required,
 }: SliderProps) {
 	const field = useFieldContext<number>();
-	const { errors, isTouched } = useStore(field.store, (state) => ({
+	const { errors, isTouched } = useSelector(field.store, (state) => ({
 		errors: state.meta.errors,
 		isTouched: state.meta.isTouched,
 	}));
@@ -367,7 +367,7 @@ export function PhoneInput({
 	required,
 }: PhoneInputProps) {
 	const field = useFieldContext<string>();
-	const { errors, isTouched } = useStore(field.store, (state) => ({
+	const { errors, isTouched } = useSelector(field.store, (state) => ({
 		errors: state.meta.errors,
 		isTouched: state.meta.isTouched,
 	}));
@@ -418,7 +418,7 @@ export function NumberField({
 	...props
 }: NumberFieldProps) {
 	const field = useFieldContext<number>();
-	const { errors, isTouched } = useStore(field.store, (state) => ({
+	const { errors, isTouched } = useSelector(field.store, (state) => ({
 		errors: state.meta.errors,
 		isTouched: state.meta.isTouched,
 	}));
@@ -480,7 +480,7 @@ export function DatePicker({
 	slotProps,
 }: DatePickerProps) {
 	const field = useFieldContext<Date>();
-	const { errors, isTouched } = useStore(field.store, (state) => ({
+	const { errors, isTouched } = useSelector(field.store, (state) => ({
 		errors: state.meta.errors,
 		isTouched: state.meta.isTouched,
 	}));
@@ -507,7 +507,7 @@ export function DatePicker({
 					>
 						<CalendarIcon className="mr-2 h-4 w-4" />
 						{field.state.value ? (
-							format(field.state.value, "PPP")
+							fDate(field.state.value, { dateStyle: "long" })
 						) : (
 							<span>{placeholder}</span>
 						)}
@@ -562,7 +562,7 @@ export function ComboboxField<T extends string | number>({
 	slotProps,
 }: ComboboxProps<T>) {
 	const field = useFieldContext<T>();
-	const { errors, isTouched } = useStore(field.store, (state) => ({
+	const { errors, isTouched } = useSelector(field.store, (state) => ({
 		errors: state.meta.errors,
 		isTouched: state.meta.isTouched,
 	}));
@@ -622,7 +622,7 @@ export function FileDropzone({
 	required,
 }: FileDropzoneProps) {
 	const field = useFieldContext<File[]>();
-	const { errors, isTouched } = useStore(field.store, (state) => ({
+	const { errors, isTouched } = useSelector(field.store, (state) => ({
 		errors: state.meta.errors,
 		isTouched: state.meta.isTouched,
 	}));
@@ -667,7 +667,7 @@ export function EditorField({
 	required,
 }: EditorFieldProps) {
 	const field = useFieldContext<JSONContent | null>();
-	const { errors, isTouched } = useStore(field.store, (state) => ({
+	const { errors, isTouched } = useSelector(field.store, (state) => ({
 		errors: state.meta.errors,
 		isTouched: state.meta.isTouched,
 	}));

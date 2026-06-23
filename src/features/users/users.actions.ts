@@ -34,26 +34,26 @@ const updateUserInputSchema = userUpdateClientSchema.extend({
 
 export const getUsersFn = createServerFn({ method: "GET" })
 	.middleware([baseMiddleware])
-	.inputValidator((data) => dataTableListInputSchema.parse(data))
+	.validator((data) => dataTableListInputSchema.parse(data))
 	.handler(async ({ data, context }) => {
 		return getUsers(normalizeDataTableListInput(data), context.signal);
 	});
 
 export const exportUsersFn = createServerFn({ method: "GET" })
-	.inputValidator((data) => dataTableExportInputSchema.parse(data))
+	.validator((data) => dataTableExportInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		return exportUsers(normalizeDataTableExportInput(data));
 	});
 
 export const getUserByIdFn = createServerFn({ method: "GET" })
-	.inputValidator((data) => idInputSchema.parse(data))
+	.validator((data) => idInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		return getUserById(data.id);
 	});
 
 export const createUserFn = createServerFn({ method: "POST" })
 	.middleware([idempotentMiddleware])
-	.inputValidator((data) => createUserInputSchema.parse(data))
+	.validator((data) => createUserInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		const { idempotencyKey: _key, ...userData } = data;
 		return createUser(userData);
@@ -61,9 +61,7 @@ export const createUserFn = createServerFn({ method: "POST" })
 
 export const updateUserFn = createServerFn({ method: "POST" })
 	.middleware([idempotentMiddleware])
-	.inputValidator((data) =>
-		updateByIdInputSchema(updateUserInputSchema).parse(data),
-	)
+	.validator((data) => updateByIdInputSchema(updateUserInputSchema).parse(data))
 	.handler(async ({ data }) => {
 		const { idempotencyKey: _key, ...userData } = data.data;
 		return updateUser(data.id, userData);
@@ -71,7 +69,7 @@ export const updateUserFn = createServerFn({ method: "POST" })
 
 export const deleteUserFn = createServerFn({ method: "POST" })
 	.middleware([idempotentMiddleware])
-	.inputValidator((data) => idInputSchema.parse(data))
+	.validator((data) => idInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		return deleteUser(data.id);
 	});

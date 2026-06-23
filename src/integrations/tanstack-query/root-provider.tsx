@@ -1,20 +1,20 @@
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { type ReactNode, useEffect } from "react";
+import { authQueries } from "@/features/auth/auth.queries";
 import { initializeConnectionMode } from "@/lib/connection-mode";
 import { getContext, getQueryPersistenceOptions } from "@/lib/query-client";
 
-export default function TanStackQueryProvider({
-	children,
-}: {
-	children: ReactNode;
-}) {
-	const { queryClient } = getContext();
-	const persistOptions = getQueryPersistenceOptions();
+function SyncCoordinatorRunner() {
+	const { data: session } = useQuery(authQueries.session());
 
 	useEffect(() => {
-		initializeConnectionMode();
+		if (!session) {
+			return;
+		}
+
 		let cleanupSync: (() => void) | undefined;
+		let active = true;
 
 		// Initialize the local-first SQLite database and sync engine
 		(async () => {
@@ -27,11 +27,14 @@ export default function TanStackQueryProvider({
 				);
 
 				// 1. Register server functions for the queue first.
-				// This keeps flush paths functional even if local DB init is delayed.
 				registerAllMutations();
 
 				// 2. Initialize DB
 				await initLocalDb();
+
+				if (!active) {
+					return;
+				}
 
 				// 3. Start the background sync orchestrator
 				cleanupSync = await startSyncCoordinator();
@@ -41,13 +44,34 @@ export default function TanStackQueryProvider({
 		})();
 
 		return () => {
-			if (cleanupSync) cleanupSync();
+			active = false;
+			if (cleanupSync) {
+				cleanupSync();
+			}
 		};
+	}, [session]);
+
+	return null;
+}
+
+export default function TanStackQueryProvider({
+	children,
+}: {
+	children: ReactNode;
+}) {
+	const { queryClient } = getContext();
+	const persistOptions = getQueryPersistenceOptions();
+
+	useEffect(() => {
+		initializeConnectionMode();
 	}, []);
 
 	if (!persistOptions) {
 		return (
-			<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+			<QueryClientProvider client={queryClient}>
+				<SyncCoordinatorRunner />
+				{children}
+			</QueryClientProvider>
 		);
 	}
 
@@ -56,6 +80,7 @@ export default function TanStackQueryProvider({
 			client={queryClient}
 			persistOptions={persistOptions}
 		>
+			<SyncCoordinatorRunner />
 			{children}
 		</PersistQueryClientProvider>
 	);

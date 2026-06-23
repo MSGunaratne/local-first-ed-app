@@ -1,8 +1,9 @@
-import { useStore } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useSelector } from "@tanstack/react-store";
 import type { JSONContent } from "@tiptap/core";
 import { BookOpen, X } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import {
 	Breadcrumb,
@@ -33,8 +34,8 @@ interface LessonFormProps {
 
 export function LessonForm({ mode, initialValues }: LessonFormProps) {
 	const navigate = useNavigate();
-	const createMutation = useMutation(lessonMutations.create());
-	const updateMutation = useMutation(
+	const { mutateAsync: createMutation } = useMutation(lessonMutations.create());
+	const { mutateAsync: updateMutation } = useMutation(
 		lessonMutations.update(initialValues?.id as string),
 	);
 
@@ -47,7 +48,7 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 		linkedCurriculumIds: [],
 		estimatedDuration: 0,
 		teacherNotes: "",
-		isPublished: false,
+		isPublished: true,
 	};
 
 	const form = useAppForm({
@@ -66,71 +67,122 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 			};
 
 			if (mode === "create") {
-				await createMutation.mutateAsync(payload);
+				await createMutation(payload);
 			} else {
 				if (!initialValues?.id)
 					throw new Error("Lesson ID is missing for update");
 
-				await updateMutation.mutateAsync(payload);
+				await updateMutation(payload);
 			}
 			navigate({ to: "/lessons" });
 		},
 	});
 
-	const currentSubject = useStore(form.store, (s) => s.values.subject);
-	const linkedCurriculumIds = useStore(
+	const currentSubject = useSelector(form.store, (s) => s.values.subject);
+	const currentGrade = useSelector(form.store, (s) => s.values.gradeLevel);
+	const linkedCurriculumIds = useSelector(
 		form.store,
 		(s) => s.values.linkedCurriculumIds ?? [],
 	);
 
-	const handleMatchSelect = (match: CurriculumItem, ocrText: string) => {
+	const handleApplyMetadata = (match: CurriculumItem) => {
 		form.setFieldValue("title", match.topic);
 		form.setFieldValue("gradeLevel", match.grade);
 
-		// Map subject string to Enum if possible
 		const subjectEnum = Object.values(Subject).find(
 			(s) => s.toLowerCase() === match.subject.toLowerCase(),
 		);
 		if (subjectEnum) {
 			form.setFieldValue("subject", subjectEnum);
 		}
+		toast.success(m.curation_toast_applied_metadata());
+	};
 
-		// Add to linked curriculum IDs
+	const handleLinkToggle = (
+		match: CurriculumItem,
+		isAlreadyLinked: boolean,
+	) => {
 		const currentIds = form.getFieldValue("linkedCurriculumIds") ?? [];
-		if (!currentIds.includes(match.id)) {
-			form.setFieldValue("linkedCurriculumIds", [...currentIds, match.id]);
+		if (isAlreadyLinked) {
+			form.setFieldValue(
+				"linkedCurriculumIds",
+				currentIds.filter((currId) => currId !== match.id),
+			);
+			toast.info(m.curation_toast_unlinked());
+		} else {
+			if (!currentIds.includes(match.id)) {
+				form.setFieldValue("linkedCurriculumIds", [...currentIds, match.id]);
+				toast.success(m.curation_toast_linked());
+			}
+		}
+	};
+
+	const handleInsertText = (ocrText: string, topic?: string) => {
+		if (!ocrText.trim()) return;
+
+		const newContent: JSONContent[] = [];
+
+		if (topic) {
+			newContent.push({
+				type: "heading",
+				attrs: { level: 2 },
+				content: [{ type: "text", text: topic }],
+			});
 		}
 
-		// Create initial content JSON with OCR text
-		const newContent: JSONContent = {
-			type: "doc",
-			content: [
-				{
-					type: "heading",
-					attrs: { level: 2 },
-					content: [{ type: "text", text: match.topic }],
-				},
-				{
-					type: "paragraph",
-					content: [{ type: "text", text: ocrText }],
-				},
-			],
-		};
+		newContent.push({
+			type: "paragraph",
+			content: [{ type: "text", text: ocrText }],
+		});
 
 		const currentContent = form.getFieldValue(
 			"contentJson",
 		) as JSONContent | null;
+
 		if (currentContent?.content) {
 			form.setFieldValue("contentJson", {
 				type: "doc",
-				content: [
-					...(currentContent.content ?? []),
-					...(newContent.content ?? []),
-				],
+				content: [...(currentContent.content ?? []), ...newContent],
 			});
 		} else {
-			form.setFieldValue("contentJson", newContent);
+			form.setFieldValue("contentJson", {
+				type: "doc",
+				content: newContent,
+			});
 		}
+
+		if (topic) {
+			toast.success(m.curation_toast_inserted_content());
+		} else {
+			toast.success(m.curation_toast_inserted_text());
+		}
+	};
+
+	const handleInsertImage = (dataUrl: string) => {
+		if (!dataUrl) return;
+
+		const newImageNode: JSONContent = {
+			type: "image",
+			attrs: {
+				src: dataUrl,
+			},
+		};
+
+		const currentContent = form.getFieldValue("contentJson");
+
+		if (currentContent?.content) {
+			form.setFieldValue("contentJson", {
+				type: "doc",
+				content: [...(currentContent.content ?? []), newImageNode],
+			});
+		} else {
+			form.setFieldValue("contentJson", {
+				type: "doc",
+				content: [newImageNode],
+			});
+		}
+
+		toast.success(m.curation_toast_inserted_image());
 	};
 
 	const handleRemoveCurriculumId = (id: string) => {
@@ -167,7 +219,12 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 					{mode === "create" ? (
 						<CurationPanel
 							subject={currentSubject}
-							onMatchSelect={handleMatchSelect}
+							grade={currentGrade}
+							linkedIds={linkedCurriculumIds}
+							onApplyMetadata={handleApplyMetadata}
+							onLinkToggle={handleLinkToggle}
+							onInsertText={handleInsertText}
+							onInsertImage={handleInsertImage}
 						/>
 					) : (
 						<Card className="h-full">

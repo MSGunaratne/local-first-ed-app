@@ -7,7 +7,11 @@ import { uuidv7 } from "uuidv7";
 import { getClassByIdFn } from "@/features/classes/classes.actions";
 import { getLessonByIdFn } from "@/features/lessons/lessons.actions";
 import type { MutationServerFnName } from "@/lib/mutation-queue";
-import { enqueue, flushMutationQueue, hasExistingMutation } from "@/lib/mutation-queue";
+import {
+	enqueue,
+	flushMutationQueue,
+	hasExistingMutation,
+} from "@/lib/mutation-queue";
 import {
 	getPendingDeleteRecords,
 	getPendingPushRecords,
@@ -22,6 +26,7 @@ const SYNC_SCOPES: SyncScope[] = ["lessons", "classes", "users"];
 let syncTimer: ReturnType<typeof setInterval> | null = null;
 let onlineUnsubscribe: (() => void) | null = null;
 let isSyncing = false;
+let activeSyncPromise: Promise<void> | null = null;
 
 function getCreateServerFn(scope: SyncScope) {
 	if (scope === "users") {
@@ -73,13 +78,39 @@ async function resolveRecordOperation(scope: SyncScope, id: string) {
 }
 
 /**
+ * Stop the background sync coordinator and wait for any active sync to complete.
+ */
+export async function stopSyncCoordinator() {
+	if (syncTimer) {
+		clearInterval(syncTimer);
+		syncTimer = null;
+	}
+	if (onlineUnsubscribe) {
+		onlineUnsubscribe();
+		onlineUnsubscribe = null;
+	}
+	if (activeSyncPromise) {
+		console.info(
+			"[Sync] Waiting for active sync to complete before stopping...",
+		);
+		try {
+			await activeSyncPromise;
+		} catch (err) {
+			console.error("[Sync] Error waiting for active sync to settle:", err);
+		}
+	}
+	isSyncing = false;
+	console.info("[Sync] Coordinator stopped.");
+}
+
+/**
  * Start the background sync coordinator.
  * Returns a cleanup function.
  */
 export async function startSyncCoordinator() {
 	if (syncTimer) {
 		// Already running, but return a dummy cleanup or the current one
-		return () => {};
+		return stopSyncCoordinator;
 	}
 
 	// 1. Listen for online status changes
@@ -103,25 +134,16 @@ export async function startSyncCoordinator() {
 	}, SYNC_INTERVAL);
 
 	// Return cleanup function
-	return () => {
-		if (syncTimer) {
-			clearInterval(syncTimer);
-			syncTimer = null;
-		}
-		if (onlineUnsubscribe) {
-			onlineUnsubscribe();
-			onlineUnsubscribe = null;
-		}
-	};
+	return stopSyncCoordinator;
 }
 
 /**
  * Trigger a full sync across all scopes.
  */
-export async function syncAll() {
+export async function syncAll(): Promise<void> {
 	if (isSyncing) {
 		console.debug("[Sync] Already syncing, skipping...");
-		return;
+		return activeSyncPromise || Promise.resolve();
 	}
 	isSyncing = true;
 	console.info("[Sync] --- Starting Full Sync ---");
@@ -136,26 +158,31 @@ export async function syncAll() {
 		}
 	}, 60000);
 
-	try {
-		// 1. Flush the mutation queue first (high priority changes)
-		console.info("[Sync] Flushing mutation queue...");
-		const flushRes = await flushMutationQueue();
-		console.info(
-			`[Sync] Queue flush: ${flushRes.succeeded} succeeded, ${flushRes.failed} failed.`,
-		);
+	activeSyncPromise = (async () => {
+		try {
+			// 1. Flush the mutation queue first (high priority changes)
+			console.info("[Sync] Flushing mutation queue...");
+			const flushRes = await flushMutationQueue();
+			console.info(
+				`[Sync] Queue flush: ${flushRes.succeeded} succeeded, ${flushRes.failed} failed.`,
+			);
 
-		// 2. Perform push/pull for each scope
-		for (const scope of SYNC_SCOPES) {
-			console.info(`[Sync] Synchronizing scope: ${scope}...`);
-			await syncScope(scope);
+			// 2. Perform push/pull for each scope
+			for (const scope of SYNC_SCOPES) {
+				console.info(`[Sync] Synchronizing scope: ${scope}...`);
+				await syncScope(scope);
+			}
+			console.info("[Sync] --- Full Sync Finished ---");
+		} catch (error) {
+			console.error("[Sync] Full sync failed fatally:", error);
+		} finally {
+			clearTimeout(timeoutId);
+			isSyncing = false;
+			activeSyncPromise = null;
 		}
-		console.info("[Sync] --- Full Sync Finished ---");
-	} catch (error) {
-		console.error("[Sync] Full sync failed fatally:", error);
-	} finally {
-		clearTimeout(timeoutId);
-		isSyncing = false;
-	}
+	})();
+
+	return activeSyncPromise;
 }
 
 /**
@@ -196,10 +223,12 @@ async function pushScope(scope: SyncScope) {
 			}
 
 			const idempotencyKey = uuidv7();
-			
+
 			// Check if already in queue to avoid duplicates
 			if (await hasExistingMutation(scope, id)) {
-				console.debug(`[Sync:${scope}] Skipping record ${id}, already in mutation queue.`);
+				console.debug(
+					`[Sync:${scope}] Skipping record ${id}, already in mutation queue.`,
+				);
 				continue;
 			}
 
@@ -241,7 +270,9 @@ async function pushScope(scope: SyncScope) {
 		for (const id of pendingDeletes) {
 			// Check if already in queue to avoid duplicates
 			if (await hasExistingMutation(scope, id)) {
-				console.debug(`[Sync:${scope}] Skipping delete for ${id}, already in mutation queue.`);
+				console.debug(
+					`[Sync:${scope}] Skipping delete for ${id}, already in mutation queue.`,
+				);
 				continue;
 			}
 

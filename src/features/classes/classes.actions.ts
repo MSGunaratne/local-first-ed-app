@@ -24,20 +24,20 @@ const createClassInputSchema = classInsertSchema.extend({
 });
 
 export const getClassesFn = createServerFn({ method: "GET" })
-	.inputValidator((data) => dataTableListInputSchema.parse(data))
+	.validator((data) => dataTableListInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		return getClasses(normalizeDataTableListInput(data));
 	});
 
 export const getClassByIdFn = createServerFn({ method: "GET" })
-	.inputValidator((data) => idInputSchema.parse(data))
+	.validator((data) => idInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		return getClassById(data.id);
 	});
 
 export const createClassFn = createServerFn({ method: "POST" })
 	.middleware([idempotentMiddleware])
-	.inputValidator((data) => createClassInputSchema.parse(data))
+	.validator((data) => createClassInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		const { idempotencyKey: _key, ...classData } = data;
 		return createClass(classData);
@@ -45,7 +45,7 @@ export const createClassFn = createServerFn({ method: "POST" })
 
 export const updateClassFn = createServerFn({ method: "POST" })
 	.middleware([idempotentMiddleware])
-	.inputValidator((data) =>
+	.validator((data) =>
 		updateByIdInputSchema(classInsertSchema.partial()).parse(data),
 	)
 	.handler(async ({ data }) => {
@@ -58,7 +58,7 @@ export const updateClassFn = createServerFn({ method: "POST" })
 
 export const deleteClassFn = createServerFn({ method: "POST" })
 	.middleware([idempotentMiddleware])
-	.inputValidator((data) => idInputSchema.parse(data))
+	.validator((data) => idInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		return deleteClass(data.id);
 	});

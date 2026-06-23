@@ -1,11 +1,8 @@
 import { environmentManager, onlineManager } from "@tanstack/react-query";
 import { useEffect, useSyncExternalStore } from "react";
 import * as mutationQueue from "@/lib/mutation-queue";
-import {
-	formatBytes,
-	getQueryClient,
-	getStorageEstimate,
-} from "@/lib/query-client";
+import { getQueryClient, getStorageEstimate } from "@/lib/query-client";
+import { fData } from "#/utils/format-number";
 
 // ----------------------------------------------------------------------
 // Sync Status Store – tracks pending mutations, last sync, and storage
@@ -166,12 +163,14 @@ async function refreshStorageUsage() {
 async function refreshQueuedCount() {
 	try {
 		const all = await mutationQueue.getAll();
-		const pending = all.filter((m) => m.status === "pending" || m.status === "in-flight");
+		const pending = all.filter(
+			(m) => m.status === "pending" || m.status === "in-flight",
+		);
 		const failed = all.filter((m) => m.status === "failed");
-		
-		updateState({ 
+
+		updateState({
 			queuedMutationCount: pending.length,
-			failedMutationCount: failed.length
+			failedMutationCount: failed.length,
 		});
 	} catch {
 		// Silently ignore
@@ -212,7 +211,7 @@ export function useSyncStatus() {
 	return {
 		...state,
 		/** Human-readable storage usage */
-		storageUsageFormatted: formatBytes(state.storageUsageBytes),
+		storageUsageFormatted: fData(state.storageUsageBytes),
 		/** Whether there are active pending mutations (in-flight or queued) */
 		hasPendingMutations:
 			state.pendingMutationCount > 0 || state.queuedMutationCount > 0,

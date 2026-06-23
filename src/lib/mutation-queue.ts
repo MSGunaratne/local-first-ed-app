@@ -1,4 +1,4 @@
-import { createStore, del, entries, get, set } from "idb-keyval";
+import { clear, createStore, del, entries, get, set } from "idb-keyval";
 import { uuidv7 } from "uuidv7";
 import type {
 	AnalyticsBatchIngest,
@@ -311,7 +311,9 @@ export async function hasExistingMutation(
 		return (
 			m.scope === scope &&
 			mEntityId === entityId &&
-			(m.status === "pending" || m.status === "in-flight")
+			(m.status === "pending" ||
+				m.status === "in-flight" ||
+				m.status === "failed")
 		);
 	});
 }
@@ -562,4 +564,9 @@ export function subscribe(listener: () => void): () => void {
 	return () => {
 		changeListeners.delete(listener);
 	};
+}
+
+export async function clearMutationQueue(): Promise<void> {
+	await clear(STORE);
+	emitChange();
 }

@@ -24,8 +24,17 @@ export default function BetterAuthHeader({ session }: { session: Session }) {
 	const isCollapsed = state === "collapsed" && !isMobile;
 
 	const handleSignOut = async () => {
-		const result = await mutateAsync({ returnTo: "/sign-in" });
-		navigate({ to: result.redirectTo });
+		let redirectTo = "/sign-in";
+		try {
+			const result = await mutateAsync({ returnTo: "/sign-in" });
+			redirectTo = result.redirectTo;
+		} catch (error) {
+			console.error("Failed server sign out:", error);
+		} finally {
+			const { clearAllLocalData } = await import("@/lib/query-client");
+			await clearAllLocalData();
+			navigate({ to: redirectTo });
+		}
 	};
 
 	// Fallback Initials

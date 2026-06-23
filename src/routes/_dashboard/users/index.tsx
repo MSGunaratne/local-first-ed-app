@@ -6,12 +6,12 @@ import {
 } from "@tanstack/react-router";
 import type { Row } from "@tanstack/react-table";
 import {
-	type ColumnDef,
+	createColumnHelper,
 	getCoreRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
 import { Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatPhoneNumber } from "react-phone-number-input";
 import {
 	DataTable,
@@ -51,21 +51,14 @@ import {
 import { ensureQueryDataAfterRestore } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
 import { ROLE_METADATA } from "@/types/user";
+import { fDate } from "@/utils/format-time";
 
 export const Route = createFileRoute("/_dashboard/users/")({
 	validateSearch: dataTableSearchSchema,
 	search: {
 		middlewares: [stripSearchParams(DATA_TABLE_SEARCH_DEFAULTS)],
 	},
-	loaderDeps: ({
-		search: { pageIndex, pageSize, sorting, columnFilters, globalFilter },
-	}) => ({
-		pageIndex,
-		pageSize,
-		sorting,
-		columnFilters,
-		globalFilter,
-	}),
+	loaderDeps: ({ search }) => search,
 	loader: async ({ context: { queryClient }, deps }) => {
 		await ensureQueryDataAfterRestore(
 			queryClient,
@@ -93,6 +86,8 @@ function DashboardListRoutePending() {
 	return <DataTableRoutePending message="Preparing users..." />;
 }
 
+const columnHelper = createColumnHelper<User>();
+
 function UsersPage() {
 	const {
 		pagination,
@@ -108,10 +103,15 @@ function UsersPage() {
 
 	const { data, isFetching } = useQuery(userQueries.list(queryParams));
 
+	const [isMounted, setIsMounted] = useState(false);
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
+
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [rowsToDelete, setRowsToDelete] = useState<Row<User>[]>([]);
 
-	const deleteMutation = useMutation({
+	const { mutateAsync: deleteMutation } = useMutation({
 		...userMutations.delete(),
 		onSuccess: () => {
 			handlers.onRowSelectionChange({});
@@ -125,7 +125,7 @@ function UsersPage() {
 
 	const confirmDelete = async () => {
 		const userIds = rowsToDelete.map((row) => row.original.id);
-		await Promise.all(userIds.map((id) => deleteMutation.mutateAsync(id)));
+		await Promise.all(userIds.map((id) => deleteMutation(id)));
 		setDeleteDialogOpen(false);
 		setRowsToDelete([]);
 	};
@@ -140,11 +140,10 @@ function UsersPage() {
 		[queryParams.sorting, queryParams.columnFilters, queryParams.globalFilter],
 	);
 
-	const columns = useMemo<ColumnDef<User>[]>(
+	const columns = useMemo(
 		() => [
 			getSelectionColumn<User>(),
-			{
-				accessorKey: "name",
+			columnHelper.accessor("name", {
 				header: m.users_table_name(),
 				cell: ({ row }) => (
 					<div className="flex flex-col">
@@ -154,21 +153,18 @@ function UsersPage() {
 						</span>
 					</div>
 				),
-			},
-			{
-				accessorKey: "email",
+			}),
+			columnHelper.accessor("email", {
 				header: m.users_table_email(),
-			},
-			{
-				accessorKey: "phoneNumber",
+			}),
+			columnHelper.accessor("phoneNumber", {
 				header: m.users_table_phone(),
 				cell: ({ getValue }) => {
 					const value = getValue<string | null>();
 					return value ? formatPhoneNumber(value) : "—";
 				},
-			},
-			{
-				accessorKey: "role",
+			}),
+			columnHelper.accessor("role", {
 				header: m.users_table_role(),
 				cell: ({ getValue }) => {
 					const role = getValue<User["role"]>();
@@ -179,20 +175,12 @@ function UsersPage() {
 						</Badge>
 					);
 				},
-			},
-			{
-				accessorKey: "createdAt",
+			}),
+			columnHelper.accessor("createdAt", {
 				header: m.common_created_at(),
-				cell: ({ getValue }) => {
-					const date = getValue<Date>();
-					return date
-						? new Intl.DateTimeFormat("en-US", {
-								dateStyle: "medium",
-							}).format(date)
-						: "—";
-				},
-			},
-			{
+				cell: ({ getValue }) => fDate(getValue()),
+			}),
+			columnHelper.display({
 				id: "actions",
 				header: () => <span className="sr-only">{m.common_actions()}</span>,
 				cell: ({ row }) => (
@@ -228,7 +216,7 @@ function UsersPage() {
 				),
 				enableSorting: false,
 				enableHiding: false,
-			},
+			}),
 		],
 		[],
 	);
@@ -244,8 +232,6 @@ function UsersPage() {
 		manualSorting: true,
 		manualFiltering: true,
 		autoResetPageIndex: false,
-		// Satisfy module augmentation from demo/table.tsx (not used in server-side mode)
-		filterFns: { fuzzy: () => false },
 		// Enable features
 		enableRowSelection: true,
 		// State change handlers - URL-synced state (from hook)
@@ -315,7 +301,7 @@ function UsersPage() {
 			{/* Table */}
 			<DataTable
 				table={table}
-				isLoading={isTableLoading}
+				isLoading={isTableLoading || !isMounted}
 				isRefetching={isTableRefetching}
 			/>
 

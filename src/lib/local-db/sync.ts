@@ -398,8 +398,17 @@ function snakeToCamel<T extends Record<string, unknown>>(
 					val = new Date(val);
 				}
 			} else if (typeof val === "string") {
-				const d = new Date(val);
-				if (!Number.isNaN(d.getTime())) val = d;
+				if (/^\d+$/.test(val)) {
+					const num = Number.parseInt(val, 10);
+					if (num < 100000000000) {
+						val = new Date(num * 1000);
+					} else {
+						val = new Date(num);
+					}
+				} else {
+					const d = new Date(val);
+					if (!Number.isNaN(d.getTime())) val = d;
+				}
 			}
 		}
 

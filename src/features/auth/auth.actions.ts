@@ -19,7 +19,7 @@ import {
 } from "./auth.service";
 
 const signInWithPasswordFn = createServerFn({ method: "POST" })
-	.inputValidator((data) => signInSchema.parse(data))
+	.validator((data) => signInSchema.parse(data))
 	.handler(async ({ data }) => {
 		await signInWithPasswordService({
 			email: data.email,
@@ -30,7 +30,7 @@ const signInWithPasswordFn = createServerFn({ method: "POST" })
 	});
 
 const signUpFn = createServerFn({ method: "POST" })
-	.inputValidator((data) => signUpSchema.parse(data))
+	.validator((data) => signUpSchema.parse(data))
 	.handler(async ({ data }) => {
 		await signUpService(data);
 
@@ -38,7 +38,7 @@ const signUpFn = createServerFn({ method: "POST" })
 	});
 
 const signOutFn = createServerFn({ method: "POST" })
-	.inputValidator((data) => signOutSchema.parse(data))
+	.validator((data) => signOutSchema.parse(data))
 	.handler(async ({ data }) => {
 		await signOutService();
 
@@ -46,7 +46,7 @@ const signOutFn = createServerFn({ method: "POST" })
 	});
 
 const changePasswordFn = createServerFn({ method: "POST" })
-	.inputValidator((data) => changePasswordSchema.parse(data))
+	.validator((data) => changePasswordSchema.parse(data))
 	.handler(async ({ data }) => {
 		await changePasswordService(data);
 	});

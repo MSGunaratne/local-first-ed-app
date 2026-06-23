@@ -30,7 +30,7 @@ function SignInPage() {
 	const { mutateAsync, isPending } = useMutation(authMutations.signIn());
 	const [error, setError] = useState("");
 
-	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setError("");
 

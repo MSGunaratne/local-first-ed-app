@@ -97,6 +97,7 @@ export async function createClass(data: ClassInsert & { id?: string }) {
 		.insert(classes)
 		.values({
 			...validatedData,
+			id: data.id,
 			teacherId: session.user.id, // Auto-assign to creating teacher
 		})
 		.returning();

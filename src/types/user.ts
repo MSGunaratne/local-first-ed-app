@@ -33,18 +33,33 @@ export const ROLE_METADATA = {
 	},
 } as const satisfies Record<Role, { label: string; color: LabelColor }>;
 
-/**
- * Type guard to check if a value is a valid Role.
- * Use at boundaries where roles come from external sources (e.g., Better Auth session).
- */
-export function isRole(value: unknown): value is Role {
-	return (
-		typeof value === "string" && Object.values(Role).includes(value as Role)
-	);
-}
+export const ROLE_GROUPS = {
+	user: [Role.TEACHER, Role.STUDENT],
+	admin: [Role.SUPER_ADMIN, Role.ADMIN],
+} as const satisfies Record<string, readonly Role[]>;
 
-export function getTypedRole(value: unknown) {
-	return isRole(value) ? value : null;
+export type UserRole = (typeof ROLE_GROUPS.user)[number];
+export type AdminRole = (typeof ROLE_GROUPS.admin)[number];
+
+export const USER_ROLE_METADATA = pickRoleMetadata(ROLE_GROUPS.user);
+
+export const ADMIN_ROLE_METADATA = pickRoleMetadata(ROLE_GROUPS.admin);
+
+type RoleGroup = keyof typeof ROLE_GROUPS;
+
+export function asRole<G extends RoleGroup>(
+	value: unknown,
+	group: G,
+): (typeof ROLE_GROUPS)[G][number] | null;
+export function asRole(value: unknown): Role | null;
+export function asRole(value: unknown, group?: RoleGroup) {
+	if (typeof value !== "string") return null;
+
+	const list = group
+		? ROLE_GROUPS[group]
+		: (Object.values(Role) as readonly string[]);
+
+	return list.includes(value) ? value : null;
 }
 
 export type SessionUser = {
@@ -55,3 +70,13 @@ export type SessionUser = {
 	role: Role;
 	phoneNumber: string | null;
 };
+
+// ----------------------------------------------------------------------
+
+function pickRoleMetadata<T extends Role>(roles: readonly T[]) {
+	return Object.fromEntries(
+		roles.map((role) => [role, ROLE_METADATA[role]]),
+	) as {
+		readonly [K in T]: (typeof ROLE_METADATA)[K];
+	};
+}

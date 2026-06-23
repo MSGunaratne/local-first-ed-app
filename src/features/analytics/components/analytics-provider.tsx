@@ -88,8 +88,10 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 	const flushedOnExitRef = useRef(false);
 
 	const { data: authSession } = useQuery(authQueries.session());
-	const ingestMutation = useMutation(analyticsMutations.ingestBatch());
-	const ingestMutateRef = useRef(ingestMutation.mutate);
+	const { mutate: ingestMutation } = useMutation(
+		analyticsMutations.ingestBatch(),
+	);
+	const ingestMutateRef = useRef(ingestMutation);
 
 	const actorContextRef = useRef<ActorContext>({
 		actorType: "anonymous",
@@ -100,8 +102,8 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 
 	// Sync mutation ref for use in stable callbacks
 	useEffect(() => {
-		ingestMutateRef.current = ingestMutation.mutate;
-	}, [ingestMutation.mutate]);
+		ingestMutateRef.current = ingestMutation;
+	}, [ingestMutation]);
 
 	// Sync actor context from auth session
 	useEffect(() => {

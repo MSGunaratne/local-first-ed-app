@@ -44,7 +44,9 @@ export function LessonFeedbackPrompt({
 	const [isOpen, setIsOpen] = useState(false);
 	const [rating, setRating] = useState<number>(0);
 	const [comment, setComment] = useState("");
-	const mutation = useMutation(analyticsMutations.submitLessonFeedback());
+	const { mutateAsync, isPending } = useMutation(
+		analyticsMutations.submitLessonFeedback(),
+	);
 
 	const submittedKey = useMemo(() => getSubmittedKey(lessonId), [lessonId]);
 	const snoozeKey = useMemo(() => getSnoozeKey(lessonId), [lessonId]);
@@ -95,7 +97,7 @@ export function LessonFeedbackPrompt({
 		}
 
 		const pseudonymousActorId = await getDailyPseudonymousActorId();
-		await mutation.mutateAsync({
+		await mutateAsync({
 			lessonId,
 			pseudonymousActorId,
 			rating,
@@ -162,9 +164,9 @@ export function LessonFeedbackPrompt({
 							type="button"
 							size="sm"
 							onClick={() => void submitFeedback()}
-							disabled={mutation.isPending || rating === 0}
+							disabled={isPending || rating === 0}
 						>
-							{mutation.isPending ? m.feedback_saving() : m.common_submit()}
+							{isPending ? m.feedback_saving() : m.common_submit()}
 						</Button>
 					</div>
 				</CardContent>

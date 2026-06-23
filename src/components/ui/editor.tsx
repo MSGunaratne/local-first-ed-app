@@ -18,6 +18,7 @@ import {
 	Undo,
 } from "lucide-react";
 import { useEffect } from "react";
+import Image from "@tiptap/extension-image";
 import { Quiz } from "@/components/editor/extensions/quiz-extension";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -38,7 +39,13 @@ export interface EditorProps {
 }
 
 // Extensions configuration - keep in sync with generateHtmlFromJson
-const EDITOR_EXTENSIONS = [StarterKit.configure({}), Quiz];
+const EDITOR_EXTENSIONS = [
+	StarterKit.configure({}),
+	Quiz,
+	Image.configure({
+		allowBase64: true,
+	}),
+];
 
 const EditorToolbar = ({ editor }: { editor: TipTapEditor | null }) => {
 	if (!editor) return null;

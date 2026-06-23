@@ -27,7 +27,13 @@ export function ConnectionModeToggle({
 	const modeLabel =
 		mode === "auto" ? "Auto" : mode === "offline" ? "Forced off" : "Forced on";
 
-	const Icon = hasFailedMutations ? CloudOff : hasPendingMutations ? Loader2 : isOnline ? Wifi : WifiOff;
+	const Icon = hasFailedMutations
+		? CloudOff
+		: hasPendingMutations
+			? Loader2
+			: isOnline
+				? Wifi
+				: WifiOff;
 
 	return (
 		<div className={cn("flex flex-col gap-1", className)}>

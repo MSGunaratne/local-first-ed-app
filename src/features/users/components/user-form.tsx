@@ -63,7 +63,7 @@ function UserFormLayout({
 
 export function UserCreateForm() {
 	const navigate = useNavigate();
-	const mutation = useMutation(userMutations.create());
+	const { mutate } = useMutation(userMutations.create());
 
 	const defaultValues: UserCreateInput = {
 		name: "",
@@ -78,8 +78,8 @@ export function UserCreateForm() {
 		validators: {
 			onSubmit: userCreateClientSchema,
 		},
-		onSubmit: async ({ value }) => {
-			await mutation.mutateAsync(value);
+		onSubmit: ({ value }) => {
+			mutate(value);
 			navigate({ to: "/users" });
 		},
 	});
@@ -157,7 +157,7 @@ export function UserEditForm({
 	initialValues: UserDetails;
 }) {
 	const navigate = useNavigate();
-	const mutation = useMutation(userMutations.update(initialValues.id));
+	const { mutate } = useMutation(userMutations.update(initialValues.id));
 
 	const defaultValues: UserUpdateInput = {
 		name: initialValues.name,
@@ -171,8 +171,8 @@ export function UserEditForm({
 		validators: {
 			onSubmit: userUpdateClientSchema,
 		},
-		onSubmit: async ({ value }) => {
-			await mutation.mutateAsync(value);
+		onSubmit: ({ value }) => {
+			mutate(value);
 			navigate({ to: "/users" });
 		},
 	});

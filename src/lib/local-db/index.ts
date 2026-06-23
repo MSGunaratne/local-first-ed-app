@@ -1,5 +1,7 @@
 // Barrel export for the local-db module
 export {
+	closeLocalDb,
+	deleteLocalDb,
 	execute,
 	initLocalDb,
 	isReady,
@@ -24,4 +26,8 @@ export {
 	updateLocal,
 } from "./sync";
 
-export { startSyncCoordinator, syncAll } from "./sync-coordinator";
+export {
+	startSyncCoordinator,
+	stopSyncCoordinator,
+	syncAll,
+} from "./sync-coordinator";

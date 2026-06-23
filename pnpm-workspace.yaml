@@ -1,5 +1,6 @@
 allowBuilds:
-  esbuild: set this to true or false
-  sharp: set this to true or false
-  tesseract.js: set this to true or false
-  workerd: set this to true or false
+  esbuild: true
+  lightningcss: true
+  sharp: false
+  tesseract.js: false
+  workerd: true

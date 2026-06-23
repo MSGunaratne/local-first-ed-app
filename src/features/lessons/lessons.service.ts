@@ -92,7 +92,7 @@ export async function createLesson(data: LessonInsert & { id?: string }) {
 
 	const [newLesson] = await db
 		.insert(lessons)
-		.values(validatedData)
+		.values({ ...validatedData, id: data.id })
 		.returning();
 
 	if (!newLesson) throw new ServerError("Failed to create lesson");

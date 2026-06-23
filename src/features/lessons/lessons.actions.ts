@@ -25,20 +25,20 @@ const createLessonInputSchema = lessonInsertSchema.extend({
 
 export const getLessonsFn = createServerFn({ method: "GET" })
 	.middleware([baseMiddleware])
-	.inputValidator((data) => dataTableListInputSchema.parse(data))
+	.validator((data) => dataTableListInputSchema.parse(data))
 	.handler(async ({ data, context }) => {
 		return getLessons(normalizeDataTableListInput(data), context.signal);
 	});
 
 export const getLessonByIdFn = createServerFn({ method: "GET" })
-	.inputValidator((data) => idInputSchema.parse(data))
+	.validator((data) => idInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		return getLessonById(data.id);
 	});
 
 export const createLessonFn = createServerFn({ method: "POST" })
 	.middleware([idempotentMiddleware])
-	.inputValidator((data) => createLessonInputSchema.parse(data))
+	.validator((data) => createLessonInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		const { idempotencyKey: _key, ...lessonData } = data;
 		return createLesson(lessonData);
@@ -46,7 +46,7 @@ export const createLessonFn = createServerFn({ method: "POST" })
 
 export const updateLessonFn = createServerFn({ method: "POST" })
 	.middleware([idempotentMiddleware])
-	.inputValidator((data) =>
+	.validator((data) =>
 		updateByIdInputSchema(lessonInsertSchema.partial()).parse(data),
 	)
 	.handler(async ({ data }) => {
@@ -59,7 +59,7 @@ export const updateLessonFn = createServerFn({ method: "POST" })
 
 export const deleteLessonFn = createServerFn({ method: "POST" })
 	.middleware([idempotentMiddleware])
-	.inputValidator((data) => idInputSchema.parse(data))
+	.validator((data) => idInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		return deleteLesson(data.id);
 	});

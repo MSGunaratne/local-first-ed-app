@@ -56,6 +56,46 @@ export async function closeLocalDb(): Promise<void> {
 }
 
 /**
+ * Completely delete the local SQLite database from IndexedDB.
+ */
+export async function deleteLocalDb(): Promise<void> {
+	await closeLocalDb();
+
+	// Reset module-level state to allow clean re-initialization
+	vfs = null;
+	sqlite3 = null;
+	wasmModule = null;
+	initPromise = null;
+	GLOBAL_VFS_FILE_MAP.clear();
+	dbQueue = Promise.resolve();
+
+	if (typeof window !== "undefined" && window.indexedDB) {
+		return new Promise<void>((resolve, reject) => {
+			const req = window.indexedDB.deleteDatabase(DB_NAME);
+			req.onsuccess = () => {
+				console.info(
+					"[LocalDB] SQLite IndexedDB database deleted successfully",
+				);
+				resolve();
+			};
+			req.onerror = (err) => {
+				console.error(
+					"[LocalDB] Failed to delete SQLite IndexedDB database",
+					err,
+				);
+				reject(err);
+			};
+			req.onblocked = () => {
+				console.warn(
+					"[LocalDB] Deletion blocked. Some connections might still be open.",
+				);
+				resolve(); // Resolve anyway so we don't block downstream code indefinitely
+			};
+		});
+	}
+}
+
+/**
  * Initialize the local SQLite database.
  * Safe to call multiple times — returns the same promise.
  */

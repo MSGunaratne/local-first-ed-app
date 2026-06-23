@@ -1,18 +1,17 @@
-import { rankItem } from "@tanstack/match-sorter-utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
 	Link,
 	stripSearchParams,
 } from "@tanstack/react-router";
-import type { FilterFn, Row } from "@tanstack/react-table";
+import type { Row } from "@tanstack/react-table";
 import {
-	type ColumnDef,
+	createColumnHelper,
 	getCoreRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
 import { Edit, Eye, MoreHorizontal, Plus, Share, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
 	DataTable,
 	DataTableExport,
@@ -54,21 +53,14 @@ import {
 } from "@/lib/dataTableSearchSchema";
 import { ensureQueryDataAfterRestore } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
+import { fDate } from "@/utils/format-time";
 
 export const Route = createFileRoute("/_dashboard/lessons/")({
 	validateSearch: dataTableSearchSchema,
 	search: {
 		middlewares: [stripSearchParams(DATA_TABLE_SEARCH_DEFAULTS)],
 	},
-	loaderDeps: ({
-		search: { pageIndex, pageSize, sorting, columnFilters, globalFilter },
-	}) => ({
-		pageIndex,
-		pageSize,
-		sorting,
-		columnFilters,
-		globalFilter,
-	}),
+	loaderDeps: ({ search }) => search,
 	loader: async ({ context: { queryClient }, deps }) => {
 		await ensureQueryDataAfterRestore(
 			queryClient,
@@ -95,11 +87,7 @@ function DashboardListRoutePending() {
 	return <DataTableRoutePending message={m.lessons_preparing()} />;
 }
 
-const fuzzyFilter: FilterFn<unknown> = (row, columnId, value, addMeta) => {
-	const itemRank = rankItem(row.getValue(columnId), value);
-	addMeta({ itemRank });
-	return itemRank.passed;
-};
+const columnHelper = createColumnHelper<Lesson>();
 
 function LessonsPage() {
 	const {
@@ -117,10 +105,15 @@ function LessonsPage() {
 
 	const { data, isFetching } = useQuery(lessonQueries.list(queryParams));
 
+	const [isMounted, setIsMounted] = useState(false);
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
+
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [rowsToDelete, setRowsToDelete] = useState<Row<Lesson>[]>([]);
 
-	const deleteMutation = useMutation({
+	const { mutateAsync: deleteMutation } = useMutation({
 		...lessonMutations.delete(),
 		onSuccess: () => {
 			handlers.onRowSelectionChange({});
@@ -134,51 +127,40 @@ function LessonsPage() {
 
 	const confirmDelete = async () => {
 		const lessonIds = rowsToDelete.map((row) => row.original.id);
-		await Promise.all(lessonIds.map((id) => deleteMutation.mutateAsync(id)));
+		await Promise.all(lessonIds.map((id) => deleteMutation(id)));
 		setDeleteDialogOpen(false);
 		setRowsToDelete([]);
 	};
 
-	const columns = useMemo<ColumnDef<Lesson>[]>(
+	const columns = useMemo(
 		() => [
 			getSelectionColumn<Lesson>(),
-			{
-				accessorKey: "title",
+			columnHelper.accessor("title", {
 				header: m.lessons_table_title(),
 				cell: ({ row }) => (
 					<div className="flex flex-col">
 						<span className="font-medium">{row.original.title}</span>
 					</div>
 				),
-			},
-			{
-				accessorKey: "subject",
+			}),
+			columnHelper.accessor("subject", {
 				header: m.lessons_table_subject(),
 				cell: ({ getValue }) => {
 					const subject = getValue<string>();
 					return <Badge variant="secondary">{subject.toUpperCase()}</Badge>;
 				},
-			},
-			{
-				accessorKey: "gradeLevel",
+			}),
+			columnHelper.accessor("gradeLevel", {
 				header: m.lessons_table_grade(),
 				cell: ({ getValue }) => {
 					return <span>Grade {getValue<number>()}</span>;
 				},
-			},
-			{
-				accessorKey: "createdAt",
+			}),
+			columnHelper.accessor("createdAt", {
 				header: m.common_created_at(),
-				cell: ({ getValue }) => {
-					const date = getValue<Date>();
-					return date
-						? new Intl.DateTimeFormat("en-US", {
-								dateStyle: "medium",
-							}).format(date)
-						: "—";
-				},
-			},
-			{
+				cell: ({ getValue }) => fDate(getValue()),
+			}),
+			columnHelper.display({
 				id: "actions",
 				header: () => <span className="sr-only">{m.common_actions()}</span>,
 				cell: ({ row }) => (
@@ -257,7 +239,7 @@ function LessonsPage() {
 				),
 				enableSorting: false,
 				enableHiding: false,
-			},
+			}),
 		],
 		[isOnline],
 	);
@@ -271,7 +253,6 @@ function LessonsPage() {
 		manualPagination: true,
 		manualSorting: true,
 		manualFiltering: true,
-		filterFns: { fuzzy: fuzzyFilter },
 		enableRowSelection: true,
 		onPaginationChange: handlers.onPaginationChange,
 		onSortingChange: handlers.onSortingChange,
@@ -330,7 +311,7 @@ function LessonsPage() {
 
 			<DataTable
 				table={table}
-				isLoading={isTableLoading}
+				isLoading={isTableLoading || !isMounted}
 				isRefetching={isTableRefetching}
 			/>
 

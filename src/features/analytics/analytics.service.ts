@@ -13,7 +13,7 @@ import { requireAdminSession } from "#/lib/auth/access";
 import { readServerSession } from "#/lib/auth/session";
 import { db } from "@/db";
 import { lessons } from "@/features/lessons/lessons.schema";
-import { getTypedRole, Role } from "@/types/user";
+import { asRole, Role } from "@/types/user";
 import type {
 	AnalyticsBatchIngest,
 	AnalyticsEventInsert,
@@ -31,7 +31,7 @@ const RAW_RETENTION_DAYS = 30;
 function normalizeActorContext(
 	session: Awaited<ReturnType<typeof readServerSession>>,
 ) {
-	const role = getTypedRole(session?.user.role);
+	const role = asRole(session?.user.role, "admin");
 
 	if (!session || !role) {
 		return {

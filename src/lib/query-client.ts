@@ -5,6 +5,7 @@ import {
 	MutationCache,
 	matchQuery,
 	QueryClient,
+	type QueryKey,
 } from "@tanstack/react-query";
 import {
 	type PersistedClient,
@@ -14,6 +15,7 @@ import {
 import { del, get, set } from "idb-keyval";
 import { toast } from "sonner";
 import type { AppError } from "@/db/utils/errors";
+import { fData } from "@/utils/format-number";
 
 declare module "@tanstack/react-query" {
 	interface Register {
@@ -21,8 +23,9 @@ declare module "@tanstack/react-query" {
 		mutationMeta: {
 			successMessage?: string;
 			errorMessage?: string;
-			invalidates?: Array<readonly string[]>;
-			getInvalidates?: (data: unknown) => Array<readonly string[]>;
+			invalidates?:
+				| ReadonlyArray<QueryKey>
+				| ((ctx: { data: any; variables: any }) => ReadonlyArray<QueryKey>);
 			onSettledCallback?: () => void;
 			idempotencyKey?: string;
 		};
@@ -202,12 +205,6 @@ export async function getStorageEstimate(): Promise<{
 	return { usageBytes, quotaBytes, usagePercent };
 }
 
-export function formatBytes(bytes: number): string {
-	if (bytes < 1024) return `${bytes} B`;
-	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 /**
  * Evict stale query cache entries when storage exceeds budget.
  * Evicts oldest stale queries first.
@@ -221,13 +218,13 @@ export async function enforceStorageBudget(queryClient: QueryClient) {
 			usageBytes <= STORAGE_BUDGET_BYTES
 		) {
 			console.warn(
-				`[Storage] Usage (${formatBytes(usageBytes)}) approaching budget (${formatBytes(STORAGE_BUDGET_BYTES)})`,
+				`[Storage] Usage (${fData(usageBytes)}) approaching budget (${fData(STORAGE_BUDGET_BYTES)})`,
 			);
 		}
 
 		if (usageBytes > STORAGE_BUDGET_BYTES) {
 			console.warn(
-				`[Storage] Budget exceeded (${formatBytes(usageBytes)} > ${formatBytes(STORAGE_BUDGET_BYTES)}). Evicting stale queries.`,
+				`[Storage] Budget exceeded (${fData(usageBytes)} > ${fData(STORAGE_BUDGET_BYTES)}). Evicting stale queries.`,
 			);
 
 			const queries = queryClient.getQueryCache().getAll();
@@ -282,23 +279,24 @@ function makeQueryClient() {
 	let client: QueryClient;
 
 	const mutationCache = new MutationCache({
-		onSuccess: (data, _variables, _context, mutation) => {
-			const { successMessage, invalidates, getInvalidates } =
-				mutation.meta || {};
+		onSuccess: (data, variables, _context, mutation) => {
+			const { successMessage, invalidates } = mutation.meta || {};
 
 			if (successMessage) {
 				toast.success(successMessage);
 			}
 
-			const allInvalidates = [
-				...(invalidates ?? []),
-				...(getInvalidates?.(data) ?? []),
-			];
+			const invalidationKeys =
+				typeof invalidates === "function"
+					? invalidates({ data, variables })
+					: invalidates;
 
-			if (allInvalidates.length > 0) {
-				client.invalidateQueries({
+			if (invalidationKeys?.length) {
+				return client.invalidateQueries({
 					predicate: (query) =>
-						allInvalidates.some((queryKey) => matchQuery({ queryKey }, query)),
+						invalidationKeys.some((queryKey) =>
+							matchQuery({ queryKey }, query),
+						),
 				});
 			}
 		},
@@ -488,6 +486,44 @@ export async function clearAuthQueryState() {
 	});
 }
 
+export async function clearAllLocalData() {
+	if (environmentManager.isServer()) {
+		return;
+	}
+
+	const queryClient = getQueryClient();
+
+	// 1. Cancel all active queries first to prevent any pending fetches from completing and writing to the cache
+	await queryClient.cancelQueries();
+
+	// 2. Clear query client cache in memory
+	queryClient.clear();
+
+	// 3. Delete the persistent cache from IndexedDB
+	const persister = getBrowserPersister();
+	if (persister.removeClient) {
+		await persister.removeClient();
+	}
+
+	// 4. Clear the offline mutation queue
+	try {
+		const { clearMutationQueue } = await import("@/lib/mutation-queue");
+		await clearMutationQueue();
+	} catch (error) {
+		console.error("[Cleanup] Failed to clear mutation queue:", error);
+	}
+
+	// 5. Delete the SQLite database
+	try {
+		const { deleteLocalDb } = await import("@/lib/local-db/init");
+		await deleteLocalDb();
+	} catch (error) {
+		console.error("[Cleanup] Failed to delete SQLite database:", error);
+	}
+
+	console.info("[Cleanup] Complete local data cleanup finished.");
+}
+
 let context:
 	| {
 			queryClient: QueryClient;
@@ -495,6 +531,12 @@ let context:
 	| undefined;
 
 export function getContext() {
+	if (environmentManager.isServer()) {
+		return {
+			queryClient: getQueryClient(),
+		};
+	}
+
 	if (context) {
 		return context;
 	}

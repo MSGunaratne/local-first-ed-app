@@ -1,5 +1,5 @@
-import { useStore } from "@tanstack/react-form";
 import { useBlocker } from "@tanstack/react-router";
+import { useSelector } from "@tanstack/react-store";
 import { useEffect } from "react";
 import { useFormContext } from "@/hooks/use-form-context";
 import { m } from "@/paraglide/messages";
@@ -7,8 +7,8 @@ import { m } from "@/paraglide/messages";
 export function UnsavedChangesWarning() {
 	const form = useFormContext();
 
-	const isDirty = useStore(form.store, (s) => s.isDirty);
-	const isSubmitting = useStore(form.store, (s) => s.isSubmitting);
+	const isDirty = useSelector(form.store, (s) => s.isDirty);
+	const isSubmitting = useSelector(form.store, (s) => s.isSubmitting);
 
 	const shouldBlock = isDirty && !isSubmitting;
 

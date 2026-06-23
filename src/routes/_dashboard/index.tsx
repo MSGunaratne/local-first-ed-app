@@ -19,30 +19,35 @@ import {
 } from "@/components/ui/card";
 import { analyticsQueries } from "@/features/analytics/analytics.queries";
 import { LessonFeedbackInsights } from "@/features/analytics/components/lesson-feedback-insights";
-import { getSessionRole, isAdminRole } from "@/lib/auth/roles";
 import { m } from "@/paraglide/messages";
 import { Subject } from "@/types/lesson";
+import { asRole } from "@/types/user";
+import { fNumber } from "@/utils/format-number";
 
 const dashboardSearchSchema = z.object({
 	feedbackSubject: z
 		.enum([Subject.MATH, Subject.ENGLISH, Subject.ICT])
-		.optional(),
-	feedbackGrade: z.coerce.number().int().min(6).max(12).optional(),
+		.optional()
+		.catch(undefined),
+	feedbackGrade: z.coerce
+		.number()
+		.int()
+		.min(6)
+		.max(12)
+		.optional()
+		.catch(undefined),
 });
 
 export const Route = createFileRoute("/_dashboard/")({
-	validateSearch: (search) => {
-		const parsed = dashboardSearchSchema.safeParse(search);
-		return parsed.success ? parsed.data : {};
-	},
+	validateSearch: dashboardSearchSchema,
 	component: DashboardIndex,
 });
 
 function DashboardIndex() {
 	const { session } = Route.useRouteContext();
-	const role = getSessionRole(session);
+	const adminRole = asRole(session?.user?.role, "admin");
 
-	if (isAdminRole(role)) {
+	if (adminRole) {
 		return <AdminDashboardView />;
 	}
 
@@ -85,7 +90,7 @@ function AdminDashboardView() {
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<div className="text-4xl font-black">{kpis?.dau ?? 0}</div>
+						<div className="text-4xl font-black">{fNumber(kpis?.dau ?? 0)}</div>
 						<p className="text-sm font-medium text-muted-foreground mt-1">
 							Last 7 days
 						</p>
@@ -101,9 +106,11 @@ function AdminDashboardView() {
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<div className="text-4xl font-black">{kpis?.sessions ?? 0}</div>
+						<div className="text-4xl font-black">
+							{fNumber(kpis?.sessions ?? 0)}
+						</div>
 						<p className="text-sm font-medium text-muted-foreground mt-1">
-							Avg duration {kpis?.avgSessionDurationSeconds ?? 0}s
+							Avg duration {fNumber(kpis?.avgSessionDurationSeconds ?? 0)}s
 						</p>
 					</CardContent>
 				</Card>
@@ -118,10 +125,12 @@ function AdminDashboardView() {
 					</CardHeader>
 					<CardContent>
 						<div className="text-4xl font-black">
-							{kpis?.pageViewsPerSession ?? 0}
+							{fNumber(kpis?.pageViewsPerSession ?? 0, {
+								maximumFractionDigits: 2,
+							})}
 						</div>
 						<p className="text-sm font-medium text-primary-foreground/70 mt-1">
-							Total page views {kpis?.pageViews ?? 0}
+							Total page views {fNumber(kpis?.pageViews ?? 0)}
 						</p>
 					</CardContent>
 				</Card>
@@ -136,10 +145,13 @@ function AdminDashboardView() {
 					</CardHeader>
 					<CardContent>
 						<div className="text-4xl font-black">
-							{kpis?.avgLessonRating ?? 0}
+							{fNumber(kpis?.avgLessonRating ?? 0, {
+								minimumFractionDigits: 1,
+								maximumFractionDigits: 2,
+							})}
 						</div>
 						<p className="text-sm font-medium text-muted-foreground mt-1">
-							{kpis?.feedbackCount ?? 0} ratings
+							{fNumber(kpis?.feedbackCount ?? 0)} ratings
 						</p>
 					</CardContent>
 				</Card>
@@ -163,7 +175,7 @@ function AdminDashboardView() {
 							>
 								<p className="font-medium">{route.routeTemplate}</p>
 								<p className="text-sm text-muted-foreground">
-									{route.views} views
+									{fNumber(route.views)} views
 								</p>
 							</div>
 						))}
@@ -185,7 +197,7 @@ function AdminDashboardView() {
 							>
 								<p className="font-medium">{route.routeTemplate}</p>
 								<p className="text-sm text-muted-foreground">
-									{route.exits} exits
+									{fNumber(route.exits)} exits
 								</p>
 							</div>
 						))}

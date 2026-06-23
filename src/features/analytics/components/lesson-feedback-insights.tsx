@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SUBJECT_METADATA, Subject } from "@/types/lesson";
+import { fNumber } from "@/utils/format-number";
 
 type FeedbackItem = {
 	lessonId: string;
@@ -99,7 +100,9 @@ function LessonRatingList({
 							{item.gradeLevel && (
 								<Badge variant="secondary">Grade {item.gradeLevel}</Badge>
 							)}
-							<Badge variant="outline">{item.ratingCount} ratings</Badge>
+							<Badge variant="outline">
+								{fNumber(item.ratingCount)} ratings
+							</Badge>
 						</div>
 					</div>
 					<div className="mt-2 flex items-center gap-2">
@@ -107,7 +110,11 @@ function LessonRatingList({
 							{renderStars(item.avgRating)}
 						</div>
 						<span className="text-sm text-muted-foreground">
-							{item.avgRating.toFixed(2)} / 5
+							{fNumber(item.avgRating, {
+								minimumFractionDigits: 2,
+								maximumFractionDigits: 2,
+							})}{" "}
+							/ 5
 						</span>
 					</div>
 				</div>
