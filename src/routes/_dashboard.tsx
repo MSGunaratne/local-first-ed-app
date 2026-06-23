@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Suspense } from "react";
 import DashboardSidebar from "@/components/dashboard/sidebar";
 import { authQueries } from "@/features/auth/auth.queries";
+import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/_dashboard")({
 	beforeLoad: async ({ context: { queryClient }, location }) => {
@@ -39,7 +40,9 @@ function DashboardOutletFallback() {
 		<div className="flex min-h-[40vh] items-center justify-center px-4">
 			<div className="flex items-center gap-2 text-muted-foreground">
 				<div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-				<span className="text-sm font-medium">Loading content...</span>
+				<span className="text-sm font-medium">
+					{m.common_loading_content()}
+				</span>
 			</div>
 		</div>
 	);

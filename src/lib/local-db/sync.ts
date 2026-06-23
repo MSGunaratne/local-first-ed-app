@@ -126,8 +126,7 @@ export async function pullRecords(
 				const values = Object.values(snakeRecord).map(serializeValue);
 				const placeholders = columns.map(() => "?").join(", ");
 				const updateSet = columns
-					.filter((c) => c !== "id")
-					.map((c) => `${c} = excluded.${c}`)
+					.flatMap((c) => (c !== "id" ? [`${c} = excluded.${c}`] : []))
 					.join(", ");
 
 				const sql = `INSERT INTO ${table} (${columns.join(", ")})

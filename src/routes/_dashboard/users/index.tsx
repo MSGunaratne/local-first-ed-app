@@ -83,7 +83,7 @@ export const Route = createFileRoute("/_dashboard/users/")({
 const fallbackData: User[] = [];
 
 function DashboardListRoutePending() {
-	return <DataTableRoutePending message="Preparing users..." />;
+	return <DataTableRoutePending message={m.users_preparing()} />;
 }
 
 const columnHelper = createColumnHelper<User>();

@@ -21,6 +21,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SUBJECT_METADATA, Subject } from "@/types/lesson";
 import { fNumber } from "@/utils/format-number";
@@ -140,9 +141,9 @@ export function LessonFeedbackInsights({
 	);
 
 	const gradeOptions = useMemo(() => {
-		const grades = allItems
-			.map((item) => item.gradeLevel)
-			.filter((value): value is number => typeof value === "number");
+		const grades = allItems.flatMap((item) =>
+			typeof item.gradeLevel === "number" ? [item.gradeLevel] : [],
+		);
 
 		return Array.from(new Set(grades)).sort((a, b) => a - b);
 	}, [allItems]);
@@ -184,9 +185,34 @@ export function LessonFeedbackInsights({
 			</CardHeader>
 			<CardContent>
 				{isLoading ? (
-					<p className="text-sm text-muted-foreground">
-						Loading feedback insights...
-					</p>
+					<div className="space-y-4">
+						<div className="grid gap-3 md:grid-cols-2">
+							<Skeleton className="h-10 w-full" />
+							<Skeleton className="h-10 w-full" />
+						</div>
+						<div className="flex gap-2">
+							<Skeleton className="h-10 w-24" />
+							<Skeleton className="h-10 w-32" />
+							<Skeleton className="h-10 w-36" />
+						</div>
+						<div className="space-y-3 pt-2">
+							{["sk-1", "sk-2", "sk-3"].map((sk) => (
+								<div
+									key={sk}
+									className="rounded-lg border bg-card/70 p-3 space-y-2"
+								>
+									<div className="flex justify-between items-center gap-4">
+										<Skeleton className="h-5 w-1/3" />
+										<div className="flex gap-2">
+											<Skeleton className="h-5 w-16" />
+											<Skeleton className="h-5 w-20" />
+										</div>
+									</div>
+									<Skeleton className="h-4 w-28" />
+								</div>
+							))}
+						</div>
+					</div>
 				) : (
 					<Tabs defaultValue="top" className="w-full space-y-4">
 						<div className="grid gap-3 md:grid-cols-2">

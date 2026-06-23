@@ -46,9 +46,15 @@ function FieldErrorList({
 	errors: Array<string | { message: string } | undefined | null>;
 }) {
 	if (!errors.length) return null;
-	const formattedErrors = errors
-		.map((e) => (typeof e === "string" ? { message: e } : (e ?? undefined)))
-		.filter((e): e is { message: string } => e !== undefined);
+	const formattedErrors = errors.flatMap((e) => {
+		if (typeof e === "string") {
+			return [{ message: e }];
+		}
+		if (e != null) {
+			return [e];
+		}
+		return [];
+	});
 	return <FieldError errors={formattedErrors} />;
 }
 

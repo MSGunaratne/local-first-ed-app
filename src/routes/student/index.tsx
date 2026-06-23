@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
 	useNavigate,
@@ -15,6 +15,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StudentLessonCard } from "@/features/lessons/components/student-lesson-card";
 import { lessonQueries } from "@/features/lessons/lessons.queries";
@@ -41,11 +42,10 @@ function StudentDashboard() {
 	const currentSort = search.sort || "newest";
 	const sorting = [SORT_MAP[currentSort]];
 
-	const columnFilters = [];
-	if (search.subject) {
-		columnFilters.push({ id: "subject", value: search.subject });
-	}
-	columnFilters.push({ id: "isPublished", value: 1 });
+	const columnFilters = [
+		...(search.subject ? [{ id: "subject", value: search.subject }] : []),
+		{ id: "isPublished", value: 1 },
+	];
 
 	const lessonListQuery = lessonQueries.list({
 		pagination: { pageIndex: (search.page || 1) - 1, pageSize: 12 },
@@ -54,7 +54,10 @@ function StudentDashboard() {
 		globalFilter: search.q || "",
 	});
 
-	const { data, isError, isFetching, isPending } = useQuery(lessonListQuery);
+	const { data, isError, isFetching, isPending } = useQuery({
+		...lessonListQuery,
+		placeholderData: keepPreviousData,
+	});
 
 	const lessons = data?.data ?? [];
 	const meta = data?.meta;
@@ -144,15 +147,42 @@ function StudentDashboard() {
 				</TabsList>
 			</Tabs>
 
-			{(isPending || isFetching || showOfflineHint) && (
+			{showOfflineHint && (
 				<div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-					{isPending || isFetching
-						? m.student_loading_cached()
-						: m.student_offline_no_cache()}
+					{m.student_offline_no_cache()}
 				</div>
 			)}
 
-			{lessons.length === 0 ? (
+			{isPending && !data ? (
+				<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+					{["sk-1", "sk-2", "sk-3", "sk-4", "sk-5", "sk-6"].map((sk) => (
+						<div
+							key={sk}
+							className="rounded-xl border border-transparent bg-card/50 p-6 space-y-4 shadow-sm"
+						>
+							<div className="flex justify-between items-start">
+								<Skeleton className="h-5 w-20" />
+								<Skeleton className="h-9 w-9 rounded-full" />
+							</div>
+							<div className="space-y-2">
+								<Skeleton className="h-6 w-3/4" />
+								<Skeleton className="h-4 w-16" />
+							</div>
+							<div className="space-y-2 pt-2">
+								<Skeleton className="h-4 w-full" />
+								<Skeleton className="h-4 w-5/6" />
+							</div>
+							<div className="flex justify-between items-center pt-4">
+								<div className="flex gap-3">
+									<Skeleton className="h-4 w-16" />
+									<Skeleton className="h-4 w-20" />
+								</div>
+								<Skeleton className="h-9 w-16" />
+							</div>
+						</div>
+					))}
+				</div>
+			) : lessons.length === 0 ? (
 				<div className="flex flex-col items-center justify-center p-16 text-center rounded-xl border border-dashed bg-muted/20">
 					<div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
 						<BookOpen className="h-8 w-8 text-muted-foreground/50" />
@@ -174,7 +204,11 @@ function StudentDashboard() {
 					)}
 				</div>
 			) : (
-				<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+				<div
+					className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 transition-opacity duration-200 ${
+						isFetching ? "opacity-60 pointer-events-none" : "opacity-100"
+					}`}
+				>
 					{lessons.map((lesson) => (
 						<StudentLessonCard key={lesson.id} lesson={lesson} />
 					))}

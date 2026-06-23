@@ -17,6 +17,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { analyticsQueries } from "@/features/analytics/analytics.queries";
 import { LessonFeedbackInsights } from "@/features/analytics/components/lesson-feedback-insights";
 import { m } from "@/paraglide/messages";
@@ -90,7 +91,13 @@ function AdminDashboardView() {
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<div className="text-4xl font-black">{fNumber(kpis?.dau ?? 0)}</div>
+						{isLoading ? (
+							<Skeleton className="h-10 w-24 my-0.5" />
+						) : (
+							<div className="text-4xl font-black">
+								{fNumber(kpis?.dau ?? 0)}
+							</div>
+						)}
 						<p className="text-sm font-medium text-muted-foreground mt-1">
 							Last 7 days
 						</p>
@@ -106,11 +113,19 @@ function AdminDashboardView() {
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<div className="text-4xl font-black">
-							{fNumber(kpis?.sessions ?? 0)}
-						</div>
+						{isLoading ? (
+							<Skeleton className="h-10 w-24 my-0.5" />
+						) : (
+							<div className="text-4xl font-black">
+								{fNumber(kpis?.sessions ?? 0)}
+							</div>
+						)}
 						<p className="text-sm font-medium text-muted-foreground mt-1">
-							Avg duration {fNumber(kpis?.avgSessionDurationSeconds ?? 0)}s
+							Avg duration{" "}
+							{isLoading
+								? "..."
+								: fNumber(kpis?.avgSessionDurationSeconds ?? 0)}
+							s
 						</p>
 					</CardContent>
 				</Card>
@@ -124,13 +139,18 @@ function AdminDashboardView() {
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<div className="text-4xl font-black">
-							{fNumber(kpis?.pageViewsPerSession ?? 0, {
-								maximumFractionDigits: 2,
-							})}
-						</div>
+						{isLoading ? (
+							<Skeleton className="h-10 w-24 my-0.5 bg-primary-foreground/20" />
+						) : (
+							<div className="text-4xl font-black">
+								{fNumber(kpis?.pageViewsPerSession ?? 0, {
+									maximumFractionDigits: 2,
+								})}
+							</div>
+						)}
 						<p className="text-sm font-medium text-primary-foreground/70 mt-1">
-							Total page views {fNumber(kpis?.pageViews ?? 0)}
+							Total page views{" "}
+							{isLoading ? "..." : fNumber(kpis?.pageViews ?? 0)}
 						</p>
 					</CardContent>
 				</Card>
@@ -144,14 +164,18 @@ function AdminDashboardView() {
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<div className="text-4xl font-black">
-							{fNumber(kpis?.avgLessonRating ?? 0, {
-								minimumFractionDigits: 1,
-								maximumFractionDigits: 2,
-							})}
-						</div>
+						{isLoading ? (
+							<Skeleton className="h-10 w-24 my-0.5" />
+						) : (
+							<div className="text-4xl font-black">
+								{fNumber(kpis?.avgLessonRating ?? 0, {
+									minimumFractionDigits: 1,
+									maximumFractionDigits: 2,
+								})}
+							</div>
+						)}
 						<p className="text-sm font-medium text-muted-foreground mt-1">
-							{fNumber(kpis?.feedbackCount ?? 0)} ratings
+							{isLoading ? "..." : fNumber(kpis?.feedbackCount ?? 0)} ratings
 						</p>
 					</CardContent>
 				</Card>
@@ -168,17 +192,21 @@ function AdminDashboardView() {
 						</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-3">
-						{(data?.topRoutes ?? []).slice(0, 5).map((route) => (
-							<div
-								key={route.routeTemplate}
-								className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2"
-							>
-								<p className="font-medium">{route.routeTemplate}</p>
-								<p className="text-sm text-muted-foreground">
-									{fNumber(route.views)} views
-								</p>
-							</div>
-						))}
+						{isLoading
+							? ["sk-1", "sk-2", "sk-3", "sk-4", "sk-5"].map((sk) => (
+									<Skeleton key={sk} className="h-10 w-full rounded-lg" />
+								))
+							: (data?.topRoutes ?? []).slice(0, 5).map((route) => (
+									<div
+										key={route.routeTemplate}
+										className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2"
+									>
+										<p className="font-medium">{route.routeTemplate}</p>
+										<p className="text-sm text-muted-foreground">
+											{fNumber(route.views)} views
+										</p>
+									</div>
+								))}
 					</CardContent>
 				</Card>
 
@@ -189,18 +217,22 @@ function AdminDashboardView() {
 							Most common exit pages in the selected window.
 						</CardDescription>
 					</CardHeader>
-					<CardContent className="space-y-4">
-						{(data?.dropOffRoutes ?? []).slice(0, 5).map((route) => (
-							<div
-								key={route.routeTemplate}
-								className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2"
-							>
-								<p className="font-medium">{route.routeTemplate}</p>
-								<p className="text-sm text-muted-foreground">
-									{fNumber(route.exits)} exits
-								</p>
-							</div>
-						))}
+					<CardContent className="space-y-3">
+						{isLoading
+							? ["sk-1", "sk-2", "sk-3", "sk-4", "sk-5"].map((sk) => (
+									<Skeleton key={sk} className="h-10 w-full rounded-lg" />
+								))
+							: (data?.dropOffRoutes ?? []).slice(0, 5).map((route) => (
+									<div
+										key={route.routeTemplate}
+										className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2"
+									>
+										<p className="font-medium">{route.routeTemplate}</p>
+										<p className="text-sm text-muted-foreground">
+											{fNumber(route.exits)} exits
+										</p>
+									</div>
+								))}
 					</CardContent>
 				</Card>
 			</div>

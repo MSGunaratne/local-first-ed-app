@@ -254,6 +254,11 @@
   "curation_crop_mode_help": "Click and drag on the image to crop a diagram.",
   "curation_crop_insert_btn": "Insert Crop",
   "curation_crop_cancel_btn": "Cancel",
-  "curation_toast_inserted_image": "Inserted diagram/image into editor."
+  "curation_toast_inserted_image": "Inserted diagram/image into editor.",
+  "student_back_to_dashboard": "Back to Dashboard",
+  "student_hub": "Student Hub",
+  "common_loading_content": "Loading content...",
+  "common_share": "Share",
+  "users_preparing": "Preparing users..."
 }
 

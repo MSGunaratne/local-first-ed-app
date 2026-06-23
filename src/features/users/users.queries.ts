@@ -108,12 +108,11 @@ export const userMutations = {
 				if (previous) {
 					// Filter out File instances from the optimistic data since
 					// the cache stores resolved URLs, not File objects
-					const safeUpdate: Record<string, unknown> = {};
-					for (const [key, value] of Object.entries(updatedData)) {
-						if (!(value instanceof File)) {
-							safeUpdate[key] = value;
-						}
-					}
+					const safeUpdate = Object.fromEntries(
+						Object.entries(updatedData).filter(
+							([_, value]) => !(value instanceof File),
+						),
+					);
 					queryClient.setQueryData(detailKey, {
 						...previous,
 						...safeUpdate,

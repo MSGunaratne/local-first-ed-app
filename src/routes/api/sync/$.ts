@@ -19,16 +19,14 @@ export const Route = createFileRoute("/api/sync/$")({
 				request: Request;
 				params: { _: string };
 			}) => {
-				const scope = params._; // The splat parameter
+				const scope =
+					params._ || new URL(request.url).pathname.split("/").pop() || "";
 				const url = new URL(request.url);
 				const since = url.searchParams.get("since");
 
 				try {
-					const scope =
-						params._ || new URL(request.url).pathname.split("/").pop();
 					let data: any[] = [];
-					const sinceDate =
-						since && since !== "" ? new Date(since) : new Date(0);
+					const sinceDate = new Date(since || 0);
 
 					switch (scope) {
 						case "lessons":

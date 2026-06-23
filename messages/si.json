@@ -254,5 +254,10 @@
   "curation_crop_mode_help": "රූප සටහනක් කපා ගැනීමට රූපය මත ක්ලික් කර අදින්න.",
   "curation_crop_insert_btn": "ඇතුළු කරන්න",
   "curation_crop_cancel_btn": "අවලංගු කරන්න",
-  "curation_toast_inserted_image": "රූප සටහන සංස්කාරකයට ඇතුළත් කරන ලදී."
+  "curation_toast_inserted_image": "රූප සටහන සංස්කාරකයට ඇතුළත් කරන ලදී.",
+  "student_back_to_dashboard": "නැවත පුවරුවට",
+  "student_hub": "ශිෂ්‍ය කේන්ද්‍රය",
+  "common_loading_content": "අන්තර්ගතය පූරණය වෙමින් පවතී...",
+  "common_share": "බෙදාගන්න",
+  "users_preparing": "පරිශීලකයින් සූදානම් කරමින්..."
 }

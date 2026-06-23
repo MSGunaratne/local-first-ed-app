@@ -126,8 +126,9 @@ function LessonsPage() {
 	};
 
 	const confirmDelete = async () => {
-		const lessonIds = rowsToDelete.map((row) => row.original.id);
-		await Promise.all(lessonIds.map((id) => deleteMutation(id)));
+		await Promise.all(
+			rowsToDelete.map((row) => deleteMutation(row.original.id)),
+		);
 		setDeleteDialogOpen(false);
 		setRowsToDelete([]);
 	};
@@ -153,7 +154,7 @@ function LessonsPage() {
 			columnHelper.accessor("gradeLevel", {
 				header: m.lessons_table_grade(),
 				cell: ({ getValue }) => {
-					return <span>Grade {getValue<number>()}</span>;
+					return <span>{m.lessons_grade({ grade: getValue<number>() })}</span>;
 				},
 			}),
 			columnHelper.accessor("createdAt", {
@@ -222,7 +223,7 @@ function LessonsPage() {
 								}}
 							>
 								<Share className="mr-2 h-4 w-4" />
-								Share
+								{m.common_share()}
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								className="text-destructive"

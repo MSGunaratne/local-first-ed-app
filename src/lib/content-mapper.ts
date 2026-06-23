@@ -226,16 +226,9 @@ export async function findMatches(
 			// Extract and flatten keywords dynamically (supports flat/nested configurations)
 			let flatKeywords: string[] = [];
 			if (Array.isArray(item.keywords)) {
-				const flatten = (arr: unknown[]) => {
-					for (const val of arr) {
-						if (Array.isArray(val)) {
-							flatten(val);
-						} else if (typeof val === "string") {
-							flatKeywords.push(val);
-						}
-					}
-				};
-				flatten(item.keywords);
+				flatKeywords = item.keywords
+					.flat(Infinity)
+					.filter((val): val is string => typeof val === "string");
 			} else if (typeof item.keywords === "string") {
 				flatKeywords = [item.keywords];
 			}

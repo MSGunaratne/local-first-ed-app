@@ -1,9 +1,16 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { LessonForm } from "@/features/lessons/components/lesson-form";
+import { lazy, Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { lessonQueries } from "@/features/lessons/lessons.queries";
 import { ensureQueryDataAfterRestore } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
+
+const LessonForm = lazy(() =>
+	import("@/features/lessons/components/lesson-form").then((module) => ({
+		default: module.LessonForm,
+	})),
+);
 
 export const Route = createFileRoute("/_dashboard/lessons/$lessonId/edit")({
 	loader: async ({ context: { queryClient }, params }) => {
@@ -14,6 +21,19 @@ export const Route = createFileRoute("/_dashboard/lessons/$lessonId/edit")({
 	},
 	component: EditLessonPage,
 });
+
+function FormSkeleton() {
+	return (
+		<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+			<div className="md:col-span-1 h-[600px]">
+				<Skeleton className="h-full w-full rounded-xl" />
+			</div>
+			<div className="md:col-span-1 lg:col-span-2 space-y-4">
+				<Skeleton className="h-[600px] w-full rounded-xl" />
+			</div>
+		</div>
+	);
+}
 
 function EditLessonPage() {
 	const params = Route.useParams();
@@ -29,7 +49,9 @@ function EditLessonPage() {
 					{m.lessons_edit_description()}
 				</p>
 			</div>
-			<LessonForm mode="edit" initialValues={lesson} />
+			<Suspense fallback={<FormSkeleton />}>
+				<LessonForm mode="edit" initialValues={lesson} />
+			</Suspense>
 		</div>
 	);
 }

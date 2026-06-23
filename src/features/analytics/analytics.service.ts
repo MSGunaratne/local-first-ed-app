@@ -480,29 +480,37 @@ export async function getAdminAnalyticsOverview(lookbackDays: number) {
 			feedbackCount: Number(feedbackKpi?.feedbackCount ?? 0),
 			avgLessonRating: Number(Number(feedbackKpi?.avgRating ?? 0).toFixed(2)),
 		},
-		topRoutes: topRoutes
-			.filter(
-				(row) => typeof row.routeTemplate === "string" && row.routeTemplate,
-			)
-			.map((row) => ({
-				routeTemplate: row.routeTemplate as string,
-				views: Number(row.views ?? 0),
-			})),
-		dropOffRoutes: dropOffRoutes
-			.filter(
-				(row) => typeof row.routeTemplate === "string" && row.routeTemplate,
-			)
-			.map((row) => ({
-				routeTemplate: row.routeTemplate as string,
-				exits: Number(row.exits ?? 0),
-			})),
-		teacherInsights: teacherInsights
-			.filter((row) => typeof row.teacherId === "string" && row.teacherId)
-			.map((row) => ({
-				teacherId: row.teacherId as string,
-				sessions: Number(row.sessions ?? 0),
-				avgDurationSeconds: Math.round(Number(row.avgDuration ?? 0)),
-			})),
+		topRoutes: topRoutes.flatMap((row) =>
+			typeof row.routeTemplate === "string" && row.routeTemplate
+				? [
+						{
+							routeTemplate: row.routeTemplate,
+							views: Number(row.views ?? 0),
+						},
+					]
+				: [],
+		),
+		dropOffRoutes: dropOffRoutes.flatMap((row) =>
+			typeof row.routeTemplate === "string" && row.routeTemplate
+				? [
+						{
+							routeTemplate: row.routeTemplate,
+							exits: Number(row.exits ?? 0),
+						},
+					]
+				: [],
+		),
+		teacherInsights: teacherInsights.flatMap((row) =>
+			typeof row.teacherId === "string" && row.teacherId
+				? [
+						{
+							teacherId: row.teacherId,
+							sessions: Number(row.sessions ?? 0),
+							avgDurationSeconds: Math.round(Number(row.avgDuration ?? 0)),
+						},
+					]
+				: [],
+		),
 		feedbackInsights: {
 			topRatedLessons: topRatedLessons.map((item) => ({
 				lessonId: item.lessonId,
@@ -520,17 +528,21 @@ export async function getAdminAnalyticsOverview(lookbackDays: number) {
 				avgRating: Number(Number(item.avgRating ?? 0).toFixed(2)),
 				ratingCount: Number(item.ratingCount ?? 0),
 			})),
-			recentComments: recentComments
-				.filter((item) => typeof item.comment === "string" && item.comment)
-				.map((item) => ({
-					lessonId: item.lessonId,
-					lessonTitle: item.lessonTitle ?? "Untitled lesson",
-					subject: item.subject ?? null,
-					gradeLevel: item.gradeLevel ?? null,
-					rating: item.rating,
-					comment: item.comment as string,
-					createdAt: item.createdAt,
-				})),
+			recentComments: recentComments.flatMap((item) =>
+				typeof item.comment === "string" && item.comment
+					? [
+							{
+								lessonId: item.lessonId,
+								lessonTitle: item.lessonTitle ?? "Untitled lesson",
+								subject: item.subject ?? null,
+								gradeLevel: item.gradeLevel ?? null,
+								rating: item.rating,
+								comment: item.comment,
+								createdAt: item.createdAt,
+							},
+						]
+					: [],
+			),
 		},
 	};
 }

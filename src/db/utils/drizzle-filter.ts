@@ -151,14 +151,13 @@ export function buildDrizzleFilter<T extends SQLiteTable>(
 	const conditions: SQL[] = [];
 
 	if (columnFilters?.length) {
-		const itemConditions = columnFilters
-			.map((item) => {
-				const column = (table as unknown as Record<string, Column>)[item.id];
-				const { operator, value } = normalizeFilterValue(item.value);
-				const operatorFn = operatorMap[operator];
-				return column && operatorFn ? operatorFn(column, value) : undefined;
-			})
-			.filter((c): c is SQL => !!c);
+		const itemConditions = columnFilters.flatMap((item) => {
+			const column = (table as unknown as Record<string, Column>)[item.id];
+			const { operator, value } = normalizeFilterValue(item.value);
+			const operatorFn = operatorMap[operator];
+			const cond = column && operatorFn ? operatorFn(column, value) : undefined;
+			return cond ? [cond] : [];
+		});
 
 		if (itemConditions.length > 0) {
 			// TanStack Table uses AND for column filters by default
@@ -177,67 +176,72 @@ export function buildDrizzleFilter<T extends SQLiteTable>(
 		const termConditions = globalFilterValues.map((value, termIdx) => {
 			const escapedPattern = escapeContains(value);
 
-			const fieldConditions = quickFilterConfig.fields
-				.map((config, fieldIdx) => {
-					if ("field" in config) {
-						const column = (table as unknown as Record<string, Column>)[
-							config.field as string
-						];
-						if (!column) return undefined;
+			const fieldConditions = quickFilterConfig.fields.flatMap(
+				(config, fieldIdx) => {
+					const getCondition = (): SQL | undefined => {
+						if ("field" in config) {
+							const column = (table as unknown as Record<string, Column>)[
+								config.field as string
+							];
+							if (!column) return undefined;
 
-						if (config.cast) {
-							return like(castToText(column), escapedPattern);
-						}
-
-						switch (config.type) {
-							case DataType.String:
-								return like(column, escapedPattern);
-							case DataType.Number:
-							case DataType.Date:
+							if (config.cast) {
 								return like(castToText(column), escapedPattern);
-							case DataType.Boolean: {
-								const v = value.toLowerCase();
-								if (v === "true") return eq(column, true);
-								if (v === "false") return eq(column, false);
-								return undefined;
 							}
-							default:
-								return undefined;
+
+							switch (config.type) {
+								case DataType.String:
+									return like(column, escapedPattern);
+								case DataType.Number:
+								case DataType.Date:
+									return like(castToText(column), escapedPattern);
+								case DataType.Boolean: {
+									const v = value.toLowerCase();
+									if (v === "true") return eq(column, true);
+									if (v === "false") return eq(column, false);
+									return undefined;
+								}
+								default:
+									return undefined;
+							}
 						}
-					}
 
-					// Related table search using EXISTS subquery
-					if ("related" in config) {
-						const relAliased = alias(
-							config.related,
-							`rel_${termIdx}_${fieldIdx}`,
-						);
+						// Related table search using EXISTS subquery
+						if ("related" in config) {
+							const relAliased = alias(
+								config.related,
+								`rel_${termIdx}_${fieldIdx}`,
+							);
 
-						const onCondition = config.on(table, relAliased);
-						if (!onCondition) return undefined;
+							const onCondition = config.on(table, relAliased);
+							if (!onCondition) return undefined;
 
-						const anyConds = config.any
-							.map((fn) => fn(relAliased, escapedPattern))
-							.filter((c): c is SQL => !!c);
+							const anyConds = config.any.flatMap((fn) => {
+								const cond = fn(relAliased, escapedPattern);
+								return cond ? [cond] : [];
+							});
 
-						if (anyConds.length === 0) return undefined;
+							if (anyConds.length === 0) return undefined;
 
-						const whereExpr = and(
-							onCondition,
-							anyConds.length === 1 ? anyConds[0] : or(...anyConds),
-						);
+							const whereExpr = and(
+								onCondition,
+								anyConds.length === 1 ? anyConds[0] : or(...anyConds),
+							);
 
-						const subquery = db
-							.select({ one: sql`1` })
-							.from(relAliased as any)
-							.where(whereExpr);
+							const subquery = db
+								.select({ one: sql`1` })
+								.from(relAliased as any)
+								.where(whereExpr);
 
-						return exists(subquery);
-					}
+							return exists(subquery);
+						}
 
-					return undefined;
-				})
-				.filter((c): c is SQL => !!c);
+						return undefined;
+					};
+					const cond = getCondition();
+					return cond ? [cond] : [];
+				},
+			);
 
 			// Within a single term, match ANY field (OR)
 			return fieldConditions.length > 0 ? or(...fieldConditions) : undefined;

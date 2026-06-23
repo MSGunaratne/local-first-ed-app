@@ -72,8 +72,20 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 		(state) => state.eventsBuffer,
 	);
 
+	const isLocalhost = useMemo(() => {
+		if (typeof window === "undefined") return false;
+		const hostname = window.location.hostname;
+		return (
+			hostname === "localhost" ||
+			hostname === "127.0.0.1" ||
+			hostname === "[::1]" ||
+			hostname.endsWith(".localhost")
+		);
+	}, []);
+
 	// 1. Sync Actor Context
 	useEffect(() => {
+		if (isLocalhost) return;
 		const role = authSession?.user.role;
 		const authState = authSession ? "authenticated" : "anonymous";
 		const actorType =
@@ -97,11 +109,11 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 					? authSession.user.id
 					: null,
 		});
-	}, [authSession]);
+	}, [authSession, isLocalhost]);
 
 	// 2. Initial Session Load
 	useEffect(() => {
-		if (typeof window === "undefined") return;
+		if (typeof window === "undefined" || isLocalhost) return;
 
 		const start = async () => {
 			if (analyticsStore.state.sessionId) return; // Already initialized
@@ -145,10 +157,11 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 		};
 
 		void start();
-	}, [router]);
+	}, [router, isLocalhost]);
 
 	// 3. Router Subscription
 	useEffect(() => {
+		if (isLocalhost) return;
 		const unsubscribe = router.subscribe("onResolved", () => {
 			const matches = router.state.matches;
 			const leafMatch = matches[matches.length - 1];
@@ -181,12 +194,13 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 		});
 
 		return unsubscribe;
-	}, [router]);
+	}, [router, isLocalhost]);
 
 	// 4. Reliable Delivery mechanism
 	const fetchLaterAbortController = useRef<AbortController | null>(null);
 
 	const flushIngest = useEvent((isSessionEnding: boolean) => {
+		if (isLocalhost) return;
 		const payload = getIngestPayload(isSessionEnding);
 		if (
 			!payload ||
@@ -232,7 +246,12 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 
 	// Schedule deferred fetchLater
 	useEffect(() => {
-		if (typeof window === "undefined" || !("fetchLater" in window)) return;
+		if (
+			typeof window === "undefined" ||
+			!("fetchLater" in window) ||
+			isLocalhost
+		)
+			return;
 		if (!sessionId) return;
 
 		// When store changes, replace the deferred beacon
@@ -250,11 +269,11 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 				activateAfter: 5 * 60 * 1000, // 5 minutes max delay
 			});
 		}
-	}, [sessionId, eventsBuffer]);
+	}, [sessionId, eventsBuffer, isLocalhost]);
 
 	// 5. Lifecycle and Visibility
 	useEffect(() => {
-		if (typeof window === "undefined") return;
+		if (typeof window === "undefined" || isLocalhost) return;
 
 		const onActivity = () => markActive();
 
@@ -290,31 +309,34 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 			document.removeEventListener("visibilitychange", onVisibilityChange);
 			window.removeEventListener("pagehide", onPageHide);
 		};
-	}, [flushIngest]);
+	}, [flushIngest, isLocalhost]);
 
 	// Buffer auto-flush
 	useEffect(() => {
+		if (isLocalhost) return;
 		if (eventsBuffer.length >= 20) {
 			flushIngest(false);
 		}
-	}, [eventsBuffer.length, flushIngest]);
+	}, [eventsBuffer.length, flushIngest, isLocalhost]);
 
 	// Global window tracking
 	useEffect(() => {
+		if (isLocalhost) return;
 		window._trackEvent = pushEvent;
 		return () => {
 			delete window._trackEvent;
 		};
-	}, []);
+	}, [isLocalhost]);
 
 	const contextValue = useMemo<AnalyticsContextValue>(
 		() => ({
 			trackEvent: (type, payload) => {
+				if (isLocalhost) return;
 				pushEvent(type, { payloadJson: payload });
 			},
-			sessionId,
+			sessionId: isLocalhost ? null : sessionId,
 		}),
-		[sessionId],
+		[sessionId, isLocalhost],
 	);
 
 	return (
