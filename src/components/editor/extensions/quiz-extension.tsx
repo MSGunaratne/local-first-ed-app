@@ -1,12 +1,6 @@
 import { mergeAttributes, Node, ReactNodeViewRenderer } from "@tiptap/react";
 import { QuizComponent } from "./quiz-component";
 
-export interface QuizAttributes {
-	question: string;
-	options: string[];
-	correctAnswer: number;
-}
-
 declare module "@tiptap/core" {
 	interface Commands<ReturnType> {
 		quiz: {
@@ -17,10 +11,10 @@ declare module "@tiptap/core" {
 
 export const Quiz = Node.create({
 	name: "quiz",
-
 	group: "block",
-
 	atom: true,
+	selectable: true,
+	draggable: true,
 
 	addAttributes() {
 		return {

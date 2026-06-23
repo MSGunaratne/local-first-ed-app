@@ -20,6 +20,7 @@ import { Route as DashboardLessonsIndexRouteImport } from './routes/_dashboard/l
 import { Route as StudentLessonsLessonIdRouteImport } from './routes/student/lessons/$lessonId'
 import { Route as ApiSyncSplatRouteImport } from './routes/api/sync/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiAnalyticsIngestRouteImport } from './routes/api/analytics/ingest'
 import { Route as DashboardUsersCreateRouteImport } from './routes/_dashboard/users/create'
 import { Route as DashboardLessonsCreateRouteImport } from './routes/_dashboard/lessons/create'
 import { Route as DashboardUsersUserIdEditRouteImport } from './routes/_dashboard/users/$userId.edit'
@@ -79,6 +80,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAnalyticsIngestRoute = ApiAnalyticsIngestRouteImport.update({
+  id: '/api/analytics/ingest',
+  path: '/api/analytics/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardUsersCreateRoute = DashboardUsersCreateRouteImport.update({
   id: '/users/create',
   path: '/users/create',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/student/': typeof StudentIndexRoute
   '/lessons/create': typeof DashboardLessonsCreateRoute
   '/users/create': typeof DashboardUsersCreateRoute
+  '/api/analytics/ingest': typeof ApiAnalyticsIngestRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/sync/$': typeof ApiSyncSplatRoute
   '/student/lessons/$lessonId': typeof StudentLessonsLessonIdRoute
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/student': typeof StudentIndexRoute
   '/lessons/create': typeof DashboardLessonsCreateRoute
   '/users/create': typeof DashboardUsersCreateRoute
+  '/api/analytics/ingest': typeof ApiAnalyticsIngestRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/sync/$': typeof ApiSyncSplatRoute
   '/student/lessons/$lessonId': typeof StudentLessonsLessonIdRoute
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/student/': typeof StudentIndexRoute
   '/_dashboard/lessons/create': typeof DashboardLessonsCreateRoute
   '/_dashboard/users/create': typeof DashboardUsersCreateRoute
+  '/api/analytics/ingest': typeof ApiAnalyticsIngestRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/sync/$': typeof ApiSyncSplatRoute
   '/student/lessons/$lessonId': typeof StudentLessonsLessonIdRoute
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/student/'
     | '/lessons/create'
     | '/users/create'
+    | '/api/analytics/ingest'
     | '/api/auth/$'
     | '/api/sync/$'
     | '/student/lessons/$lessonId'
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/student'
     | '/lessons/create'
     | '/users/create'
+    | '/api/analytics/ingest'
     | '/api/auth/$'
     | '/api/sync/$'
     | '/student/lessons/$lessonId'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/student/'
     | '/_dashboard/lessons/create'
     | '/_dashboard/users/create'
+    | '/api/analytics/ingest'
     | '/api/auth/$'
     | '/api/sync/$'
     | '/student/lessons/$lessonId'
@@ -207,6 +219,7 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
   StudentRoute: typeof StudentRouteWithChildren
+  ApiAnalyticsIngestRoute: typeof ApiAnalyticsIngestRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiSyncSplatRoute: typeof ApiSyncSplatRoute
 }
@@ -290,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/analytics/ingest': {
+      id: '/api/analytics/ingest'
+      path: '/api/analytics/ingest'
+      fullPath: '/api/analytics/ingest'
+      preLoaderRoute: typeof ApiAnalyticsIngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_dashboard/users/create': {
       id: '/_dashboard/users/create'
       path: '/users/create'
@@ -363,6 +383,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
   StudentRoute: StudentRouteWithChildren,
+  ApiAnalyticsIngestRoute: ApiAnalyticsIngestRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiSyncSplatRoute: ApiSyncSplatRoute,
 }

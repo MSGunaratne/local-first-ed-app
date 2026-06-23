@@ -8,6 +8,7 @@ import { navConfig } from "@/config/dashboard-nav";
 import BetterAuthHeader from "@/integrations/better-auth/header-user";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import ThemeToggle from "@/components/ThemeToggle";
 import { NavItem } from "./nav-item";
 import { useSidebar } from "./sidebar-context";
 
@@ -98,11 +99,12 @@ export function Sidebar({
 				<div className="border-t p-2">
 					<div
 						className={cn(
-							"flex flex-col gap-1",
+							"flex flex-col gap-2",
 							isCollapsed ? "items-center" : "items-stretch",
 						)}
 					>
 						<ParaglideLocaleSwitcher isCollapsed={isCollapsed} />
+						<ThemeToggle isCollapsed={isCollapsed} />
 						<BetterAuthHeader session={session} />
 					</div>
 				</div>

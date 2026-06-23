@@ -3,7 +3,8 @@ import { ExpirationPlugin } from "workbox-expiration";
 import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 import { offlineFallback } from "workbox-recipes";
 import { NavigationRoute, registerRoute } from "workbox-routing";
-import { CacheFirst, NetworkFirst } from "workbox-strategies";
+import { CacheFirst, NetworkFirst, NetworkOnly } from "workbox-strategies";
+import { BackgroundSyncPlugin } from "workbox-background-sync";
 
 declare let self: ServiceWorkerGlobalScope;
 const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";
@@ -87,6 +88,22 @@ registerRoute(
 				maxAgeSeconds: 24 * 60 * 60, // 24 hours
 			}),
 		],
+	}),
+);
+
+// ----------------------------------------------------------------------
+// Analytics Ingestion: NetworkOnly + Background Sync
+// ----------------------------------------------------------------------
+
+const bgSyncPlugin = new BackgroundSyncPlugin("analytics-queue", {
+	maxRetentionTime: 24 * 60, // Retry for max of 24 Hours (specified in minutes)
+});
+
+registerRoute(
+	({ url, request }) =>
+		request.method === "POST" && url.pathname === "/api/analytics/ingest",
+	new NetworkOnly({
+		plugins: [bgSyncPlugin],
 	}),
 );
 

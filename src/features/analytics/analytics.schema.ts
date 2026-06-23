@@ -216,12 +216,16 @@ export type LessonFeedback = InferSelectModel<typeof lessonFeedback>;
 
 export const analyticsSessionInsertSchema = createInsertSchema(
 	analyticsSessions,
+	{
+		startedAt: z.coerce.date(),
+		endedAt: z.coerce.date().optional().nullable(),
+	},
 ).omit({
-	id: true,
 	createdAt: true,
 });
 
 export const analyticsEventInsertSchema = createInsertSchema(analyticsEvents, {
+	occurredAt: z.coerce.date(),
 	payloadJson: z.record(z.string(), z.unknown()).optional(),
 }).omit({
 	id: true,
@@ -260,7 +264,8 @@ export type AnalyticsSessionInsert = z.infer<
 >;
 export type AnalyticsEventInsert = z.infer<typeof analyticsEventInsertSchema>;
 export type AnalyticsBatchIngest = z.infer<typeof analyticsBatchIngestSchema>;
+export type LessonFeedbackInput = z.infer<typeof lessonFeedbackInputSchema>;
+//not in use
 export type AnalyticsOverviewInput = z.infer<
 	typeof analyticsOverviewInputSchema
 >;
-export type LessonFeedbackInput = z.infer<typeof lessonFeedbackInputSchema>;

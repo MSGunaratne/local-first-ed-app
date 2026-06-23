@@ -14,7 +14,6 @@ import {
 	setLocalStorageItem,
 } from "../client/browser-env";
 import { getDailyPseudonymousActorId } from "../client/pseudonymous-id";
-import { toRouteTemplate } from "../client/route-template";
 
 type LessonFeedbackPromptProps = {
 	lessonId: string;
@@ -38,8 +37,13 @@ export function LessonFeedbackPrompt({
 	lessonTitle,
 	openOnComplete = false,
 }: LessonFeedbackPromptProps) {
-	const pathname = useRouterState({
-		select: (state) => state.location.pathname,
+	const routeTemplate = useRouterState({
+		select: (state) => {
+			const leafMatch = state.matches[state.matches.length - 1];
+			return leafMatch && leafMatch.routeId !== "__root__"
+				? leafMatch.routeId
+				: "/";
+		},
 	});
 	const [isOpen, setIsOpen] = useState(false);
 	const [rating, setRating] = useState<number>(0);
@@ -102,7 +106,7 @@ export function LessonFeedbackPrompt({
 			pseudonymousActorId,
 			rating,
 			comment: comment.trim() || undefined,
-			routeTemplate: toRouteTemplate(pathname),
+			routeTemplate,
 		});
 
 		setLocalStorageItem(submittedKey, "1");

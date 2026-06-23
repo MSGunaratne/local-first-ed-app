@@ -35,7 +35,7 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 		select: (routerState) => routerState.location?.pathname ?? "",
 	});
 
-	const matchesPath = (candidatePath: string | undefined) => {
+	const matchesPath = (candidatePath: string | undefined, exact?: boolean) => {
 		if (!candidatePath) {
 			return false;
 		}
@@ -44,13 +44,17 @@ export function NavItem({ item, depth = 0 }: NavItemProps) {
 			return pathname === "/";
 		}
 
+		if (exact) {
+			return pathname === candidatePath;
+		}
+
 		return (
 			pathname === candidatePath || pathname.startsWith(`${candidatePath}/`)
 		);
 	};
 
 	const isActive = useRouterState({
-		select: () => matchesPath(item.path),
+		select: () => matchesPath(item.path, item.exact),
 	});
 	const isGroupActive = useRouterState({
 		select: () =>

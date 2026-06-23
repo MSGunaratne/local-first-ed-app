@@ -1,7 +1,4 @@
-import {
-	ingestAnalyticsBatchFn,
-	submitLessonFeedbackFn,
-} from "@/features/analytics/analytics.actions";
+import { submitLessonFeedbackFn } from "@/features/analytics/analytics.actions";
 import {
 	createClassFn,
 	deleteClassFn,
@@ -90,9 +87,6 @@ export function registerAllMutations() {
 	});
 
 	// Analytics
-	registerServerFn("ingestAnalyticsBatch", async (payload) => {
-		return ingestAnalyticsBatchFn({ data: payload });
-	});
 
 	registerServerFn("submitLessonFeedback", async (payload) => {
 		return submitLessonFeedbackFn({ data: payload });

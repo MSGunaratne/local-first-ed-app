@@ -1,37 +1,45 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { createContext, useContext, useEffect, useMemo, useRef } from "react";
-import { uuidv7 } from "uuidv7";
+import { useSelector } from "@tanstack/react-store";
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+} from "react";
 import { authQueries } from "@/features/auth/auth.queries";
 import { Role } from "@/types/user";
-import { analyticsMutations } from "../analytics.queries";
-import type {
-	AnalyticsEventInsert,
-	AnalyticsSessionInsert,
-} from "../analytics.schema";
-import { getBrowserUserAgent } from "../client/browser-env";
+import type { AnalyticsEventInsert } from "../analytics.schema";
+import {
+	analyticsStore,
+	clearEventsBuffer,
+	getIngestPayload,
+	initSession,
+	markActive,
+	pushEvent,
+	setActorContext,
+	setCurrentRoute,
+	updateIntervalState,
+} from "../client/analytics-store";
 import { getDailyPseudonymousActorId } from "../client/pseudonymous-id";
-import { toRouteTemplate } from "../client/route-template";
 
-// ----------------------------------------------------------------------
-// Types
-// ----------------------------------------------------------------------
-
-type SessionRuntime = {
-	id: string;
-	startedAtMs: number;
-	lastActivityAtMs: number;
-	activeSeconds: number;
-	idleSeconds: number;
-	entryRoute: string;
-};
-
-type ActorContext = {
-	actorType: "anonymous" | "teacher" | "admin";
-	authState: "anonymous" | "authenticated";
-	roleBucket: AnalyticsSessionInsert["roleBucket"];
-	teacherId: string | null;
-};
+// Add experimental window.fetchLater type
+declare global {
+	interface Window {
+		fetchLater?: (
+			url: string,
+			init?: RequestInit & { activateAfter?: number },
+		) => { activated: boolean };
+	}
+	interface Window {
+		_trackEvent?: (
+			eventType: AnalyticsEventInsert["eventType"],
+			overrides?: Partial<AnalyticsEventInsert>,
+		) => void;
+	}
+}
 
 interface AnalyticsContextValue {
 	trackEvent: (
@@ -43,69 +51,28 @@ interface AnalyticsContextValue {
 
 const AnalyticsContext = createContext<AnalyticsContextValue | null>(null);
 
-// ----------------------------------------------------------------------
-// Utilities
-// ----------------------------------------------------------------------
-
-function detectDeviceClass(): "mobile" | "tablet" | "desktop" | "unknown" {
-	const ua = getBrowserUserAgent().toLowerCase();
-	if (/ipad|tablet/.test(ua)) return "tablet";
-	if (/mobi|android|iphone/.test(ua)) return "mobile";
-	if (ua.length > 0) return "desktop";
-	return "unknown";
+function useEvent<T extends (...args: any[]) => any>(handler: T): T {
+	const handlerRef = useRef<T>(handler);
+	useEffect(() => {
+		handlerRef.current = handler;
+	});
+	return useCallback((...args: Parameters<T>) => {
+		return handlerRef.current(...args);
+	}, []) as T;
 }
 
-function detectOsFamily(): string {
-	const ua = getBrowserUserAgent().toLowerCase();
-	if (ua.includes("windows")) return "Windows";
-	if (ua.includes("android")) return "Android";
-	if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ios"))
-		return "iOS";
-	if (ua.includes("mac os") || ua.includes("macintosh")) return "macOS";
-	if (ua.includes("linux")) return "Linux";
-	return "Unknown";
-}
-
-function detectBrowserFamily(): string {
-	const ua = getBrowserUserAgent().toLowerCase();
-	if (ua.includes("edg/")) return "Edge";
-	if (ua.includes("firefox/")) return "Firefox";
-	if (ua.includes("safari/") && !ua.includes("chrome/")) return "Safari";
-	if (ua.includes("chrome/")) return "Chrome";
-	return "Unknown";
-}
-
-// ----------------------------------------------------------------------
-// Provider
-// ----------------------------------------------------------------------
+const INGEST_URL = "/api/analytics/ingest";
 
 export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 	const router = useRouter();
-	const sessionRuntimeRef = useRef<SessionRuntime | null>(null);
-	const actorIdRef = useRef<string>("pending");
-	const routeRef = useRef<string>("/");
-	const eventsRef = useRef<AnalyticsEventInsert[]>([]);
-	const flushedOnExitRef = useRef(false);
-
 	const { data: authSession } = useQuery(authQueries.session());
-	const { mutate: ingestMutation } = useMutation(
-		analyticsMutations.ingestBatch(),
+	const sessionId = useSelector(analyticsStore, (state) => state.sessionId);
+	const eventsBuffer = useSelector(
+		analyticsStore,
+		(state) => state.eventsBuffer,
 	);
-	const ingestMutateRef = useRef(ingestMutation);
 
-	const actorContextRef = useRef<ActorContext>({
-		actorType: "anonymous",
-		authState: "anonymous",
-		roleBucket: null,
-		teacherId: null,
-	});
-
-	// Sync mutation ref for use in stable callbacks
-	useEffect(() => {
-		ingestMutateRef.current = ingestMutation;
-	}, [ingestMutation]);
-
-	// Sync actor context from auth session
+	// 1. Sync Actor Context
 	useEffect(() => {
 		const role = authSession?.user.role;
 		const authState = authSession ? "authenticated" : "anonymous";
@@ -121,7 +88,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 				? role
 				: null;
 
-		actorContextRef.current = {
+		setActorContext({
 			actorType,
 			authState,
 			roleBucket,
@@ -129,213 +96,225 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 				role === Role.TEACHER && typeof authSession?.user.id === "string"
 					? authSession.user.id
 					: null,
-		};
+		});
 	}, [authSession]);
 
-	// Core Tracking Logic
+	// 2. Initial Session Load
 	useEffect(() => {
 		if (typeof window === "undefined") return;
 
-		function flushBufferedEvents() {
-			if (eventsRef.current.length === 0) return;
-			const batch = [...eventsRef.current];
-			eventsRef.current = [];
-			ingestMutateRef.current({ sessions: [], events: batch });
-		}
+		const start = async () => {
+			if (analyticsStore.state.sessionId) return; // Already initialized
 
-		function pushEvent(
-			eventType: AnalyticsEventInsert["eventType"],
-			overrides?: Partial<AnalyticsEventInsert>,
-		) {
-			const runtime = sessionRuntimeRef.current;
-			if (!runtime) return;
+			const matches = router.state.matches;
+			const initialMatch = matches[matches.length - 1];
+			const route =
+				initialMatch && initialMatch.routeId !== "__root__"
+					? initialMatch.routeId
+					: "/";
 
-			const context = actorContextRef.current;
+			const actorId = await getDailyPseudonymousActorId();
+			initSession(actorId, route);
 
-			eventsRef.current.push({
-				sessionId: runtime.id,
-				idempotencyKey: uuidv7(),
-				pseudonymousActorId: actorIdRef.current,
-				actorType: context.actorType,
-				authState: context.authState,
-				teacherId: context.teacherId,
-				eventType,
-				occurredAt: new Date(),
-				routeTemplate: routeRef.current,
-				referrerTemplate: null,
-				lessonId: null,
-				classId: null,
-				engagementSeconds: null,
-				payloadJson: undefined,
-				...overrides,
-			});
-
-			if (eventsRef.current.length >= 20) {
-				flushBufferedEvents();
-			}
-		}
-
-		function endSession() {
-			if (flushedOnExitRef.current) return;
-			const runtime = sessionRuntimeRef.current;
-			if (!runtime) return;
-
-			const endedAtMs = Date.now();
-			const durationSeconds = Math.max(
-				1,
-				Math.floor((endedAtMs - runtime.startedAtMs) / 1000),
-			);
-			const context = actorContextRef.current;
-			const sessionRow: AnalyticsSessionInsert = {
-				pseudonymousActorId: actorIdRef.current,
-				actorType: context.actorType,
-				authState: context.authState,
-				roleBucket: context.roleBucket,
-				teacherId: context.teacherId,
-				entryRoute: runtime.entryRoute,
-				exitRoute: routeRef.current,
-				deviceClass: detectDeviceClass(),
-				osFamily: detectOsFamily(),
-				browserFamily: detectBrowserFamily(),
-				startedAt: new Date(runtime.startedAtMs),
-				endedAt: new Date(endedAtMs),
-				durationSeconds,
-				activeSeconds: runtime.activeSeconds,
-				idleSeconds: runtime.idleSeconds,
-			};
-
-			pushEvent("session_end", {
-				engagementSeconds: runtime.activeSeconds,
-				payloadJson: {
-					durationSeconds,
-					activeSeconds: runtime.activeSeconds,
-					idleSeconds: runtime.idleSeconds,
-					reason: "lifecycle_end",
-				},
-			});
-
-			const pendingEvents = [...eventsRef.current];
-			eventsRef.current = [];
-			ingestMutateRef.current({
-				sessions: [sessionRow],
-				events: pendingEvents,
-			});
-			flushedOnExitRef.current = true;
-		}
-
-		const startSession = async () => {
-			if (typeof window !== "undefined") {
-				routeRef.current = toRouteTemplate(window.location.pathname);
-			}
-			actorIdRef.current = await getDailyPseudonymousActorId();
-			const now = Date.now();
-			sessionRuntimeRef.current = {
-				id: uuidv7(),
-				startedAtMs: now,
-				lastActivityAtMs: now,
-				activeSeconds: 0,
-				idleSeconds: 0,
-				entryRoute: routeRef.current,
-			};
-
-			flushedOnExitRef.current = false;
+			const state = analyticsStore.state;
 			pushEvent("session_start", {
 				payloadJson: {
-					deviceClass: detectDeviceClass(),
-					osFamily: detectOsFamily(),
-					browserFamily: detectBrowserFamily(),
+					deviceClass: state.deviceClass,
+					osFamily: state.osFamily,
+					browserFamily: state.browserFamily,
 				},
 			});
-		};
 
-		void startSession();
-
-		// Activity tracking
-		const markActive = () => {
-			const runtime = sessionRuntimeRef.current;
-			if (!runtime) return;
-			runtime.lastActivityAtMs = Date.now();
-		};
-
-		// Global heartbeats
-		const heartbeatInterval = window.setInterval(() => {
-			const runtime = sessionRuntimeRef.current;
-			if (!runtime) return;
-
-			const nowMs = Date.now();
-			const idleForMs = nowMs - runtime.lastActivityAtMs;
-			if (idleForMs > 60_000 || document.hidden) {
-				runtime.idleSeconds += 15;
-			} else {
-				runtime.activeSeconds += 15;
+			let lessonId: string | null = null;
+			let classId: string | null = null;
+			for (const match of matches) {
+				if (match.params) {
+					if ("lessonId" in match.params)
+						lessonId = match.params.lessonId as string;
+					if ("classId" in match.params)
+						classId = match.params.classId as string;
+				}
 			}
 
-			pushEvent("engagement_heartbeat", {
-				engagementSeconds: 15,
-				payloadJson: { idleForMs, documentHidden: document.hidden },
+			pushEvent("page_view", {
+				routeTemplate: route,
+				referrerTemplate: null,
+				lessonId,
+				classId,
 			});
-		}, 15_000);
+		};
 
-		const flushInterval = window.setInterval(() => {
-			flushBufferedEvents();
-		}, 10_000);
+		void start();
+	}, [router]);
 
-		// Global Listeners
-		window.addEventListener("mousemove", markActive, { passive: true });
-		window.addEventListener("keydown", markActive);
-		window.addEventListener("touchstart", markActive, { passive: true });
-		window.addEventListener("scroll", markActive, { passive: true });
-		window.addEventListener("pagehide", endSession);
+	// 3. Router Subscription
+	useEffect(() => {
+		const unsubscribe = router.subscribe("onResolved", () => {
+			const matches = router.state.matches;
+			const leafMatch = matches[matches.length - 1];
+			const nextRoute =
+				leafMatch && leafMatch.routeId !== "__root__" ? leafMatch.routeId : "/";
+
+			const previous = analyticsStore.state.currentRoute;
+			if (nextRoute !== previous) {
+				setCurrentRoute(nextRoute);
+
+				let lessonId: string | null = null;
+				let classId: string | null = null;
+
+				for (const match of matches) {
+					if (match.params) {
+						if ("lessonId" in match.params)
+							lessonId = match.params.lessonId as string;
+						if ("classId" in match.params)
+							classId = match.params.classId as string;
+					}
+				}
+
+				pushEvent("page_view", {
+					routeTemplate: nextRoute,
+					referrerTemplate: previous,
+					lessonId,
+					classId,
+				});
+			}
+		});
+
+		return unsubscribe;
+	}, [router]);
+
+	// 4. Reliable Delivery mechanism
+	const fetchLaterAbortController = useRef<AbortController | null>(null);
+
+	const flushIngest = useEvent((isSessionEnding: boolean) => {
+		const payload = getIngestPayload(isSessionEnding);
+		if (
+			!payload ||
+			(payload.sessions.length === 0 && payload.events.length === 0)
+		) {
+			return;
+		}
+
+		const body = JSON.stringify(payload);
+
+		if (isSessionEnding) {
+			// Abort any pending fetchLater
+			if (fetchLaterAbortController.current) {
+				fetchLaterAbortController.current.abort();
+				fetchLaterAbortController.current = null;
+			}
+
+			if ("fetchLater" in window && typeof window.fetchLater === "function") {
+				window.fetchLater(INGEST_URL, {
+					method: "POST",
+					body,
+				});
+			} else if ("sendBeacon" in navigator) {
+				navigator.sendBeacon(INGEST_URL, body);
+			} else {
+				fetch(INGEST_URL, {
+					method: "POST",
+					body,
+					keepalive: true,
+				}).catch(() => {});
+			}
+		} else {
+			// Routine flush (e.g., when buffer full or periodically)
+			fetch(INGEST_URL, {
+				method: "POST",
+				body,
+				headers: { "Content-Type": "application/json" },
+			}).catch(() => {});
+		}
+
+		clearEventsBuffer();
+	});
+
+	// Schedule deferred fetchLater
+	useEffect(() => {
+		if (typeof window === "undefined" || !("fetchLater" in window)) return;
+		if (!sessionId) return;
+
+		// When store changes, replace the deferred beacon
+		if (fetchLaterAbortController.current) {
+			fetchLaterAbortController.current.abort();
+		}
+		fetchLaterAbortController.current = new AbortController();
+
+		const payload = getIngestPayload(true);
+		if (payload) {
+			window.fetchLater?.(INGEST_URL, {
+				method: "POST",
+				body: JSON.stringify(payload),
+				signal: fetchLaterAbortController.current.signal,
+				activateAfter: 5 * 60 * 1000, // 5 minutes max delay
+			});
+		}
+	}, [sessionId, eventsBuffer]);
+
+	// 5. Lifecycle and Visibility
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+
+		const onActivity = () => markActive();
 
 		const onVisibilityChange = () => {
-			if (document.hidden) flushBufferedEvents();
+			const isHidden = document.visibilityState === "hidden";
+			updateIntervalState(isHidden);
+
+			if (isHidden) {
+				flushIngest(true);
+			} else {
+				markActive();
+			}
 		};
+
+		const onPageHide = (event: PageTransitionEvent) => {
+			updateIntervalState(true);
+			flushIngest(!event.persisted); // End session entirely if not bfcache
+		};
+
+		window.addEventListener("mousemove", onActivity, { passive: true });
+		window.addEventListener("keydown", onActivity, { passive: true });
+		window.addEventListener("touchstart", onActivity, { passive: true });
+		window.addEventListener("scroll", onActivity, { passive: true });
+
 		document.addEventListener("visibilitychange", onVisibilityChange);
-
-		// Route changes
-		const unsubscribeRoute = router.subscribe(
-			"onResolved",
-			({ toLocation }) => {
-				const nextRoute = toRouteTemplate(toLocation.pathname);
-				const previous = routeRef.current;
-				routeRef.current = nextRoute;
-
-				if (nextRoute !== previous) {
-					pushEvent("page_view", {
-						routeTemplate: nextRoute,
-						referrerTemplate: previous,
-					});
-				}
-			},
-		);
-
-		// Manual tracking exposing
-		window._trackEvent = pushEvent;
+		window.addEventListener("pagehide", onPageHide);
 
 		return () => {
-			window.clearInterval(heartbeatInterval);
-			window.clearInterval(flushInterval);
-			window.removeEventListener("mousemove", markActive);
-			window.removeEventListener("keydown", markActive);
-			window.removeEventListener("touchstart", markActive);
-			window.removeEventListener("scroll", markActive);
-			window.removeEventListener("pagehide", endSession);
+			window.removeEventListener("mousemove", onActivity);
+			window.removeEventListener("keydown", onActivity);
+			window.removeEventListener("touchstart", onActivity);
+			window.removeEventListener("scroll", onActivity);
 			document.removeEventListener("visibilitychange", onVisibilityChange);
-			unsubscribeRoute();
-			endSession();
+			window.removeEventListener("pagehide", onPageHide);
 		};
-	}, [router]);
+	}, [flushIngest]);
+
+	// Buffer auto-flush
+	useEffect(() => {
+		if (eventsBuffer.length >= 20) {
+			flushIngest(false);
+		}
+	}, [eventsBuffer.length, flushIngest]);
+
+	// Global window tracking
+	useEffect(() => {
+		window._trackEvent = pushEvent;
+		return () => {
+			delete window._trackEvent;
+		};
+	}, []);
 
 	const contextValue = useMemo<AnalyticsContextValue>(
 		() => ({
 			trackEvent: (type, payload) => {
-				if (typeof window !== "undefined" && window._trackEvent) {
-					window._trackEvent(type, { payloadJson: payload });
-				}
+				pushEvent(type, { payloadJson: payload });
 			},
-			sessionId: sessionRuntimeRef.current?.id ?? null,
+			sessionId,
 		}),
-		[],
+		[sessionId],
 	);
 
 	return (

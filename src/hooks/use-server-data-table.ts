@@ -14,14 +14,14 @@ import type { DataTableSearchParams } from "@/lib/dataTableSearchSchema";
 // Constants
 // ----------------------------------------------------------------------
 
-export const DEFAULT_PAGE_INDEX = 0;
-export const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_INDEX = 0;
+const DEFAULT_PAGE_SIZE = 10;
 
 // ----------------------------------------------------------------------
 // Types
 // ----------------------------------------------------------------------
 
-export type UseServerDataTableOptions = {
+type UseServerDataTableOptions = {
 	/** Default page size when not specified in URL */
 	defaultPageSize?: number;
 	/** Default sorting when not specified in URL */
@@ -30,7 +30,7 @@ export type UseServerDataTableOptions = {
 	defaultColumnVisibility?: VisibilityState;
 };
 
-export type ServerDataTableHandlers = {
+type ServerDataTableHandlers = {
 	onPaginationChange: OnChangeFn<PaginationState>;
 	onSortingChange: OnChangeFn<SortingState>;
 	onColumnFiltersChange: OnChangeFn<ColumnFiltersState>;
@@ -39,7 +39,7 @@ export type ServerDataTableHandlers = {
 	onColumnVisibilityChange: OnChangeFn<VisibilityState>;
 };
 
-export type ServerDataTableQueryParams = {
+type ServerDataTableQueryParams = {
 	pagination: PaginationState;
 	sorting: SortingState;
 	columnFilters: ColumnFiltersState;

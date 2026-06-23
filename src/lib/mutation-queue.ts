@@ -1,9 +1,6 @@
 import { clear, createStore, del, entries, get, set } from "idb-keyval";
 import { uuidv7 } from "uuidv7";
-import type {
-	AnalyticsBatchIngest,
-	LessonFeedbackInput,
-} from "@/features/analytics/analytics.schema";
+import { LessonFeedbackInput } from "#/features/analytics/analytics.schema";
 
 // ----------------------------------------------------------------------
 // Application-level mutation queue
@@ -58,7 +55,6 @@ export interface MutationServerFnPayloadMap {
 		idempotencyKey?: string;
 	};
 	deleteUser: ScopedDeletePayload;
-	ingestAnalyticsBatch: AnalyticsBatchIngest;
 	submitLessonFeedback: LessonFeedbackInput;
 }
 
@@ -168,18 +164,6 @@ function isValidPayloadForServerFn<K extends MutationServerFnName>(
 	name: K,
 	payload: unknown,
 ): payload is MutationServerFnPayloadMap[K] {
-	if (name === "ingestAnalyticsBatch") {
-		if (!isRecord(payload)) {
-			return false;
-		}
-
-		return (
-			typeof payload.idempotencyKey === "string" &&
-			Array.isArray(payload.sessions) &&
-			Array.isArray(payload.events)
-		);
-	}
-
 	if (name === "submitLessonFeedback") {
 		if (!isRecord(payload)) {
 			return false;
@@ -323,7 +307,7 @@ export async function remove(id: string): Promise<void> {
 	emitChange();
 }
 
-export async function markInFlight(id: string): Promise<void> {
+async function markInFlight(id: string): Promise<void> {
 	const current = await get<QueuedMutation>(id, STORE);
 	if (!current) {
 		return;
@@ -339,7 +323,7 @@ export async function markInFlight(id: string): Promise<void> {
 	);
 }
 
-export async function markFailed(id: string, error: string): Promise<void> {
+async function markFailed(id: string, error: string): Promise<void> {
 	const current = await get<QueuedMutation>(id, STORE);
 	if (!current) {
 		return;
@@ -436,7 +420,6 @@ function getMutationEntityId(mutation: QueuedMutation): string | null {
 		case "deleteUser":
 			return getStringField(mutation.payload, "id");
 		case "createUser":
-		case "ingestAnalyticsBatch":
 		case "submitLessonFeedback":
 			return null;
 	}

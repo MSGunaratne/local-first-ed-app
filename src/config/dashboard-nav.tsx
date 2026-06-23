@@ -7,6 +7,7 @@ export type NavItem = {
 	icon?: React.ReactNode;
 	items?: NavItem[];
 	preload?: LinkProps["preload"];
+	exact?: boolean;
 };
 
 export const navConfig: NavItem[] = [
@@ -29,6 +30,7 @@ export const navConfig: NavItem[] = [
 				title: "nav_lessons",
 				path: "/lessons",
 				preload: "intent",
+				exact: true,
 			},
 			{
 				title: "nav_lessons_create",

@@ -1,22 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { baseMiddleware, idempotentMiddleware } from "@/lib/server-fn";
 import {
-	analyticsBatchIngestSchema,
 	analyticsOverviewInputSchema,
 	lessonFeedbackInputSchema,
 } from "./analytics.schema";
 import {
 	getAdminAnalyticsOverview,
-	ingestAnalyticsBatch,
 	submitLessonFeedback,
 } from "./analytics.service";
-
-export const ingestAnalyticsBatchFn = createServerFn({ method: "POST" })
-	.middleware([baseMiddleware, idempotentMiddleware])
-	.validator((data) => analyticsBatchIngestSchema.parse(data))
-	.handler(async ({ data }) => {
-		return ingestAnalyticsBatch(data);
-	});
 
 export const getAdminAnalyticsOverviewFn = createServerFn({ method: "GET" })
 	.middleware([baseMiddleware])

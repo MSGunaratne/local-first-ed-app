@@ -24,6 +24,7 @@ import {
 	analyticsEvents,
 	analyticsSessions,
 	lessonFeedback,
+	analyticsDailyAggregates,
 } from "./analytics.schema";
 
 const RAW_RETENTION_DAYS = 30;
@@ -106,6 +107,145 @@ async function pruneExpiredRawRows() {
 		.where(lte(analyticsSessions.startedAt, cutoff));
 }
 
+function formatDaySql(column: any) {
+	return sql<string>`strftime('%Y-%m-%d', case when ${column} > 10000000000 then datetime(${column} / 1000, 'unixepoch') else datetime(${column}, 'unixepoch') end)`;
+}
+
+async function rollupDailyAnalytics(days: string[]) {
+	if (days.length === 0) return;
+
+	for (const day of days) {
+		await db
+			.delete(analyticsDailyAggregates)
+			.where(eq(analyticsDailyAggregates.dayUtc, day));
+
+		// Aggregate sessions
+		const sessionsOfDay = await db
+			.select({
+				actorType: analyticsSessions.actorType,
+				roleBucket: analyticsSessions.roleBucket,
+				teacherId: analyticsSessions.teacherId,
+				sessionCount: count(analyticsSessions.id),
+				dauCount: sql<number>`count(distinct ${analyticsSessions.pseudonymousActorId})`,
+				avgDuration: sql<number>`coalesce(avg(${analyticsSessions.durationSeconds}), 0)`,
+				dropOffCount: sql<number>`sum(case when ${analyticsSessions.exitRoute} is not null then 1 else 0 end)`,
+			})
+			.from(analyticsSessions)
+			.where(eq(formatDaySql(analyticsSessions.startedAt), day))
+			.groupBy(
+				analyticsSessions.actorType,
+				analyticsSessions.roleBucket,
+				analyticsSessions.teacherId,
+			);
+
+		// Aggregate page views
+		const pageViewsOfDay = await db
+			.select({
+				actorType: analyticsEvents.actorType,
+				roleBucket: analyticsSessions.roleBucket,
+				teacherId: analyticsEvents.teacherId,
+				classId: analyticsEvents.classId,
+				pageViews: count(analyticsEvents.id),
+			})
+			.from(analyticsEvents)
+			.leftJoin(
+				analyticsSessions,
+				eq(analyticsEvents.sessionId, analyticsSessions.id),
+			)
+			.where(
+				and(
+					eq(analyticsEvents.eventType, "page_view"),
+					eq(formatDaySql(analyticsEvents.occurredAt), day),
+				),
+			)
+			.groupBy(
+				analyticsEvents.actorType,
+				analyticsSessions.roleBucket,
+				analyticsEvents.teacherId,
+				analyticsEvents.classId,
+			);
+
+		const groupMap = new Map<
+			string,
+			{
+				actorType: "anonymous" | "teacher" | "admin";
+				roleBucket: Role.SUPER_ADMIN | Role.ADMIN | Role.TEACHER | null;
+				teacherId: string | null;
+				classId: string | null;
+				sessionCount: number;
+				dauCount: number;
+				avgSessionDurationSec: number;
+				pageViews: number;
+				dropOffCount: number;
+			}
+		>();
+
+		for (const s of sessionsOfDay) {
+			const key = `${s.actorType}:${s.roleBucket || ""}:${s.teacherId || ""}:`;
+			groupMap.set(key, {
+				actorType: s.actorType,
+				roleBucket:
+					s.roleBucket &&
+					(s.roleBucket === Role.SUPER_ADMIN ||
+						s.roleBucket === Role.ADMIN ||
+						s.roleBucket === Role.TEACHER)
+						? (s.roleBucket as Role.SUPER_ADMIN | Role.ADMIN | Role.TEACHER)
+						: null,
+				teacherId: s.teacherId,
+				classId: null,
+				sessionCount: Number(s.sessionCount ?? 0),
+				dauCount: Number(s.dauCount ?? 0),
+				avgSessionDurationSec: Math.round(Number(s.avgDuration ?? 0)),
+				pageViews: 0,
+				dropOffCount: Number(s.dropOffCount ?? 0),
+			});
+		}
+
+		for (const p of pageViewsOfDay) {
+			const key = `${p.actorType}:${p.roleBucket || ""}:${p.teacherId || ""}:${p.classId || ""}`;
+			const existing = groupMap.get(key);
+			if (existing) {
+				existing.pageViews = Number(p.pageViews ?? 0);
+			} else {
+				groupMap.set(key, {
+					actorType: p.actorType,
+					roleBucket:
+						p.roleBucket &&
+						(p.roleBucket === Role.SUPER_ADMIN ||
+							p.roleBucket === Role.ADMIN ||
+							p.roleBucket === Role.TEACHER)
+							? (p.roleBucket as Role.SUPER_ADMIN | Role.ADMIN | Role.TEACHER)
+							: null,
+					teacherId: p.teacherId,
+					classId: p.classId,
+					sessionCount: 0,
+					dauCount: 0,
+					avgSessionDurationSec: 0,
+					pageViews: Number(p.pageViews ?? 0),
+					dropOffCount: 0,
+				});
+			}
+		}
+
+		const insertRows = Array.from(groupMap.values()).map((row) => ({
+			dayUtc: day,
+			actorType: row.actorType,
+			roleBucket: row.roleBucket,
+			teacherId: row.teacherId,
+			classId: row.classId,
+			sessionCount: row.sessionCount,
+			dauCount: row.dauCount,
+			avgSessionDurationSec: row.avgSessionDurationSec,
+			pageViews: row.pageViews,
+			dropOffCount: row.dropOffCount,
+		}));
+
+		if (insertRows.length > 0) {
+			await db.insert(analyticsDailyAggregates).values(insertRows);
+		}
+	}
+}
+
 export async function ingestAnalyticsBatch(data: AnalyticsBatchIngest) {
 	const session = await readServerSession().catch(() => null);
 	const actorContext = normalizeActorContext(session);
@@ -121,7 +261,17 @@ export async function ingestAnalyticsBatch(data: AnalyticsBatchIngest) {
 		await db
 			.insert(analyticsSessions)
 			.values(sessions)
-			.onConflictDoNothing({ target: analyticsSessions.id });
+			.onConflictDoUpdate({
+				target: analyticsSessions.id,
+				set: {
+					endedAt: sql`excluded.ended_at`,
+					exitRoute: sql`excluded.exit_route`,
+					durationSeconds: sql`excluded.duration_seconds`,
+					activeSeconds: sql`excluded.active_seconds`,
+					idleSeconds: sql`excluded.idle_seconds`,
+					lastHeartbeatAt: sql`excluded.last_heartbeat_at`,
+				},
+			});
 	}
 
 	if (events.length > 0) {
@@ -129,6 +279,22 @@ export async function ingestAnalyticsBatch(data: AnalyticsBatchIngest) {
 			.insert(analyticsEvents)
 			.values(events)
 			.onConflictDoNothing({ target: analyticsEvents.idempotencyKey });
+	}
+
+	const affectedDays = new Set<string>();
+	for (const s of sessions) {
+		const d = new Date(s.startedAt).toISOString().slice(0, 10);
+		affectedDays.add(d);
+	}
+	for (const e of events) {
+		const d = new Date(e.occurredAt).toISOString().slice(0, 10);
+		affectedDays.add(d);
+	}
+
+	if (affectedDays.size > 0) {
+		await rollupDailyAnalytics(Array.from(affectedDays)).catch((error) => {
+			console.warn("[Analytics] Daily rollup failed", error);
+		});
 	}
 
 	// Opportunistic retention cleanup keeps table size bounded without a dedicated cron.
@@ -148,25 +314,27 @@ export async function getAdminAnalyticsOverview(lookbackDays: number) {
 	await requireAdminSession("Only admins can view analytics insights");
 
 	const since = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
+	const sinceStr = since.toISOString().slice(0, 10);
+	const rawSince = new Date(
+		Date.now() -
+			Math.min(lookbackDays, RAW_RETENTION_DAYS) * 24 * 60 * 60 * 1000,
+	);
 
-	const [sessionKpi] = await db
+	const [aggregateKpis] = await db
 		.select({
-			sessionCount: count(),
+			sessionCount: sql<number>`sum(${analyticsDailyAggregates.sessionCount})`,
+			pageViews: sql<number>`sum(${analyticsDailyAggregates.pageViews})`,
+			avgSessionDuration: sql<number>`coalesce(sum(${analyticsDailyAggregates.avgSessionDurationSec} * ${analyticsDailyAggregates.sessionCount}) / sum(${analyticsDailyAggregates.sessionCount}), 0)`,
+		})
+		.from(analyticsDailyAggregates)
+		.where(gte(analyticsDailyAggregates.dayUtc, sinceStr));
+
+	const [dauKpi] = await db
+		.select({
 			dau: sql<number>`count(distinct ${analyticsSessions.pseudonymousActorId})`,
-			avgSessionDuration: sql<number>`coalesce(avg(${analyticsSessions.durationSeconds}), 0)`,
 		})
 		.from(analyticsSessions)
 		.where(gte(analyticsSessions.startedAt, since));
-
-	const [pageViewKpi] = await db
-		.select({ pageViews: count() })
-		.from(analyticsEvents)
-		.where(
-			and(
-				eq(analyticsEvents.eventType, "page_view"),
-				gte(analyticsEvents.occurredAt, since),
-			),
-		);
 
 	const viewsExpr = sql<number>`count(*)`;
 	const topRoutes = await db
@@ -178,7 +346,7 @@ export async function getAdminAnalyticsOverview(lookbackDays: number) {
 		.where(
 			and(
 				eq(analyticsEvents.eventType, "page_view"),
-				gte(analyticsEvents.occurredAt, since),
+				gte(analyticsEvents.occurredAt, rawSince),
 				isNotNull(analyticsEvents.routeTemplate),
 			),
 		)
@@ -195,7 +363,7 @@ export async function getAdminAnalyticsOverview(lookbackDays: number) {
 		.from(analyticsSessions)
 		.where(
 			and(
-				gte(analyticsSessions.startedAt, since),
+				gte(analyticsSessions.startedAt, rawSince),
 				isNotNull(analyticsSessions.exitRoute),
 			),
 		)
@@ -213,7 +381,7 @@ export async function getAdminAnalyticsOverview(lookbackDays: number) {
 		.from(analyticsSessions)
 		.where(
 			and(
-				gte(analyticsSessions.startedAt, since),
+				gte(analyticsSessions.startedAt, rawSince),
 				isNotNull(analyticsSessions.teacherId),
 			),
 		)
@@ -221,8 +389,8 @@ export async function getAdminAnalyticsOverview(lookbackDays: number) {
 		.orderBy(desc(teacherSessionsExpr))
 		.limit(8);
 
-	const sessions = Number(sessionKpi?.sessionCount ?? 0);
-	const pageViews = Number(pageViewKpi?.pageViews ?? 0);
+	const sessions = Number(aggregateKpis?.sessionCount ?? 0);
+	const pageViews = Number(aggregateKpis?.pageViews ?? 0);
 
 	const [feedbackKpi] = await db
 		.select({
@@ -301,10 +469,10 @@ export async function getAdminAnalyticsOverview(lookbackDays: number) {
 	return {
 		lookbackDays,
 		kpis: {
-			dau: Number(sessionKpi?.dau ?? 0),
+			dau: Number(dauKpi?.dau ?? 0),
 			sessions,
 			avgSessionDurationSeconds: Math.round(
-				Number(sessionKpi?.avgSessionDuration ?? 0),
+				Number(aggregateKpis?.avgSessionDuration ?? 0),
 			),
 			pageViews,
 			pageViewsPerSession:
