@@ -171,8 +171,8 @@ async function loadCurriculum(subjects: Subject[]): Promise<CurriculumItem[]> {
 			let data: CurriculumItem[];
 			if (typeof window === "undefined") {
 				// Server-side / Node / Vitest: load directly from public folder using fs
-				const fs = await import(/* @vite-ignore */ "node:fs");
-				const path = await import(/* @vite-ignore */ "node:path");
+				const fs = await import("node:fs");
+				const path = await import("node:path");
 				const absolutePath = path.join(process.cwd(), "public", filePath);
 				const fileContent = fs.readFileSync(absolutePath, "utf8");
 				data = JSON.parse(fileContent) as CurriculumItem[];
