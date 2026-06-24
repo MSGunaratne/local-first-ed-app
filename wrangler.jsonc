@@ -17,7 +17,7 @@
 		{
 			"binding": "ed_app_db",
 			"database_name": "ed-app-db",
-			"database_id": "c0d1dab6-0917-4ecb-b7a7-e7ef771f6343",
+			"database_id": "5475afea-962e-4360-99ce-26ff426cfb67",
 			"migrations_dir": "drizzle",
 			"remote": true
 		}

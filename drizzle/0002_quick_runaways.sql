@@ -1,1 +1,0 @@
-ALTER TABLE `analytics_session` ADD `last_heartbeat_at` integer;
