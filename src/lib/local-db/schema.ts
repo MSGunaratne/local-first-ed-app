@@ -7,7 +7,7 @@
 import type { SQLiteAPI } from "wa-sqlite";
 import { execWithParams } from "@/lib/local-db/init";
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 1;
 
 /**
  * Run schema migrations on the local SQLite database.
@@ -45,18 +45,7 @@ export async function migrateSchema(
 
 	const currentVersion = rows.length > 0 ? Number.parseInt(rows[0], 10) : 0;
 
-	if (currentVersion >= SCHEMA_VERSION) {
-		return; // Already up to date
-	}
-
-	// Run migrations
-	if (currentVersion < 1) {
-		await applyV1(sqlite3, db);
-	}
-	if (currentVersion < 2) {
-		await applyV2(sqlite3, db);
-	}
-
+	await applyV1(sqlite3, db);
 	// Update schema version
 	await execWithParams(
 		sqlite3,
@@ -164,6 +153,15 @@ async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
       updated_at      INTEGER NOT NULL DEFAULT (unixepoch())
     );
 
+    CREATE TABLE IF NOT EXISTS student_progress_event (
+      id                  TEXT PRIMARY KEY,
+      lesson_id           TEXT NOT NULL,
+      progress_status     TEXT NOT NULL,
+      idempotency_key     TEXT NOT NULL UNIQUE,
+      occurred_at         INTEGER NOT NULL DEFAULT (unixepoch()),
+      sync_status         TEXT NOT NULL DEFAULT 'pending'
+    );
+
     -- Sync cursor tracking
     CREATE TABLE IF NOT EXISTS _sync_cursors (
       scope       TEXT PRIMARY KEY,
@@ -190,60 +188,8 @@ async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_class_sync_status ON class(sync_status);
     CREATE INDEX IF NOT EXISTS idx_user_role ON user(role);
     CREATE INDEX IF NOT EXISTS idx_sync_conflicts_scope_entity ON _sync_conflicts(scope, entity_id);
+    CREATE INDEX IF NOT EXISTS idx_student_progress_lesson ON student_progress_event(lesson_id);
+    CREATE INDEX IF NOT EXISTS idx_student_progress_sync_status ON student_progress_event(sync_status);
   `,
 	);
-}
-
-async function applyV2(sqlite3: SQLiteAPI, db: number): Promise<void> {
-	await addColumnIfMissing(sqlite3, db, "lesson", "deleted_at", "INTEGER");
-	await addColumnIfMissing(sqlite3, db, "lesson", "base_updated_at", "INTEGER");
-	await addColumnIfMissing(sqlite3, db, "class", "deleted_at", "INTEGER");
-	await addColumnIfMissing(sqlite3, db, "class", "base_updated_at", "INTEGER");
-
-	await sqlite3.exec(
-		db,
-		`
-    CREATE TABLE IF NOT EXISTS _sync_conflicts (
-      id              TEXT PRIMARY KEY,
-      scope           TEXT NOT NULL,
-      entity_id       TEXT NOT NULL,
-      conflict_type   TEXT NOT NULL,
-      base_record     TEXT,
-      local_record    TEXT NOT NULL,
-      remote_record   TEXT NOT NULL,
-      created_at      INTEGER NOT NULL DEFAULT (unixepoch()),
-      resolved_at     INTEGER
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_sync_conflicts_scope_entity ON _sync_conflicts(scope, entity_id);
-  `,
-	);
-}
-
-async function addColumnIfMissing(
-	sqlite3: SQLiteAPI,
-	db: number,
-	table: string,
-	column: string,
-	definition: string,
-) {
-	const columns: string[] = [];
-	await execWithParams(
-		sqlite3,
-		db,
-		`PRAGMA table_info(${table});`,
-		undefined,
-		(row: readonly unknown[]) => {
-			if (typeof row[1] === "string") {
-				columns.push(row[1]);
-			}
-		},
-	);
-
-	if (!columns.includes(column)) {
-		await sqlite3.exec(
-			db,
-			`ALTER TABLE ${table} ADD COLUMN ${column} ${definition};`,
-		);
-	}
 }

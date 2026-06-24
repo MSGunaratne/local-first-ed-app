@@ -22,6 +22,8 @@ export const ANALYTICS_EVENT_TYPES = [
 	"lesson_create",
 	"class_view",
 	"lesson_feedback_submitted",
+	"lesson_started",
+	"lesson_completed",
 ] as const;
 
 export const ACTOR_TYPES = ["anonymous", "teacher", "admin"] as const;
@@ -175,6 +177,33 @@ export const lessonFeedback = sqliteTable(
 	],
 );
 
+export const studentProgressDailyAggregates = sqliteTable(
+	"student_progress_daily_aggregate",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => uuidv7()),
+		dayUtc: text("day_utc").notNull(),
+		lessonId: text("lesson_id")
+			.notNull()
+			.references(() => lessons.id, { onDelete: "cascade" }),
+		startedCount: integer("started_count").notNull().default(0),
+		completedCount: integer("completed_count").notNull().default(0),
+		updatedAt: integer("updated_at", { mode: "timestamp" })
+			.notNull()
+			.default(sql`(unixepoch())`)
+			.$onUpdate(() => new Date()),
+	},
+	(table) => [
+		uniqueIndex("idx_student_progress_daily_lesson").on(
+			table.dayUtc,
+			table.lessonId,
+		),
+		index("idx_student_progress_daily_day").on(table.dayUtc),
+		index("idx_student_progress_daily_lesson_id").on(table.lessonId),
+	],
+);
+
 export const analyticsSessionRelations = relations(
 	analyticsSessions,
 	({ many }) => ({
@@ -213,6 +242,9 @@ export type AnalyticsDailyAggregate = InferSelectModel<
 	typeof analyticsDailyAggregates
 >;
 export type LessonFeedback = InferSelectModel<typeof lessonFeedback>;
+export type StudentProgressDailyAggregate = InferSelectModel<
+	typeof studentProgressDailyAggregates
+>;
 
 export const analyticsSessionInsertSchema = createInsertSchema(
 	analyticsSessions,
@@ -259,12 +291,22 @@ export const lessonFeedbackInputSchema = createInsertSchema(lessonFeedback, {
 	teacherId: true,
 });
 
+export const studentProgressEventInputSchema = z.object({
+	idempotencyKey: z.string().min(1),
+	lessonId: z.string().min(1),
+	status: z.enum(["started", "completed"]),
+	occurredAt: z.coerce.date(),
+});
+
 export type AnalyticsSessionInsert = z.infer<
 	typeof analyticsSessionInsertSchema
 >;
 export type AnalyticsEventInsert = z.infer<typeof analyticsEventInsertSchema>;
 export type AnalyticsBatchIngest = z.infer<typeof analyticsBatchIngestSchema>;
 export type LessonFeedbackInput = z.infer<typeof lessonFeedbackInputSchema>;
+export type StudentProgressEventInput = z.infer<
+	typeof studentProgressEventInputSchema
+>;
 //not in use
 export type AnalyticsOverviewInput = z.infer<
 	typeof analyticsOverviewInputSchema

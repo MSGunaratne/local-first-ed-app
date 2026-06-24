@@ -7,6 +7,7 @@ import {
 	gte,
 	isNotNull,
 	lte,
+	type SQLWrapper,
 	sql,
 } from "drizzle-orm";
 import { requireAdminSession } from "#/lib/auth/access";
@@ -19,12 +20,14 @@ import type {
 	AnalyticsEventInsert,
 	AnalyticsSessionInsert,
 	LessonFeedbackInput,
+	StudentProgressEventInput,
 } from "./analytics.schema";
 import {
+	analyticsDailyAggregates,
 	analyticsEvents,
 	analyticsSessions,
 	lessonFeedback,
-	analyticsDailyAggregates,
+	studentProgressDailyAggregates,
 } from "./analytics.schema";
 
 const RAW_RETENTION_DAYS = 30;
@@ -107,7 +110,7 @@ async function pruneExpiredRawRows() {
 		.where(lte(analyticsSessions.startedAt, cutoff));
 }
 
-function formatDaySql(column: any) {
+function formatDaySql(column: SQLWrapper) {
 	return sql<string>`strftime('%Y-%m-%d', case when ${column} > 10000000000 then datetime(${column} / 1000, 'unixepoch') else datetime(${column}, 'unixepoch') end)`;
 }
 
@@ -400,6 +403,14 @@ export async function getAdminAnalyticsOverview(lookbackDays: number) {
 		.from(lessonFeedback)
 		.where(gte(lessonFeedback.createdAt, since));
 
+	const [progressKpi] = await db
+		.select({
+			startedCount: sql<number>`coalesce(sum(${studentProgressDailyAggregates.startedCount}), 0)`,
+			completedCount: sql<number>`coalesce(sum(${studentProgressDailyAggregates.completedCount}), 0)`,
+		})
+		.from(studentProgressDailyAggregates)
+		.where(gte(studentProgressDailyAggregates.dayUtc, sinceStr));
+
 	const avgRatingExpr = sql<number>`coalesce(avg(${lessonFeedback.rating}), 0)`;
 	const ratingCountExpr = count();
 
@@ -479,6 +490,8 @@ export async function getAdminAnalyticsOverview(lookbackDays: number) {
 				sessions > 0 ? Number((pageViews / sessions).toFixed(2)) : 0,
 			feedbackCount: Number(feedbackKpi?.feedbackCount ?? 0),
 			avgLessonRating: Number(Number(feedbackKpi?.avgRating ?? 0).toFixed(2)),
+			lessonStarts: Number(progressKpi?.startedCount ?? 0),
+			lessonCompletions: Number(progressKpi?.completedCount ?? 0),
 		},
 		topRoutes: topRoutes.flatMap((row) =>
 			typeof row.routeTemplate === "string" && row.routeTemplate
@@ -561,6 +574,38 @@ export async function submitLessonFeedback(input: LessonFeedbackInput) {
 			teacherId: actorContext.teacherId,
 		})
 		.onConflictDoNothing({ target: lessonFeedback.idempotencyKey });
+
+	return {
+		success: true,
+	};
+}
+
+export async function submitStudentProgressEvent(
+	input: StudentProgressEventInput,
+) {
+	const dayUtc = input.occurredAt.toISOString().slice(0, 10);
+	const startedIncrement = input.status === "started" ? 1 : 0;
+	const completedIncrement = input.status === "completed" ? 1 : 0;
+
+	await db
+		.insert(studentProgressDailyAggregates)
+		.values({
+			dayUtc,
+			lessonId: input.lessonId,
+			startedCount: startedIncrement,
+			completedCount: completedIncrement,
+		})
+		.onConflictDoUpdate({
+			target: [
+				studentProgressDailyAggregates.dayUtc,
+				studentProgressDailyAggregates.lessonId,
+			],
+			set: {
+				startedCount: sql`${studentProgressDailyAggregates.startedCount} + ${startedIncrement}`,
+				completedCount: sql`${studentProgressDailyAggregates.completedCount} + ${completedIncrement}`,
+				updatedAt: new Date(),
+			},
+		});
 
 	return {
 		success: true,

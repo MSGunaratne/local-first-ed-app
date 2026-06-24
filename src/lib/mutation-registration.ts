@@ -1,4 +1,7 @@
-import { submitLessonFeedbackFn } from "@/features/analytics/analytics.actions";
+import {
+	submitLessonFeedbackFn,
+	submitStudentProgressEventFn,
+} from "@/features/analytics/analytics.actions";
 import {
 	createClassFn,
 	deleteClassFn,
@@ -90,5 +93,9 @@ export function registerAllMutations() {
 
 	registerServerFn("submitLessonFeedback", async (payload) => {
 		return submitLessonFeedbackFn({ data: payload });
+	});
+
+	registerServerFn("submitStudentProgressEvent", async (payload) => {
+		return submitStudentProgressEventFn({ data: payload });
 	});
 }

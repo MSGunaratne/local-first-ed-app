@@ -16,6 +16,7 @@ export {
 	getPendingDeleteRecords,
 	getPendingPushRecords,
 	getSyncCursor,
+	getUnresolvedConflictCount,
 	insertLocal,
 	markSynced,
 	pullRecords,

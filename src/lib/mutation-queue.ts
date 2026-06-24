@@ -1,6 +1,9 @@
 import { clear, createStore, del, entries, get, set } from "idb-keyval";
 import { uuidv7 } from "uuidv7";
-import { LessonFeedbackInput } from "#/features/analytics/analytics.schema";
+import type {
+	LessonFeedbackInput,
+	StudentProgressEventInput,
+} from "#/features/analytics/analytics.schema";
 
 // ----------------------------------------------------------------------
 // Application-level mutation queue
@@ -56,6 +59,7 @@ export interface MutationServerFnPayloadMap {
 	};
 	deleteUser: ScopedDeletePayload;
 	submitLessonFeedback: LessonFeedbackInput;
+	submitStudentProgressEvent: StudentProgressEventInput;
 }
 
 export type MutationServerFnName = keyof MutationServerFnPayloadMap;
@@ -174,6 +178,19 @@ function isValidPayloadForServerFn<K extends MutationServerFnName>(
 			typeof payload.lessonId === "string" &&
 			typeof payload.pseudonymousActorId === "string" &&
 			typeof payload.rating === "number"
+		);
+	}
+
+	if (name === "submitStudentProgressEvent") {
+		if (!isRecord(payload)) {
+			return false;
+		}
+
+		return (
+			typeof payload.idempotencyKey === "string" &&
+			typeof payload.lessonId === "string" &&
+			(payload.status === "started" || payload.status === "completed") &&
+			typeof payload.occurredAt !== "undefined"
 		);
 	}
 
@@ -421,6 +438,7 @@ function getMutationEntityId(mutation: QueuedMutation): string | null {
 			return getStringField(mutation.payload, "id");
 		case "createUser":
 		case "submitLessonFeedback":
+		case "submitStudentProgressEvent":
 			return null;
 	}
 }

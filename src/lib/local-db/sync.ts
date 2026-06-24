@@ -419,6 +419,13 @@ export async function getSyncCursor(scope: SyncScope): Promise<string | null> {
 	return rows[0]?.cursor ?? null;
 }
 
+export async function getUnresolvedConflictCount(): Promise<number> {
+	const rows = await query<{ count: number }>(
+		"SELECT count(*) as count FROM _sync_conflicts WHERE resolved_at IS NULL;",
+	);
+	return rows[0]?.count ?? 0;
+}
+
 type ConflictType = "update-update" | "delete-update";
 
 function isUnresolvedLocalChange(row: Record<string, unknown>) {

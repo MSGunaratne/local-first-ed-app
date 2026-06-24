@@ -1,8 +1,8 @@
 import { environmentManager, onlineManager } from "@tanstack/react-query";
 import { useEffect, useSyncExternalStore } from "react";
+import { fData } from "#/utils/format-number";
 import * as mutationQueue from "@/lib/mutation-queue";
 import { getQueryClient, getStorageEstimate } from "@/lib/query-client";
-import { fData } from "#/utils/format-number";
 
 // ----------------------------------------------------------------------
 // Sync Status Store – tracks pending mutations, last sync, and storage
@@ -12,6 +12,7 @@ interface SyncState {
 	pendingMutationCount: number /** Number of mutations currently pending in TanStack Query */;
 	queuedMutationCount: number;
 	failedMutationCount: number;
+	conflictCount: number;
 	lastSyncAt: number | null;
 	isOnline: boolean;
 	storageUsageBytes: number;
@@ -26,6 +27,7 @@ let currentState: SyncState = {
 	pendingMutationCount: 0,
 	queuedMutationCount: 0,
 	failedMutationCount: 0,
+	conflictCount: 0,
 	lastSyncAt: null,
 	isOnline: true,
 	storageUsageBytes: 0,
@@ -64,6 +66,7 @@ const SERVER_SNAPSHOT: SyncState = {
 	pendingMutationCount: 0,
 	queuedMutationCount: 0,
 	failedMutationCount: 0,
+	conflictCount: 0,
 	lastSyncAt: null,
 	isOnline: true,
 	storageUsageBytes: 0,
@@ -125,6 +128,7 @@ function initializeSyncStatus() {
 		void refreshQueuedCount();
 	});
 	void refreshQueuedCount();
+	void refreshConflictCount();
 
 	// Periodically update storage usage (every 30 seconds)
 	if (storageRefreshIntervalId !== null) {
@@ -134,6 +138,7 @@ function initializeSyncStatus() {
 	void refreshStorageUsage();
 	storageRefreshIntervalId = setInterval(() => {
 		void refreshStorageUsage();
+		void refreshConflictCount();
 	}, 30_000);
 }
 
@@ -177,6 +182,16 @@ async function refreshQueuedCount() {
 	}
 }
 
+async function refreshConflictCount() {
+	try {
+		const { getUnresolvedConflictCount } = await import("@/lib/local-db");
+		const count = await getUnresolvedConflictCount();
+		updateState({ conflictCount: count });
+	} catch {
+		updateState({ conflictCount: 0 });
+	}
+}
+
 async function flushMutationQueue() {
 	try {
 		const { flushMutationQueue } = await import("@/lib/mutation-queue");
@@ -217,10 +232,12 @@ export function useSyncStatus() {
 			state.pendingMutationCount > 0 || state.queuedMutationCount > 0,
 		/** Whether there are failed mutations that need attention */
 		hasFailedMutations: state.failedMutationCount > 0,
+		hasConflicts: state.conflictCount > 0,
 		/** Total active pending: in-flight + queued (excluding failed) */
 		totalPending: state.pendingMutationCount + state.queuedMutationCount,
 		/** Total failed mutations */
 		totalFailed: state.failedMutationCount,
+		totalConflicts: state.conflictCount,
 		/** Human-readable last sync time */
 		lastSyncFormatted: state.lastSyncAt
 			? formatRelativeTime(state.lastSyncAt)
