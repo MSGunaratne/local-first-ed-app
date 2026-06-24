@@ -54,6 +54,7 @@ export const lessons = sqliteTable("lesson", {
 	isDeleted: integer("is_deleted", { mode: "boolean" })
 		.notNull()
 		.default(false),
+	deletedAt: integer("deleted_at", { mode: "timestamp" }),
 
 	createdAt: integer("created_at", { mode: "timestamp" })
 		.notNull()
@@ -123,6 +124,7 @@ export const lessonInsertSchema = createInsertSchema(lessons, {
 	syncStatus: true,
 	lastModified: true,
 	isDeleted: true,
+	deletedAt: true,
 	originalImageUrl: true,
 	lessonSummary: true,
 	flashcards: true,

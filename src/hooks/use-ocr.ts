@@ -14,12 +14,17 @@ interface UseOCROptions {
 
 interface UseOCRResult {
 	text: string;
+	confidence: number | null;
 	progress: number;
 	status: "idle" | "loading" | "success" | "error";
 	scanImage: (file: File) => Promise<void>;
 	setText: (text: string) => void;
 	reset: () => void;
 }
+
+const OCR_CANVAS_BORDER = 20;
+const MIN_OCR_LONG_EDGE = 1400;
+const MAX_OCR_LONG_EDGE = 2800;
 
 /**
  * Preprocesses an image by converting to grayscale and increasing contrast using Canvas.
@@ -28,17 +33,40 @@ interface UseOCRResult {
 function preprocessImage(file: File, contrast: number = 80): Promise<File> {
 	return new Promise((resolve) => {
 		const img = new Image();
+		const objectUrl = URL.createObjectURL(file);
+
 		img.onload = () => {
 			const canvas = document.createElement("canvas");
 			const ctx = canvas.getContext("2d");
 			if (!ctx) {
+				URL.revokeObjectURL(objectUrl);
 				resolve(file);
 				return;
 			}
 
-			canvas.width = img.width;
-			canvas.height = img.height;
-			ctx.drawImage(img, 0, 0);
+			const longEdge = Math.max(img.width, img.height);
+			const scale =
+				longEdge < MIN_OCR_LONG_EDGE
+					? MIN_OCR_LONG_EDGE / longEdge
+					: longEdge > MAX_OCR_LONG_EDGE
+						? MAX_OCR_LONG_EDGE / longEdge
+						: 1;
+			const targetWidth = Math.round(img.width * scale);
+			const targetHeight = Math.round(img.height * scale);
+
+			canvas.width = targetWidth + OCR_CANVAS_BORDER * 2;
+			canvas.height = targetHeight + OCR_CANVAS_BORDER * 2;
+			ctx.fillStyle = "#fff";
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			ctx.imageSmoothingEnabled = true;
+			ctx.imageSmoothingQuality = "high";
+			ctx.drawImage(
+				img,
+				OCR_CANVAS_BORDER,
+				OCR_CANVAS_BORDER,
+				targetWidth,
+				targetHeight,
+			);
 
 			try {
 				const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -68,26 +96,29 @@ function preprocessImage(file: File, contrast: number = 80): Promise<File> {
 				ctx.putImageData(imageData, 0, 0);
 
 				canvas.toBlob((blob) => {
+					URL.revokeObjectURL(objectUrl);
 					if (blob) {
-						resolve(new File([blob], file.name, { type: file.type }));
+						resolve(new File([blob], file.name, { type: "image/png" }));
 					} else {
 						resolve(file);
 					}
-				}, file.type);
+				}, "image/png");
 			} catch (e) {
 				console.warn(
 					"Image preprocessing failed, falling back to raw image:",
 					e,
 				);
+				URL.revokeObjectURL(objectUrl);
 				resolve(file);
 			}
 		};
 
 		img.onerror = () => {
+			URL.revokeObjectURL(objectUrl);
 			resolve(file); // Fallback
 		};
 
-		img.src = URL.createObjectURL(file);
+		img.src = objectUrl;
 	});
 }
 
@@ -104,6 +135,7 @@ function preprocessImage(file: File, contrast: number = 80): Promise<File> {
  */
 export function useOCR(options?: UseOCROptions): UseOCRResult {
 	const [text, setText] = useState("");
+	const [confidence, setConfidence] = useState<number | null>(null);
 	const [progress, setProgress] = useState(0);
 	const [status, setStatus] = useState<
 		"idle" | "loading" | "success" | "error"
@@ -157,6 +189,7 @@ export function useOCR(options?: UseOCROptions): UseOCRResult {
 			setStatus("loading");
 			setProgress(0);
 			setText("");
+			setConfidence(null);
 
 			try {
 				let fileToScan = file;
@@ -178,7 +211,7 @@ export function useOCR(options?: UseOCROptions): UseOCRResult {
 					workerRef.current = await createWorker(language, 1, {
 						workerPath: "/ocr-data/worker.min.js",
 						corePath: "/ocr-data/tesseract-core.wasm.js",
-						langPath: "/ocr-data/",
+						langPath: "/ocr-data",
 						logger: (m) => {
 							if (m.status === "recognizing text") {
 								// Tesseract progress starts at 0, map to 5% - 100% range
@@ -195,13 +228,16 @@ export function useOCR(options?: UseOCROptions): UseOCRResult {
 				// Apply page segmentation mode before recognition
 				await worker.setParameters({
 					tessedit_pageseg_mode: psm,
+					preserve_interword_spaces: "1",
+					user_defined_dpi: "300",
 				});
 
 				const {
-					data: { text: extractedText },
+					data: { text: extractedText, confidence: meanConfidence },
 				} = await worker.recognize(fileToScan);
 
 				setText(extractedText);
+				setConfidence(meanConfidence);
 				setStatus("success");
 				setProgress(100);
 			} catch (error) {
@@ -214,12 +250,14 @@ export function useOCR(options?: UseOCROptions): UseOCRResult {
 
 	const reset = useCallback(() => {
 		setText("");
+		setConfidence(null);
 		setProgress(0);
 		setStatus("idle");
 	}, []);
 
 	return {
 		text,
+		confidence,
 		progress,
 		status,
 		scanImage,

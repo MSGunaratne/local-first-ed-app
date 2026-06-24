@@ -38,7 +38,7 @@ export default function ParaglideLocaleSwitcher({
 						className={cn("h-10 w-10", className)}
 					>
 						<Globe className="h-5 w-5" />
-						<span className="sr-only">Switch Language</span>
+						<span className="sr-only">{m.common_switch_language()}</span>
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="start" side="right">

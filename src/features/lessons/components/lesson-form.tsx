@@ -14,7 +14,6 @@ import {
 	BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { generateHtmlFromJson } from "@/components/ui/editor";
 import { lessonMutations } from "@/features/lessons/lessons.queries";
 import {
 	type LessonInsert,
@@ -57,6 +56,7 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 			onChange: lessonInsertSchema,
 		},
 		onSubmit: async ({ value }) => {
+			const { generateHtmlFromJson } = await import("@/components/ui/editor");
 			const contentHtml = value.contentJson
 				? generateHtmlFromJson(value.contentJson)
 				: null;
@@ -84,8 +84,21 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 		form.store,
 		(s) => s.values.linkedCurriculumIds ?? [],
 	);
+	const isEditorEmpty = useSelector(form.store, (s) => {
+		const content = s.values.contentJson;
+		if (!content) return true;
+		if (typeof content === "object") {
+			if (
+				content.type === "doc" &&
+				(!content.content || content.content.length === 0)
+			) {
+				return true;
+			}
+		}
+		return false;
+	});
 
-	const handleApplyMetadata = (match: CurriculumItem) => {
+	const applyMetadata = (match: CurriculumItem) => {
 		form.setFieldValue("title", match.topic);
 		form.setFieldValue("gradeLevel", match.grade);
 
@@ -95,6 +108,10 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 		if (subjectEnum) {
 			form.setFieldValue("subject", subjectEnum);
 		}
+	};
+
+	const handleApplyMetadata = (match: CurriculumItem) => {
+		applyMetadata(match);
 		toast.success(m.curation_toast_applied_metadata());
 	};
 
@@ -117,8 +134,13 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 		}
 	};
 
-	const handleInsertText = (ocrText: string, topic?: string) => {
+	const handleInsertText = (
+		ocrText: string,
+		topic?: string,
+		options?: { showToast?: boolean },
+	) => {
 		if (!ocrText.trim()) return;
+		const showToast = options?.showToast ?? true;
 
 		const newContent: JSONContent[] = [];
 
@@ -139,6 +161,49 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 			"contentJson",
 		) as JSONContent | null;
 
+		// Extract text content recursively from JSONContent
+		const extractTextContent = (content: JSONContent | null): string => {
+			if (!content) return "";
+			let text = "";
+			if (content.text) {
+				text += content.text;
+			}
+			if (content.content) {
+				for (const node of content.content) {
+					text += " " + extractTextContent(node);
+				}
+			}
+			return text;
+		};
+
+		const editorText = extractTextContent(currentContent);
+		const cleanStr = (s: string) => s.replace(/\s+/g, "").toLowerCase();
+		const cleanedOcr = cleanStr(ocrText);
+		const cleanedEditor = cleanStr(editorText);
+		const alreadyHasText = cleanedEditor.includes(cleanedOcr);
+
+		if (alreadyHasText) {
+			// If the editor has EXACTLY the OCR text (and nothing else, except maybe whitespace),
+			// and they now want to insert it WITH a topic heading, we can replace the content
+			// to include the heading!
+			const isExactMatch = cleanedEditor === cleanedOcr;
+			if (isExactMatch && topic) {
+				form.setFieldValue("contentJson", {
+					type: "doc",
+					content: newContent,
+				});
+				if (showToast) {
+					toast.success(m.curation_toast_inserted_content());
+				}
+			} else {
+				// Already has the text, and has other edits or no topic, so don't double insert.
+				if (topic && showToast) {
+					toast.info(m.curation_toast_content_already_inserted());
+				}
+			}
+			return;
+		}
+
 		if (currentContent?.content) {
 			form.setFieldValue("contentJson", {
 				type: "doc",
@@ -152,10 +217,29 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 		}
 
 		if (topic) {
-			toast.success(m.curation_toast_inserted_content());
+			if (showToast) {
+				toast.success(m.curation_toast_inserted_content());
+			}
 		} else {
-			toast.success(m.curation_toast_inserted_text());
+			if (showToast) {
+				toast.success(m.curation_toast_inserted_text());
+			}
 		}
+	};
+
+	const handleQuickApply = (match: CurriculumItem, ocrText: string) => {
+		applyMetadata(match);
+
+		const currentIds = form.getFieldValue("linkedCurriculumIds") ?? [];
+		if (!currentIds.includes(match.id)) {
+			form.setFieldValue("linkedCurriculumIds", [...currentIds, match.id]);
+		}
+
+		if (ocrText.trim()) {
+			handleInsertText(ocrText, match.topic, { showToast: false });
+		}
+
+		toast.success(m.curation_toast_quick_applied());
 	};
 
 	const handleInsertImage = (dataUrl: string) => {
@@ -216,30 +300,17 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 				{/* Media / Curation Section */}
 				<div className="md:col-span-1 h-[600px]">
-					{mode === "create" ? (
-						<CurationPanel
-							subject={currentSubject}
-							grade={currentGrade}
-							linkedIds={linkedCurriculumIds}
-							onApplyMetadata={handleApplyMetadata}
-							onLinkToggle={handleLinkToggle}
-							onInsertText={handleInsertText}
-							onInsertImage={handleInsertImage}
-						/>
-					) : (
-						<Card className="h-full">
-							<CardHeader>
-								<CardTitle className="text-lg">
-									{m.lessons_card_media()}
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<div className="text-sm text-muted-foreground text-center py-8">
-									{m.lessons_media_unavailable()}
-								</div>
-							</CardContent>
-						</Card>
-					)}
+					<CurationPanel
+						subject={currentSubject}
+						grade={currentGrade}
+						linkedIds={linkedCurriculumIds}
+						onApplyMetadata={handleApplyMetadata}
+						onQuickApply={handleQuickApply}
+						onLinkToggle={handleLinkToggle}
+						onInsertText={handleInsertText}
+						onInsertImage={handleInsertImage}
+						isEditorEmpty={isEditorEmpty}
+					/>
 				</div>
 
 				<div className="md:col-span-1 lg:col-span-2 space-y-4">

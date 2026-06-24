@@ -52,6 +52,8 @@ const COLUMN_MAP: { [K in SyncScope]: Record<string, string> } = {
 		lastModified: "last_modified",
 		syncStatus: "sync_status",
 		isDeleted: "is_deleted",
+		deletedAt: "deleted_at",
+		baseUpdatedAt: "base_updated_at",
 		createdAt: "created_at",
 		updatedAt: "updated_at",
 	},
@@ -65,6 +67,8 @@ const COLUMN_MAP: { [K in SyncScope]: Record<string, string> } = {
 		updatedAt: "updated_at",
 		syncStatus: "sync_status",
 		isDeleted: "is_deleted",
+		deletedAt: "deleted_at",
+		baseUpdatedAt: "base_updated_at",
 	},
 	users: {
 		id: "id",
@@ -100,6 +104,7 @@ const TABLE_MAP: Record<SyncScope, string> = {
 export async function pullRecords(
 	scope: SyncScope,
 	records: Array<Record<string, unknown>>,
+	cursor?: string | null,
 ): Promise<SyncResult> {
 	const result: SyncResult = {
 		scope,
@@ -114,14 +119,50 @@ export async function pullRecords(
 	const table = TABLE_MAP[scope];
 	const colMap = COLUMN_MAP[scope];
 
-	await transaction(async (exec) => {
+	await transaction(async (exec, qry) => {
 		for (const record of records) {
 			try {
+				const id = typeof record.id === "string" ? record.id : null;
+				if (!id) {
+					result.errors.push(`Skipped ${scope} record without string id`);
+					continue;
+				}
+
 				const mutableRecord =
 					scope === "lessons" || scope === "classes"
-						? { ...record, syncStatus: "synced" }
+						? {
+								...record,
+								syncStatus: "synced",
+								isDeleted: record.deletedAt
+									? true
+									: (record.isDeleted ?? false),
+								baseUpdatedAt: record.updatedAt,
+							}
 						: record;
 				const snakeRecord = camelToSnake(mutableRecord, colMap);
+
+				if (scope === "lessons" || scope === "classes") {
+					const existingRows = await qry<Record<string, unknown>>(
+						`SELECT * FROM ${table} WHERE id = ? LIMIT 1;`,
+						[id],
+					);
+					const existing = existingRows[0];
+
+					if (existing && isUnresolvedLocalChange(existing)) {
+						await recordConflict(exec, {
+							scope,
+							entityId: id,
+							conflictType: record.deletedAt
+								? "delete-update"
+								: "update-update",
+							localRecord: existing,
+							remoteRecord: record,
+						});
+						result.recordsProcessed++;
+						continue;
+					}
+				}
+
 				const columns = Object.keys(snakeRecord);
 				const values = Object.values(snakeRecord).map(serializeValue);
 				const placeholders = columns.map(() => "?").join(", ");
@@ -145,14 +186,14 @@ export async function pullRecords(
 	});
 
 	// Update sync cursor
-	if (result.recordsProcessed > 0) {
+	if (cursor && result.errors.length === 0) {
 		console.info(
 			`[Sync:Pull] ${scope} pull complete: ${result.recordsProcessed} processed`,
 		);
 		await execute(
 			`INSERT OR REPLACE INTO _sync_cursors (scope, cursor, synced_at)
        VALUES (?, ?, unixepoch());`,
-			[scope, new Date().toISOString()],
+			[scope, cursor],
 		);
 	}
 
@@ -272,21 +313,36 @@ export async function updateLocal(
 ): Promise<void> {
 	const table = TABLE_MAP[scope];
 	const colMap = COLUMN_MAP[scope];
-	const snakeData = camelToSnake(
-		{
-			...data,
-			syncStatus: "pending",
-			updatedAt: Math.floor(Date.now() / 1000),
-		},
-		colMap,
-	);
 
-	const setClauses = Object.keys(snakeData)
-		.map((col) => `${col} = ?`)
-		.join(", ");
-	const values = [...Object.values(snakeData).map(serializeValue), id];
+	await transaction(async (exec, qry) => {
+		const existingRows = await qry<Record<string, unknown>>(
+			`SELECT sync_status, updated_at, base_updated_at FROM ${table} WHERE id = ? LIMIT 1;`,
+			[id],
+		);
+		const existing = existingRows[0];
+		const baseUpdatedAt =
+			existing?.sync_status === "pending" ||
+			existing?.sync_status === "conflict"
+				? existing.base_updated_at
+				: existing?.updated_at;
 
-	await execute(`UPDATE ${table} SET ${setClauses} WHERE id = ?;`, values);
+		const snakeData = camelToSnake(
+			{
+				...data,
+				syncStatus: "pending",
+				baseUpdatedAt,
+				updatedAt: Math.floor(Date.now() / 1000),
+			},
+			colMap,
+		);
+
+		const setClauses = Object.keys(snakeData)
+			.map((col) => `${col} = ?`)
+			.join(", ");
+		const values = [...Object.values(snakeData).map(serializeValue), id];
+
+		await exec(`UPDATE ${table} SET ${setClauses} WHERE id = ?;`, values);
+	});
 }
 
 /**
@@ -294,10 +350,23 @@ export async function updateLocal(
  */
 export async function deleteLocal(scope: SyncScope, id: string): Promise<void> {
 	const table = TABLE_MAP[scope];
-	await execute(
-		`UPDATE ${table} SET is_deleted = 1, sync_status = 'pending', updated_at = unixepoch() WHERE id = ?;`,
-		[id],
-	);
+	await transaction(async (exec, qry) => {
+		const existingRows = await qry<Record<string, unknown>>(
+			`SELECT sync_status, updated_at, base_updated_at FROM ${table} WHERE id = ? LIMIT 1;`,
+			[id],
+		);
+		const existing = existingRows[0];
+		const baseUpdatedAt =
+			existing?.sync_status === "pending" ||
+			existing?.sync_status === "conflict"
+				? existing.base_updated_at
+				: existing?.updated_at;
+
+		await exec(
+			`UPDATE ${table} SET is_deleted = 1, deleted_at = unixepoch(), sync_status = 'pending', base_updated_at = ?, updated_at = unixepoch() WHERE id = ?;`,
+			[serializeValue(baseUpdatedAt), id],
+		);
+	});
 }
 
 /**
@@ -309,8 +378,10 @@ export async function getLocalById(
 ): Promise<SyncEntity<typeof scope> | null> {
 	const table = TABLE_MAP[scope];
 	const colMap = COLUMN_MAP[scope];
+	const whereClause =
+		scope === "users" ? "id = ?" : "id = ? AND is_deleted = 0";
 	const rows = await query<Record<string, unknown>>(
-		`SELECT * FROM ${table} WHERE id = ? AND is_deleted = 0;`,
+		`SELECT * FROM ${table} WHERE ${whereClause};`,
 		[id],
 	);
 
@@ -346,6 +417,48 @@ export async function getSyncCursor(scope: SyncScope): Promise<string | null> {
 		[scope],
 	);
 	return rows[0]?.cursor ?? null;
+}
+
+type ConflictType = "update-update" | "delete-update";
+
+function isUnresolvedLocalChange(row: Record<string, unknown>) {
+	return row.sync_status === "pending" || row.sync_status === "conflict";
+}
+
+async function recordConflict(
+	exec: (sql: string, params?: readonly SQLiteBindValue[]) => Promise<void>,
+	{
+		scope,
+		entityId,
+		conflictType,
+		localRecord,
+		remoteRecord,
+	}: {
+		scope: MutableSyncScope;
+		entityId: string;
+		conflictType: ConflictType;
+		localRecord: Record<string, unknown>;
+		remoteRecord: Record<string, unknown>;
+	},
+) {
+	await exec(
+		`INSERT OR REPLACE INTO _sync_conflicts
+      (id, scope, entity_id, conflict_type, local_record, remote_record, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, unixepoch());`,
+		[
+			`${scope}:${entityId}`,
+			scope,
+			entityId,
+			conflictType,
+			JSON.stringify(localRecord),
+			JSON.stringify(remoteRecord),
+		],
+	);
+
+	const table = TABLE_MAP[scope];
+	await exec(`UPDATE ${table} SET sync_status = 'conflict' WHERE id = ?;`, [
+		entityId,
+	]);
 }
 
 // ----------------------------------------------------------------------
@@ -430,8 +543,8 @@ function snakeToCamel<T extends Record<string, unknown>>(
 function serializeValue(value: unknown): SQLiteBindValue {
 	if (value === null || value === undefined) return null;
 	if (typeof value === "boolean") return value ? 1 : 0;
-	if (typeof value === "object") return JSON.stringify(value);
 	if (value instanceof Date) return Math.floor(value.getTime() / 1000);
+	if (typeof value === "object") return JSON.stringify(value);
 	if (
 		typeof value === "string" ||
 		typeof value === "number" ||

@@ -5,13 +5,19 @@ import { m } from "@/paraglide/messages";
 
 export function SubmitButton({
 	label = m.common_submit(),
+	disabled,
 	...props
 }: { label?: string } & React.ComponentProps<typeof Button>) {
 	const form = useFormContext();
 	return (
-		<form.Subscribe selector={(state) => [state.isSubmitting]}>
-			{([isSubmitting]) => (
-				<Button type="submit" disabled={isSubmitting} {...props}>
+		<form.Subscribe
+			selector={(state) => ({
+				canSubmit: state.canSubmit,
+				isSubmitting: state.isSubmitting,
+			})}
+		>
+			{({ canSubmit, isSubmitting }) => (
+				<Button type="submit" disabled={!canSubmit || disabled} {...props}>
 					{isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
 					{label}
 				</Button>

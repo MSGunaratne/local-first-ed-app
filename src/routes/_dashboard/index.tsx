@@ -23,6 +23,7 @@ import { LessonFeedbackInsights } from "@/features/analytics/components/lesson-f
 import { m } from "@/paraglide/messages";
 import { Subject } from "@/types/lesson";
 import { asRole } from "@/types/user";
+import { cn } from "@/lib/utils";
 import { fNumber } from "@/utils/format-number";
 
 const dashboardSearchSchema = z.object({
@@ -38,6 +39,47 @@ const dashboardSearchSchema = z.object({
 		.optional()
 		.catch(undefined),
 });
+
+function KpiValueSkeleton({
+	className,
+	captionWidth = "w-28",
+}: {
+	className?: string;
+	captionWidth?: string;
+}) {
+	return (
+		<div className="space-y-2">
+			<Skeleton className={cn("h-10 w-24 rounded-md", className)} />
+			<Skeleton className={cn("h-4 rounded-md", captionWidth, className)} />
+		</div>
+	);
+}
+
+function RouteRowSkeleton({ index }: { index: number }) {
+	const widths = ["w-7/12", "w-5/12", "w-2/3", "w-1/2", "w-3/5"];
+
+	return (
+		<div className="flex items-center justify-between gap-4 rounded-lg bg-muted/40 px-3 py-2">
+			<div className="flex min-w-0 flex-1 items-center gap-3">
+				<Skeleton className="h-6 w-6 rounded-full" />
+				<Skeleton
+					className={cn("h-4 rounded-md", widths[index % widths.length])}
+				/>
+			</div>
+			<Skeleton className="h-4 w-16 rounded-md" />
+		</div>
+	);
+}
+
+function RouteListSkeleton() {
+	return (
+		<div className="space-y-3">
+			{[0, 1, 2, 3, 4].map((index) => (
+				<RouteRowSkeleton key={`route-skeleton-${index}`} index={index} />
+			))}
+		</div>
+	);
+}
 
 export const Route = createFileRoute("/_dashboard/")({
 	validateSearch: dashboardSearchSchema,
@@ -70,12 +112,12 @@ function AdminDashboardView() {
 		<div className="space-y-4 p-1">
 			<div className="flex items-center justify-between">
 				<h1 className="text-4xl font-extrabold tracking-tight">
-					Admin Analytics
+					{m.dashboard_admin_title()}
 				</h1>
 				<Link to="/users">
 					<Button className="h-12 px-6 text-base font-bold gap-2 shadow-md">
 						<Users className="h-5 w-5" />
-						Manage Users
+						{m.dashboard_manage_users()}
 					</Button>
 				</Link>
 			</div>
@@ -87,20 +129,22 @@ function AdminDashboardView() {
 					</div>
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 						<CardTitle className="text-base font-bold text-muted-foreground uppercase tracking-wider">
-							Daily Active Users
+							{m.dashboard_daily_active_users()}
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{isLoading ? (
-							<Skeleton className="h-10 w-24 my-0.5" />
+							<KpiValueSkeleton />
 						) : (
-							<div className="text-4xl font-black">
-								{fNumber(kpis?.dau ?? 0)}
-							</div>
+							<>
+								<div className="text-4xl font-black">
+									{fNumber(kpis?.dau ?? 0)}
+								</div>
+								<p className="text-sm font-medium text-muted-foreground mt-1">
+									{m.dashboard_last_7_days()}
+								</p>
+							</>
 						)}
-						<p className="text-sm font-medium text-muted-foreground mt-1">
-							Last 7 days
-						</p>
 					</CardContent>
 				</Card>
 				<Card className="border-2 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
@@ -109,24 +153,24 @@ function AdminDashboardView() {
 					</div>
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 						<CardTitle className="text-base font-bold text-muted-foreground uppercase tracking-wider">
-							Sessions
+							{m.dashboard_sessions()}
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{isLoading ? (
-							<Skeleton className="h-10 w-24 my-0.5" />
+							<KpiValueSkeleton captionWidth="w-36" />
 						) : (
-							<div className="text-4xl font-black">
-								{fNumber(kpis?.sessions ?? 0)}
-							</div>
+							<>
+								<div className="text-4xl font-black">
+									{fNumber(kpis?.sessions ?? 0)}
+								</div>
+								<p className="text-sm font-medium text-muted-foreground mt-1">
+									{m.dashboard_avg_duration({
+										seconds: fNumber(kpis?.avgSessionDurationSeconds ?? 0),
+									})}
+								</p>
+							</>
 						)}
-						<p className="text-sm font-medium text-muted-foreground mt-1">
-							Avg duration{" "}
-							{isLoading
-								? "..."
-								: fNumber(kpis?.avgSessionDurationSeconds ?? 0)}
-							s
-						</p>
 					</CardContent>
 				</Card>
 				<Card className="border-2 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow bg-primary text-primary-foreground">
@@ -135,23 +179,29 @@ function AdminDashboardView() {
 					</div>
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 						<CardTitle className="text-base font-bold uppercase tracking-wider text-primary-foreground/80">
-							Page Views / Session
+							{m.dashboard_page_views_session()}
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{isLoading ? (
-							<Skeleton className="h-10 w-24 my-0.5 bg-primary-foreground/20" />
+							<KpiValueSkeleton
+								className="bg-primary-foreground/20"
+								captionWidth="w-40"
+							/>
 						) : (
-							<div className="text-4xl font-black">
-								{fNumber(kpis?.pageViewsPerSession ?? 0, {
-									maximumFractionDigits: 2,
-								})}
-							</div>
+							<>
+								<div className="text-4xl font-black">
+									{fNumber(kpis?.pageViewsPerSession ?? 0, {
+										maximumFractionDigits: 2,
+									})}
+								</div>
+								<p className="text-sm font-medium text-primary-foreground/70 mt-1">
+									{m.dashboard_total_page_views({
+										count: fNumber(kpis?.pageViews ?? 0),
+									})}
+								</p>
+							</>
 						)}
-						<p className="text-sm font-medium text-primary-foreground/70 mt-1">
-							Total page views{" "}
-							{isLoading ? "..." : fNumber(kpis?.pageViews ?? 0)}
-						</p>
 					</CardContent>
 				</Card>
 				<Card className="border-2 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
@@ -160,23 +210,27 @@ function AdminDashboardView() {
 					</div>
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 						<CardTitle className="text-base font-bold text-muted-foreground uppercase tracking-wider">
-							Lesson Feedback
+							{m.dashboard_lesson_feedback()}
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{isLoading ? (
-							<Skeleton className="h-10 w-24 my-0.5" />
+							<KpiValueSkeleton captionWidth="w-24" />
 						) : (
-							<div className="text-4xl font-black">
-								{fNumber(kpis?.avgLessonRating ?? 0, {
-									minimumFractionDigits: 1,
-									maximumFractionDigits: 2,
-								})}
-							</div>
+							<>
+								<div className="text-4xl font-black">
+									{fNumber(kpis?.avgLessonRating ?? 0, {
+										minimumFractionDigits: 1,
+										maximumFractionDigits: 2,
+									})}
+								</div>
+								<p className="text-sm font-medium text-muted-foreground mt-1">
+									{m.dashboard_ratings({
+										count: fNumber(kpis?.feedbackCount ?? 0),
+									})}
+								</p>
+							</>
 						)}
-						<p className="text-sm font-medium text-muted-foreground mt-1">
-							{isLoading ? "..." : fNumber(kpis?.feedbackCount ?? 0)} ratings
-						</p>
 					</CardContent>
 				</Card>
 			</div>
@@ -188,14 +242,12 @@ function AdminDashboardView() {
 							<div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-inner">
 								<LayoutDashboard className="h-5 w-5" />
 							</div>
-							Most Visited Routes
+							{m.dashboard_most_visited_routes()}
 						</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-3">
 						{isLoading
-							? ["sk-1", "sk-2", "sk-3", "sk-4", "sk-5"].map((sk) => (
-									<Skeleton key={sk} className="h-10 w-full rounded-lg" />
-								))
+							? <RouteListSkeleton />
 							: (data?.topRoutes ?? []).slice(0, 5).map((route) => (
 									<div
 										key={route.routeTemplate}
@@ -212,16 +264,16 @@ function AdminDashboardView() {
 
 				<Card className="border-2 shadow-sm border-dashed">
 					<CardHeader>
-						<CardTitle className="text-xl font-bold">Drop-off Routes</CardTitle>
+						<CardTitle className="text-xl font-bold">
+							{m.dashboard_drop_off_routes()}
+						</CardTitle>
 						<CardDescription>
-							Most common exit pages in the selected window.
+							{m.dashboard_drop_off_routes_description()}
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-3">
 						{isLoading
-							? ["sk-1", "sk-2", "sk-3", "sk-4", "sk-5"].map((sk) => (
-									<Skeleton key={sk} className="h-10 w-full rounded-lg" />
-								))
+							? <RouteListSkeleton />
 							: (data?.dropOffRoutes ?? []).slice(0, 5).map((route) => (
 									<div
 										key={route.routeTemplate}
@@ -325,7 +377,7 @@ function TeacherDashboardView() {
 					<CardContent>
 						<div className="text-4xl font-black">0</div>
 						<p className="text-sm font-medium text-primary-foreground/70 mt-1">
-							Lessons published
+							{m.dashboard_lessons_published()}
 						</p>
 					</CardContent>
 				</Card>
@@ -358,7 +410,7 @@ function TeacherDashboardView() {
 								variant="outline"
 								className="h-12 px-6 text-base font-semibold"
 							>
-								View All Lessons
+								{m.dashboard_view_all_lessons()}
 							</Button>
 						</Link>
 					</CardContent>
@@ -366,9 +418,11 @@ function TeacherDashboardView() {
 
 				<Card className="border-2 shadow-sm border-dashed">
 					<CardHeader>
-						<CardTitle className="text-xl font-bold">Getting Started</CardTitle>
+						<CardTitle className="text-xl font-bold">
+							{m.dashboard_getting_started()}
+						</CardTitle>
 						<CardDescription>
-							Follow these steps to set up your classroom.
+							{m.dashboard_getting_started_description()}
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
@@ -377,9 +431,9 @@ function TeacherDashboardView() {
 								1
 							</div>
 							<div>
-								<p className="font-bold">Register your students</p>
+								<p className="font-bold">{m.dashboard_register_students()}</p>
 								<p className="text-sm text-muted-foreground">
-									Add students to your dashboard to track their progress.
+									{m.dashboard_register_students_description()}
 								</p>
 							</div>
 						</div>
@@ -388,9 +442,9 @@ function TeacherDashboardView() {
 								2
 							</div>
 							<div>
-								<p className="font-bold">Create your first lesson</p>
+								<p className="font-bold">{m.dashboard_create_first_lesson()}</p>
 								<p className="text-sm text-muted-foreground">
-									Use our easy editor to create engaging lessons.
+									{m.dashboard_create_first_lesson_description()}
 								</p>
 							</div>
 						</div>

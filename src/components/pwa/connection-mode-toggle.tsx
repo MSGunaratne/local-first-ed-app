@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { cycleConnectionMode, useConnectionMode } from "@/lib/connection-mode";
 import { useSyncStatus } from "@/lib/sync-status";
 import { cn } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 interface ConnectionModeToggleProps {
 	className?: string;
@@ -23,9 +24,13 @@ export function ConnectionModeToggle({
 		storageUsageFormatted,
 	} = useSyncStatus();
 
-	const displayedStatus = isOnline ? "Online" : "Offline";
+	const displayedStatus = isOnline ? m.common_online() : m.common_offline();
 	const modeLabel =
-		mode === "auto" ? "Auto" : mode === "offline" ? "Forced off" : "Forced on";
+		mode === "auto"
+			? m.common_auto()
+			: mode === "offline"
+				? m.common_forced_off()
+				: m.common_forced_on();
 
 	const Icon = hasFailedMutations
 		? CloudOff
@@ -46,8 +51,11 @@ export function ConnectionModeToggle({
 					compact ? "h-9 w-9" : "w-full justify-between gap-3 px-3",
 				)}
 				onClick={cycleConnectionMode}
-				title="Cycle connection mode"
-				aria-label={`Connection ${displayedStatus}, mode ${modeLabel}. Click to cycle mode.`}
+				title={m.common_cycle_connection_mode()}
+				aria-label={m.common_connection_status({
+					status: displayedStatus,
+					mode: modeLabel,
+				})}
 			>
 				<span className="flex items-center gap-2 min-w-0">
 					<Icon
@@ -85,17 +93,17 @@ export function ConnectionModeToggle({
 						{hasFailedMutations ? (
 							<div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
 								<CloudOff className="h-3 w-3" />
-								<span>{totalFailed} failed</span>
+								<span>{m.common_failed_count({ count: String(totalFailed) })}</span>
 							</div>
 						) : hasPendingMutations ? (
 							<>
 								<Loader2 className="h-3 w-3 animate-spin" />
-								<span>{totalPending} pending</span>
+								<span>{m.common_pending_count({ count: String(totalPending) })}</span>
 							</>
 						) : lastSyncFormatted ? (
-							<span>Synced {lastSyncFormatted}</span>
+							<span>{m.common_synced_at({ time: lastSyncFormatted })}</span>
 						) : (
-							<span>No sync yet</span>
+							<span>{m.common_no_sync_yet()}</span>
 						)}
 					</div>
 					<span>{storageUsageFormatted}</span>

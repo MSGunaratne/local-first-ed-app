@@ -1,4 +1,4 @@
-import { asc, count, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNull } from "drizzle-orm";
 import {
 	requireTeacherOrAdminSession,
 	requireTeacherOwnershipOrAdmin,
@@ -35,6 +35,7 @@ export async function getClasses(params: DataTableQueryParams) {
 		globalFilter,
 		classQuickFilterConfig,
 	);
+	const whereClause = and(searchFilters, isNull(classes.deletedAt));
 
 	// Optional: Filter by teacher if user is a teacher?
 	// Or filter by visibility?
@@ -49,7 +50,7 @@ export async function getClasses(params: DataTableQueryParams) {
 	const dataPromise = db
 		.select()
 		.from(classes)
-		.where(searchFilters)
+		.where(whereClause)
 		.orderBy(orderBy)
 		.limit(limit)
 		.offset(page * limit);
@@ -57,7 +58,7 @@ export async function getClasses(params: DataTableQueryParams) {
 	const totalPromise = db
 		.select({ total: count() })
 		.from(classes)
-		.where(searchFilters);
+		.where(whereClause);
 
 	const [data, totalResult] = await Promise.all([dataPromise, totalPromise]);
 	const total = totalResult[0]?.total ?? 0;
@@ -78,7 +79,7 @@ export async function getClasses(params: DataTableQueryParams) {
 
 export async function getClassById(id: string) {
 	const selectedClass = await db.query.classes.findFirst({
-		where: eq(classes.id, id),
+		where: and(eq(classes.id, id), isNull(classes.deletedAt)),
 	});
 	if (!selectedClass) {
 		throw new NotFoundError("Class", id);
@@ -179,7 +180,11 @@ export async function deleteClass(id: string) {
 		"You can only delete classes assigned to you",
 	);
 
-	await db.delete(classes).where(eq(classes.id, id));
+	const now = new Date();
+	await db
+		.update(classes)
+		.set({ deletedAt: now, updatedAt: now })
+		.where(eq(classes.id, id));
 
 	// Drizzle delete doesn't return success status in simple run, but if it throws it fails.
 	// We can check rowsAffected if we used execute() or returned valid info,

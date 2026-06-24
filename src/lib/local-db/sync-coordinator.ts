@@ -304,7 +304,15 @@ async function pullScope(scope: SyncScope) {
 	const cursor = await getSyncCursor(scope);
 
 	try {
-		const response = await fetch(`/api/sync/${scope}?since=${cursor || ""}`);
+		const params = new URLSearchParams();
+		if (cursor) {
+			params.set("cursor", cursor);
+			params.set("since", cursor);
+		}
+		const query = params.toString();
+		const response = await fetch(
+			`/api/sync/${scope}${query ? `?${query}` : ""}`,
+		);
 		if (!response.ok) {
 			const errJson = await response.json().catch(() => ({ error: "Unknown" }));
 			console.error(
@@ -314,17 +322,30 @@ async function pullScope(scope: SyncScope) {
 			return;
 		}
 
-		const resJson = (await response.json()) as { data: unknown[] };
+		const resJson = (await response.json()) as {
+			data: unknown[];
+			cursor?: unknown;
+			hasMore?: boolean;
+		};
 		const records = resJson.data.filter(
 			(item): item is Record<string, unknown> =>
 				typeof item === "object" && item !== null,
 		);
+		const nextCursor =
+			typeof resJson.cursor === "string"
+				? resJson.cursor
+				: resJson.cursor
+					? JSON.stringify(resJson.cursor)
+					: null;
 
 		if (records.length > 0) {
 			console.info(
 				`[Sync:${scope}] Received ${records.length} new records from server.`,
 			);
-			await pullRecords(scope, records);
+			await pullRecords(scope, records, nextCursor);
+			if (resJson.hasMore) {
+				await pullScope(scope);
+			}
 		} else {
 			console.info(`[Sync:${scope}] No new records to pull.`);
 		}

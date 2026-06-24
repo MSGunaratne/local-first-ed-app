@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 
-const IDEMPOTENCY_TTL_SECONDS = 24 * 60 * 60;
+const IDEMPOTENCY_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 let ensureTablePromise: Promise<void> | null = null;
 
@@ -79,7 +79,7 @@ export async function recordIdempotencyKey(
 
 	await env.ed_app_db
 		.prepare(
-			"INSERT OR REPLACE INTO idempotency_keys (key, response_body, created_at) VALUES (?, ?, unixepoch());",
+			"INSERT OR IGNORE INTO idempotency_keys (key, response_body, created_at) VALUES (?, ?, unixepoch());",
 		)
 		.bind(key, serialized)
 		.run();

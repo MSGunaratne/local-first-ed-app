@@ -49,15 +49,15 @@ export function requireTeacherOwnershipOrAdmin(
 ) {
 	const typedRole = asRole(role);
 
-	if (
-		!typedRole &&
-		typedRole !== Role.TEACHER &&
-		typedRole !== Role.ADMIN &&
-		typedRole !== Role.SUPER_ADMIN &&
-		resourceOwnerId !== currentUserId
-	) {
-		throw new AuthorizationError(message);
+	if (typedRole === Role.ADMIN || typedRole === Role.SUPER_ADMIN) {
+		return;
 	}
+
+	if (typedRole === Role.TEACHER && resourceOwnerId === currentUserId) {
+		return;
+	}
+
+	throw new AuthorizationError(message);
 }
 
 /**

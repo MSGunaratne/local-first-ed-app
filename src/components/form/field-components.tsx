@@ -1,6 +1,7 @@
 import { useSelector } from "@tanstack/react-store";
 import type { JSONContent } from "@tiptap/core";
 import { CalendarIcon } from "lucide-react";
+import { lazy, Suspense } from "react";
 import type * as React from "react";
 import type { DropzoneOptions } from "react-dropzone";
 import PhoneInputWithCountry from "react-phone-number-input/input";
@@ -15,7 +16,6 @@ import {
 	ComboboxItem,
 	ComboboxList,
 } from "@/components/ui/combobox";
-import { Editor } from "@/components/ui/editor";
 import {
 	Field,
 	FieldDescription,
@@ -36,6 +36,12 @@ import { Textarea as ShadcnTextarea } from "@/components/ui/textarea";
 import { useFieldContext } from "@/hooks/use-form-context";
 import { cn } from "@/lib/utils";
 import { fDate } from "@/utils/format-time";
+
+const LazyEditor = lazy(() =>
+	import("@/components/ui/editor").then((module) => ({
+		default: module.Editor,
+	})),
+);
 
 // ----------------------------------------------------------------------
 // Helper for displaying errors
@@ -477,6 +483,17 @@ interface DatePickerProps {
 	};
 }
 
+function FieldControlFallback({ className }: { className?: string }) {
+	return (
+		<div
+			className={cn(
+				"min-h-[150px] w-full rounded-md border border-input bg-muted/20 animate-pulse",
+				className,
+			)}
+		/>
+	);
+}
+
 export function DatePicker({
 	label,
 	placeholder = "Pick a date",
@@ -688,14 +705,25 @@ export function EditorField({
 				</FieldLabel>
 			)}
 			<div className="w-full">
-				<Editor
-					value={field.state.value}
-					onChange={(json, _html) => {
-						field.handleChange(json);
-					}}
-					placeholder={placeholder}
-					className={cn(isInvalid && "border-destructive ring-destructive/50")}
-				/>
+				<Suspense
+					fallback={
+						<FieldControlFallback
+							className={cn(
+								"min-h-[220px]",
+								isInvalid && "border-destructive ring-destructive/50",
+							)}
+						/>
+					}
+				>
+					<LazyEditor
+						value={field.state.value}
+						onChange={(json, _html) => {
+							field.handleChange(json);
+						}}
+						placeholder={placeholder}
+						className={cn(isInvalid && "border-destructive ring-destructive/50")}
+					/>
+				</Suspense>
 			</div>
 			{description && <FieldDescription>{description}</FieldDescription>}
 			{isInvalid && <FieldErrorList errors={errors} />}

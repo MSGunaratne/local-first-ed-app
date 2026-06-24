@@ -24,6 +24,7 @@ export const classes = sqliteTable("class", {
 		.notNull()
 		.references(() => users.id, { onDelete: "cascade" }),
 	gradeLevel: integer("grade_level").notNull(),
+	deletedAt: integer("deleted_at", { mode: "timestamp" }),
 	createdAt: integer("created_at", { mode: "timestamp" })
 		.notNull()
 		.default(sql`(unixepoch())`),
@@ -76,6 +77,7 @@ export const classInsertSchema = createInsertSchema(classes, {
 	gradeLevel: z.number().min(6).max(12),
 }).omit({
 	id: true,
+	deletedAt: true,
 	createdAt: true,
 	updatedAt: true,
 });

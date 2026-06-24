@@ -24,6 +24,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SUBJECT_METADATA, Subject } from "@/types/lesson";
+import { m } from "@/paraglide/messages";
 import { fNumber } from "@/utils/format-number";
 
 type FeedbackItem = {
@@ -124,6 +125,55 @@ function LessonRatingList({
 	);
 }
 
+function FeedbackInsightsSkeleton() {
+	return (
+		<div className="space-y-4">
+			<div className="grid gap-3 md:grid-cols-2">
+				<Skeleton className="h-10 w-full rounded-md" />
+				<Skeleton className="h-10 w-full rounded-md" />
+			</div>
+			<div className="flex flex-wrap gap-2">
+				<Skeleton className="h-10 w-28 rounded-md" />
+				<Skeleton className="h-10 w-36 rounded-md" />
+				<Skeleton className="h-10 w-40 rounded-md" />
+			</div>
+			<div className="space-y-3 pt-1">
+				{[0, 1, 2].map((index) => (
+					<div
+						key={`feedback-skeleton-${index}`}
+						className="rounded-lg border bg-card/70 p-3"
+					>
+						<div className="flex items-center justify-between gap-3">
+							<div className="min-w-0 flex-1 space-y-2">
+								<Skeleton
+									className={
+										index === 1
+											? "h-5 w-7/12 rounded-md"
+											: "h-5 w-1/2 rounded-md"
+									}
+								/>
+								<div className="flex gap-1">
+									{[0, 1, 2, 3, 4].map((star) => (
+										<Skeleton
+											key={`feedback-star-${index}-${star}`}
+											className="h-3.5 w-3.5 rounded-full"
+										/>
+									))}
+								</div>
+							</div>
+							<div className="hidden shrink-0 gap-2 sm:flex">
+								<Skeleton className="h-6 w-16 rounded-full" />
+								<Skeleton className="h-6 w-20 rounded-full" />
+								<Skeleton className="h-6 w-20 rounded-full" />
+							</div>
+						</div>
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
 export function LessonFeedbackInsights({
 	feedbackInsights,
 	isLoading,
@@ -176,43 +226,15 @@ export function LessonFeedbackInsights({
 			<CardHeader>
 				<CardTitle className="flex items-center gap-2 text-xl font-bold">
 					<MessageSquareText className="h-5 w-5" />
-					Feedback by Lesson
+					{m.dashboard_feedback_by_lesson()}
 				</CardTitle>
 				<CardDescription>
-					A compact insights view works better than a table for qualitative
-					lesson feedback.
+					{m.dashboard_feedback_by_lesson_description()}
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
 				{isLoading ? (
-					<div className="space-y-4">
-						<div className="grid gap-3 md:grid-cols-2">
-							<Skeleton className="h-10 w-full" />
-							<Skeleton className="h-10 w-full" />
-						</div>
-						<div className="flex gap-2">
-							<Skeleton className="h-10 w-24" />
-							<Skeleton className="h-10 w-32" />
-							<Skeleton className="h-10 w-36" />
-						</div>
-						<div className="space-y-3 pt-2">
-							{["sk-1", "sk-2", "sk-3"].map((sk) => (
-								<div
-									key={sk}
-									className="rounded-lg border bg-card/70 p-3 space-y-2"
-								>
-									<div className="flex justify-between items-center gap-4">
-										<Skeleton className="h-5 w-1/3" />
-										<div className="flex gap-2">
-											<Skeleton className="h-5 w-16" />
-											<Skeleton className="h-5 w-20" />
-										</div>
-									</div>
-									<Skeleton className="h-4 w-28" />
-								</div>
-							))}
-						</div>
-					</div>
+					<FeedbackInsightsSkeleton />
 				) : (
 					<Tabs defaultValue="top" className="w-full space-y-4">
 						<div className="grid gap-3 md:grid-cols-2">
@@ -223,25 +245,33 @@ export function LessonFeedbackInsights({
 								}
 							>
 								<SelectTrigger className="w-full">
-									<SelectValue placeholder="Filter by subject" />
+									<SelectValue placeholder={m.dashboard_filter_by_subject()} />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="all">All subjects</SelectItem>
-									<SelectItem value={Subject.MATH}>Math</SelectItem>
-									<SelectItem value={Subject.ENGLISH}>English</SelectItem>
-									<SelectItem value={Subject.ICT}>ICT</SelectItem>
+									<SelectItem value="all">
+										{m.dashboard_all_subjects()}
+									</SelectItem>
+									<SelectItem value={Subject.MATH}>
+										{m.dashboard_subject_math()}
+									</SelectItem>
+									<SelectItem value={Subject.ENGLISH}>
+										{m.dashboard_subject_english()}
+									</SelectItem>
+									<SelectItem value={Subject.ICT}>
+										{m.dashboard_subject_ict()}
+									</SelectItem>
 								</SelectContent>
 							</Select>
 
 							<Select value={gradeFilter} onValueChange={onGradeFilterChange}>
 								<SelectTrigger className="w-full">
-									<SelectValue placeholder="Filter by grade" />
+									<SelectValue placeholder={m.dashboard_filter_by_grade()} />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="all">All grades</SelectItem>
+									<SelectItem value="all">{m.dashboard_all_grades()}</SelectItem>
 									{gradeOptions.map((grade) => (
 										<SelectItem key={grade} value={String(grade)}>
-											Grade {grade}
+											{m.dashboard_grade_label({ grade: String(grade) })}
 										</SelectItem>
 									))}
 								</SelectContent>
@@ -249,22 +279,26 @@ export function LessonFeedbackInsights({
 						</div>
 
 						<TabsList>
-							<TabsTrigger value="top">Top Rated</TabsTrigger>
-							<TabsTrigger value="improve">Needs Attention</TabsTrigger>
-							<TabsTrigger value="comments">Recent Comments</TabsTrigger>
+							<TabsTrigger value="top">{m.dashboard_top_rated()}</TabsTrigger>
+							<TabsTrigger value="improve">
+								{m.dashboard_needs_attention()}
+							</TabsTrigger>
+							<TabsTrigger value="comments">
+								{m.dashboard_recent_comments()}
+							</TabsTrigger>
 						</TabsList>
 
 						<TabsContent value="top" className="mt-4">
 							<LessonRatingList
 								items={filteredTopRatedLessons}
-								emptyLabel="No lesson ratings in this period yet."
+								emptyLabel={m.dashboard_no_lesson_ratings()}
 							/>
 						</TabsContent>
 
 						<TabsContent value="improve" className="mt-4">
 							<LessonRatingList
 								items={filteredLowRatedLessons}
-								emptyLabel="No low-rated lessons found in this period."
+								emptyLabel={m.dashboard_no_low_rated_lessons()}
 							/>
 						</TabsContent>
 
@@ -283,9 +317,11 @@ export function LessonFeedbackInsights({
 														<p className="text-xs text-muted-foreground">
 															{item.subject
 																? SUBJECT_METADATA[item.subject].label
-																: "Unknown subject"}
+																: m.dashboard_unknown_subject()}
 															{item.gradeLevel
-																? ` • Grade ${item.gradeLevel}`
+																? ` • ${m.dashboard_grade_label({
+																		grade: String(item.gradeLevel),
+																	})}`
 																: ""}
 														</p>
 													</div>
@@ -303,7 +339,7 @@ export function LessonFeedbackInsights({
 									))}
 									{filteredComments.length === 0 && (
 										<p className="text-sm text-muted-foreground">
-											No comments yet in this period.
+											{m.dashboard_no_comments_yet()}
 										</p>
 									)}
 								</div>

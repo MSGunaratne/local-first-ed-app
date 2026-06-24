@@ -1,4 +1,4 @@
-import { asc, count, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNull } from "drizzle-orm";
 import { requireTeacherOrAdminSession } from "#/lib/auth/access";
 import { db } from "@/db";
 import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
@@ -36,6 +36,7 @@ export async function getLessons(
 		globalFilter,
 		lessonQuickFilterConfig,
 	);
+	const whereClause = and(searchFilters, isNull(lessons.deletedAt));
 
 	const sort = sorting?.[0];
 	const sortField = (sort?.id as keyof Lesson) ?? "createdAt";
@@ -45,7 +46,7 @@ export async function getLessons(
 	const dataPromise = db
 		.select()
 		.from(lessons)
-		.where(searchFilters)
+		.where(whereClause)
 		.orderBy(orderBy)
 		.limit(limit)
 		.offset(page * limit);
@@ -53,7 +54,7 @@ export async function getLessons(
 	const totalPromise = db
 		.select({ total: count() })
 		.from(lessons)
-		.where(searchFilters);
+		.where(whereClause);
 
 	const [data, totalResult] = await Promise.all([dataPromise, totalPromise]);
 	throwIfAborted(abortSignal);
@@ -75,7 +76,7 @@ export async function getLessons(
 
 export async function getLessonById(id: string) {
 	const selectedLesson = await db.query.lessons.findFirst({
-		where: eq(lessons.id, id),
+		where: and(eq(lessons.id, id), isNull(lessons.deletedAt)),
 	});
 	if (!selectedLesson) {
 		throw new NotFoundError("Lesson", id);
@@ -151,7 +152,11 @@ export async function deleteLesson(id: string) {
 		throw new NotFoundError("Lesson", id);
 	}
 
-	await db.delete(lessons).where(eq(lessons.id, id));
+	const now = new Date();
+	await db
+		.update(lessons)
+		.set({ deletedAt: now, isDeleted: true, updatedAt: now })
+		.where(eq(lessons.id, id));
 }
 
 export type LessonDetails = Awaited<ReturnType<typeof getLessonById>>;

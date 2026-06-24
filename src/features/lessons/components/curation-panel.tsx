@@ -69,11 +69,11 @@ interface CurationPanelProps {
 	grade?: number;
 	linkedIds?: string[];
 	onApplyMetadata?: (match: CurriculumItem) => void;
+	onQuickApply?: (match: CurriculumItem, ocrText: string) => void;
 	onLinkToggle?: (match: CurriculumItem, isLinked: boolean) => void;
 	onInsertText?: (text: string, topic?: string) => void;
 	onInsertImage?: (dataUrl: string) => void;
-	// Backward compatibility fallback
-	onMatchSelect?: (match: CurriculumItem, ocrText: string) => void;
+	isEditorEmpty?: boolean;
 }
 
 export function CurationPanel({
@@ -81,18 +81,20 @@ export function CurationPanel({
 	grade,
 	linkedIds = [],
 	onApplyMetadata,
+	onQuickApply,
 	onLinkToggle,
 	onInsertText,
 	onInsertImage,
-	onMatchSelect,
+	isEditorEmpty = false,
 }: CurationPanelProps) {
 	// OCR parameters
 	const [usePreprocessing, setUsePreprocessing] = useState(true);
 	const [psmMode, setPsmMode] = useState<number>(3); // Default to 3 (Auto)
-	const [ocrLanguage, setOcrLanguage] = useState<string>("sin"); // Default to Sinhala
+	const [ocrLanguage, setOcrLanguage] = useState<string>("eng+sin");
 
 	const {
 		text: rawOcrText,
+		confidence,
 		progress,
 		status,
 		scanImage,
@@ -115,6 +117,8 @@ export function CurationPanel({
 	const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
 	const lastProcessedTextRef = useRef<string>("");
+	const lastMatchTextRef = useRef<string>("");
+	const matchRequestRef = useRef(0);
 	const prevPreprocessingRef = useRef(usePreprocessing);
 	const prevPsmModeRef = useRef(psmMode);
 	const prevOcrLanguageRef = useRef(ocrLanguage);
@@ -180,12 +184,45 @@ export function CurationPanel({
 		setImageUrl(null);
 	}, [uploadedFile]);
 
-	// Clear matches and manual search query when subject or grade change
-	// biome-ignore lint/correctness/useExhaustiveDependencies: clear matches when subject/grade props change
+	const runMatchSearch = useCallback(
+		async (
+			textToSearch: string,
+			options: { notifyEmpty?: boolean; showNoMatchesToast?: boolean } = {},
+		) => {
+			const trimmedText = textToSearch.trim();
+			if (!trimmedText) {
+				if (options.notifyEmpty) {
+					toast.warning(m.lessons_analyze_warning_no_text());
+				}
+				return;
+			}
+
+			const requestId = matchRequestRef.current + 1;
+			matchRequestRef.current = requestId;
+			lastMatchTextRef.current = trimmedText;
+
+			try {
+				const results = await findMatches(trimmedText, subject, grade);
+				if (matchRequestRef.current !== requestId) return;
+
+				setMatches(results);
+				if (results.length === 0 && options.showNoMatchesToast) {
+					toast.info(m.lessons_analyze_info_no_matches({ subject }));
+				}
+			} catch (error) {
+				toast.error(m.lessons_analyze_error());
+				console.error(error);
+			}
+		},
+		[subject, grade],
+	);
+
 	useEffect(() => {
-		setMatches([]);
-		setSearchQuery("");
-	}, [subject, grade]);
+		const textToRefresh = lastMatchTextRef.current;
+		if (!textToRefresh) return;
+
+		runMatchSearch(textToRefresh);
+	}, [runMatchSearch]);
 
 	const handleFileUpload = async (files: File[]) => {
 		if (files.length === 0) return;
@@ -201,26 +238,16 @@ export function CurationPanel({
 	};
 
 	const handleFindMatches = useCallback(
-		async (overrideText?: string | React.MouseEvent) => {
-			const textToSearch = (
-				typeof overrideText === "string" ? overrideText : ocrText
-			).trim();
-			if (!textToSearch) {
-				toast.warning(m.lessons_analyze_warning_no_text());
-				return;
-			}
-			try {
-				const results = await findMatches(textToSearch, subject, grade);
-				setMatches(results);
-				if (results.length === 0) {
-					toast.info(m.lessons_analyze_info_no_matches({ subject }));
-				}
-			} catch (error) {
-				toast.error(m.lessons_analyze_error());
-				console.error(error);
-			}
+		(overrideText?: string | React.MouseEvent) => {
+			const textToSearch =
+				typeof overrideText === "string" ? overrideText : ocrText;
+
+			void runMatchSearch(textToSearch, {
+				notifyEmpty: true,
+				showNoMatchesToast: true,
+			});
 		},
-		[ocrText, subject, grade],
+		[ocrText, runMatchSearch],
 	);
 
 	// Auto-find matches when text is updated from OCR
@@ -233,8 +260,18 @@ export function CurationPanel({
 			const cleaned = cleanOcrText(rawOcrText, ocrLanguage);
 			lastProcessedTextRef.current = rawOcrText;
 			handleFindMatches(cleaned);
+			if (isEditorEmpty && onInsertText) {
+				onInsertText(cleaned);
+			}
 		}
-	}, [status, rawOcrText, ocrLanguage, handleFindMatches]);
+	}, [
+		status,
+		rawOcrText,
+		ocrLanguage,
+		handleFindMatches,
+		isEditorEmpty,
+		onInsertText,
+	]);
 
 	const handleManualSearch = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -242,14 +279,7 @@ export function CurationPanel({
 
 		setIsSearchingManual(true);
 		try {
-			const results = await findMatches(searchQuery, subject, grade);
-			setMatches(results);
-			if (results.length === 0) {
-				toast.info(m.lessons_analyze_info_no_matches({ subject }));
-			}
-		} catch (error) {
-			toast.error(m.lessons_analyze_error());
-			console.error(error);
+			await runMatchSearch(searchQuery, { showNoMatchesToast: true });
 		} finally {
 			setIsSearchingManual(false);
 		}
@@ -343,6 +373,25 @@ export function CurationPanel({
 		setIsCropping(false);
 		setCropRect(null);
 		setActiveTab("scan");
+	};
+
+	const handleQuickApply = (item: CurriculumItem) => {
+		if (onQuickApply) {
+			onQuickApply(item, ocrText);
+			return;
+		}
+
+		if (onApplyMetadata) {
+			onApplyMetadata(item);
+		}
+		const isLinked = linkedIds.includes(item.id);
+		if (!isLinked && onLinkToggle) {
+			onLinkToggle(item, false);
+		}
+
+		if (ocrText && onInsertText) {
+			onInsertText(ocrText, item.topic);
+		}
 	};
 
 	return (
@@ -598,13 +647,25 @@ export function CurationPanel({
 										</Badge>
 									)}
 									{status === "success" && (
-										<Badge
-											variant="default"
-											className="bg-green-600 py-1 px-2 text-xs"
-										>
-											<CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-											{m.curation_editable_badge()}
-										</Badge>
+										<div className="flex items-center gap-1.5">
+											{confidence !== null && (
+												<Badge
+													variant="outline"
+													className="py-1 px-2 text-xs bg-background"
+												>
+													{m.curation_confidence_badge({
+														confidence: Math.round(confidence).toString(),
+													})}
+												</Badge>
+											)}
+											<Badge
+												variant="default"
+												className="bg-green-600 py-1 px-2 text-xs"
+											>
+												<CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+												{m.curation_editable_badge()}
+											</Badge>
+										</div>
 									)}
 								</CardTitle>
 							</CardHeader>
@@ -710,18 +771,13 @@ export function CurationPanel({
 													: "hover:border-muted-foreground/30 border-muted/70"
 											}`}
 										>
-											{/* Header Summary (Clicking toggles expansion) */}
-											<button
-												type="button"
-												onClick={() => toggleExpand(item.id)}
-												onKeyDown={(e) => {
-													if (e.key === "Enter" || e.key === " ") {
-														toggleExpand(item.id);
-													}
-												}}
-												className="w-full p-3.5 cursor-pointer flex items-start justify-between gap-3 text-left select-none hover:bg-accent/40 bg-transparent border-none outline-none focus-visible:ring-1 focus-visible:ring-primary"
-											>
-												<div className="space-y-1.5 flex-1 min-w-0">
+											{/* Header Summary */}
+											<div className="w-full p-3.5 flex items-center justify-between gap-3 text-left select-none hover:bg-accent/10">
+												<button
+													type="button"
+													onClick={() => toggleExpand(item.id)}
+													className="space-y-1.5 flex-1 min-w-0 cursor-pointer outline-none bg-transparent border-0 p-0 text-left"
+												>
 													<div className="flex flex-wrap items-center gap-1.5">
 														<Badge
 															variant="outline"
@@ -766,15 +822,43 @@ export function CurationPanel({
 															{item.content_summary}
 														</p>
 													)}
-												</div>
-												<div className="text-muted-foreground mt-0.5">
-													{isExpanded ? (
-														<ChevronUp className="h-4 w-4" />
+												</button>
+												<div className="flex items-center gap-2 shrink-0">
+													{isLinked ? (
+														<Badge
+															variant="secondary"
+															className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 py-1 px-2 gap-1 text-[10px] font-bold"
+														>
+															<Check className="h-3 w-3" />
+															{m.curation_linked_badge()}
+														</Badge>
 													) : (
-														<ChevronDown className="h-4 w-4" />
+														<Button
+															size="xs"
+															onClick={(e) => {
+																e.stopPropagation();
+																handleQuickApply(item);
+															}}
+															className="h-7 text-[10px] font-bold gap-1 px-2.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+														>
+															<Sparkles className="h-3 w-3 text-amber-300 fill-amber-300" />
+															{m.curation_quick_apply()}
+														</Button>
 													)}
+													<button
+														type="button"
+														onClick={() => toggleExpand(item.id)}
+														className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted"
+														aria-label={isExpanded ? "Collapse" : "Expand"}
+													>
+														{isExpanded ? (
+															<ChevronUp className="h-4 w-4" />
+														) : (
+															<ChevronDown className="h-4 w-4" />
+														)}
+													</button>
 												</div>
-											</button>
+											</div>
 
 											{/* Collapsible Details Panel */}
 											{isExpanded && (
@@ -885,21 +969,6 @@ export function CurationPanel({
 																		{m.curation_link_to_lesson()}
 																	</>
 																)}
-															</Button>
-														)}
-
-														{/* Fallback for backward compatibility */}
-														{!onLinkToggle && onMatchSelect && (
-															<Button
-																variant="default"
-																size="sm"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	onMatchSelect(item, ocrText);
-																}}
-																className="h-8 text-[11px] font-bold"
-															>
-																Apply Match (Legacy)
 															</Button>
 														)}
 													</div>

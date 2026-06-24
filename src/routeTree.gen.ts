@@ -94,7 +94,9 @@ const DashboardLessonsCreateRoute = DashboardLessonsCreateRouteImport.update({
   id: '/lessons/create',
   path: '/lessons/create',
   getParentRoute: () => DashboardRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_dashboard/lessons/create.lazy').then((d) => d.Route),
+)
 const DashboardUsersUserIdEditRoute =
   DashboardUsersUserIdEditRouteImport.update({
     id: '/users/$userId/edit',
@@ -106,7 +108,11 @@ const DashboardLessonsLessonIdEditRoute =
     id: '/lessons/$lessonId/edit',
     path: '/lessons/$lessonId/edit',
     getParentRoute: () => DashboardRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/_dashboard/lessons/$lessonId.edit.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute

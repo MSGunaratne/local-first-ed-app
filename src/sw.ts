@@ -1,10 +1,11 @@
 /// <reference lib="webworker" />
+
+import { BackgroundSyncPlugin } from "workbox-background-sync";
 import { ExpirationPlugin } from "workbox-expiration";
 import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 import { offlineFallback } from "workbox-recipes";
 import { NavigationRoute, registerRoute } from "workbox-routing";
 import { CacheFirst, NetworkFirst, NetworkOnly } from "workbox-strategies";
-import { BackgroundSyncPlugin } from "workbox-background-sync";
 
 declare let self: ServiceWorkerGlobalScope;
 const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";
@@ -78,6 +79,7 @@ registerRoute(
 registerRoute(
 	({ request, url }) =>
 		request.method === "GET" &&
+		!url.pathname.startsWith("/api/sync/") &&
 		(url.pathname.startsWith("/_server") || url.pathname.includes("/api/")),
 	new NetworkFirst({
 		cacheName: "api-cache",

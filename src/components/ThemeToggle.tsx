@@ -14,13 +14,14 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 type ThemeMode = "light" | "dark" | "auto";
 
 const THEME_METADATA = {
-	light: { label: "Light", icon: Sun },
-	dark: { label: "Dark", icon: Moon },
-	auto: { label: "System", icon: Laptop },
+	light: { label: m.common_theme_light(), icon: Sun },
+	dark: { label: m.common_theme_dark(), icon: Moon },
+	auto: { label: m.common_theme_auto(), icon: Laptop },
 } as const satisfies Record<
 	ThemeMode,
 	{ label: string; icon: React.ComponentType<{ className?: string }> }
@@ -82,7 +83,7 @@ export default function ThemeToggle({
 	};
 
 	const TriggerIcon = THEME_METADATA[mode].icon;
-	const label = `Theme mode: ${THEME_METADATA[mode].label}`;
+	const label = m.common_theme_mode({ mode: THEME_METADATA[mode].label });
 
 	if (isCollapsed) {
 		return (
@@ -100,7 +101,7 @@ export default function ThemeToggle({
 									)}
 								>
 									<TriggerIcon className="h-5 w-5" />
-									<span className="sr-only">Switch Theme</span>
+									<span className="sr-only">{m.common_switch_theme()}</span>
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent
@@ -145,7 +146,7 @@ export default function ThemeToggle({
 			>
 				<div className="flex items-center gap-2 px-1">
 					<TriggerIcon className="h-4 w-4 text-muted-foreground" />
-					<span className="text-sm font-semibold">Theme</span>
+					<span className="text-sm font-semibold">{m.common_theme_label()}</span>
 				</div>
 				<div className="flex gap-2">
 					{(Object.keys(THEME_METADATA) as ThemeMode[]).map((themeMode) => {
@@ -158,13 +159,13 @@ export default function ThemeToggle({
 										size="sm"
 										className="flex-1 h-10 transition-all duration-200"
 										onClick={() => handleThemeChange(themeMode)}
-										aria-label={`Switch to ${themeLabel} theme`}
+										aria-label={m.common_switch_to_theme({ theme: themeLabel })}
 									>
 										<Icon className="h-4 w-4" />
 									</Button>
 								</TooltipTrigger>
 								<TooltipContent side="top" align="center">
-									<span>{themeLabel} Mode</span>
+									<span>{m.common_theme_mode({ mode: themeLabel })}</span>
 								</TooltipContent>
 							</Tooltip>
 						);

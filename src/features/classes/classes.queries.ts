@@ -1,10 +1,28 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
+import {
+	keepPreviousData,
+	mutationOptions,
+	queryOptions,
+} from "@tanstack/react-query";
 import { uuidv7 } from "uuidv7";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { getQueryClient } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
 import { getClassByIdFn, getClassesFn } from "./classes.actions";
-import type { ClassInsert } from "./classes.schema";
+import type { Class, ClassInsert } from "./classes.schema";
+
+function asClassArray(value: unknown): Class[] {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+
+	return value.filter(
+		(item): item is Class => typeof item === "object" && item !== null,
+	);
+}
+
+function asClass(value: unknown): Class | null {
+	return typeof value === "object" && value !== null ? (value as Class) : null;
+}
 
 function getExpectedUpdatedAt(value: unknown): string | undefined {
 	if (typeof value !== "object" || value === null) {
@@ -24,6 +42,96 @@ function getExpectedUpdatedAt(value: unknown): string | undefined {
 	return undefined;
 }
 
+function normalizeComparableValue(value: unknown): string | number | boolean {
+	if (value instanceof Date) {
+		return value.getTime();
+	}
+	if (typeof value === "boolean" || typeof value === "number") {
+		return value;
+	}
+	return String(value ?? "").toLowerCase();
+}
+
+function localValueMatchesFilter(value: unknown, filterValue: unknown) {
+	const localValue = normalizeComparableValue(value);
+	const expectedValue = normalizeComparableValue(filterValue);
+
+	if (typeof localValue === "boolean" || typeof expectedValue === "boolean") {
+		return (
+			localValue === expectedValue ||
+			Number(localValue) === Number(expectedValue)
+		);
+	}
+
+	return localValue === expectedValue;
+}
+
+function getSortableValue(classRecord: Class, id: string) {
+	const value = classRecord[id as keyof Class];
+	if (value instanceof Date) {
+		return value.getTime();
+	}
+	if (typeof value === "number" || typeof value === "string") {
+		return value;
+	}
+	return "";
+}
+
+function getLocalClassList(
+	localClasses: Class[],
+	params: DataTableQueryParams,
+) {
+	const globalFilter = params.globalFilter.trim().toLowerCase();
+
+	const filtered = localClasses.filter((classRecord) => {
+		const matchesGlobalFilter =
+			globalFilter.length === 0 ||
+			[classRecord.name, classRecord.subject]
+				.filter((value): value is string => typeof value === "string")
+				.some((value) => value.toLowerCase().includes(globalFilter));
+
+		if (!matchesGlobalFilter) {
+			return false;
+		}
+
+		return params.columnFilters.every((filter) =>
+			localValueMatchesFilter(
+				classRecord[filter.id as keyof Class],
+				filter.value,
+			),
+		);
+	});
+
+	const sort = params.sorting[0] ?? { id: "updatedAt", desc: true };
+	const sorted = [...filtered].sort((a, b) => {
+		const aValue = getSortableValue(a, sort.id);
+		const bValue = getSortableValue(b, sort.id);
+
+		if (aValue < bValue) return sort.desc ? 1 : -1;
+		if (aValue > bValue) return sort.desc ? -1 : 1;
+		return 0;
+	});
+
+	const pageIndex = params.pagination.pageIndex;
+	const pageSize = params.pagination.pageSize;
+	const total = sorted.length;
+	const pageCount = Math.ceil(total / pageSize);
+	const pageStart = pageIndex * pageSize;
+
+	return {
+		data: sorted.slice(pageStart, pageStart + pageSize),
+		meta: {
+			itemCount: total,
+			total,
+			page: pageIndex,
+			limit: pageSize,
+			pageCount,
+			hasPreviousPage: pageIndex > 0,
+			hasNextPage: pageIndex < pageCount - 1,
+		},
+	};
+}
+
 // ----------------------------------------------------------------------
 
 export const classQueries = {
@@ -32,12 +140,27 @@ export const classQueries = {
 	list: (params: DataTableQueryParams) =>
 		queryOptions({
 			queryKey: [...classQueries.lists(), params],
-			queryFn: () => getClassesFn({ data: params }),
+			queryFn: async () => {
+				const { getLocalAll, isReady } = await import("@/lib/local-db");
+				if (isReady()) {
+					const local = asClassArray(await getLocalAll("classes"));
+					if (local.length > 0) return getLocalClassList(local, params);
+				}
+				return getClassesFn({ data: params });
+			},
+			placeholderData: keepPreviousData,
 		}),
 	detail: (id: string) =>
 		queryOptions({
 			queryKey: [...classQueries.all(), id],
-			queryFn: () => getClassByIdFn({ data: { id } }),
+			queryFn: async () => {
+				const { getLocalById, isReady } = await import("@/lib/local-db");
+				if (isReady()) {
+					const local = asClass(await getLocalById("classes", id));
+					if (local) return local;
+				}
+				return getClassByIdFn({ data: { id } });
+			},
 		}),
 };
 
