@@ -4,6 +4,7 @@
 
 import { onlineManager } from "@tanstack/react-query";
 import { uuidv7 } from "uuidv7";
+import { z } from "zod";
 import { getClassByIdFn } from "@/features/classes/classes.actions";
 import { getLessonByIdFn } from "@/features/lessons/lessons.actions";
 import type { MutationServerFnName } from "@/lib/mutation-queue";
@@ -12,6 +13,7 @@ import {
 	flushMutationQueue,
 	hasExistingMutation,
 } from "@/lib/mutation-queue";
+import { SYNC_SCOPES } from "@/types/sync-constants";
 import {
 	getPendingDeleteRecords,
 	getPendingPushRecords,
@@ -21,7 +23,11 @@ import {
 } from "./index";
 
 const SYNC_INTERVAL = 60000; // 60 seconds
-const SYNC_SCOPES: SyncScope[] = ["lessons", "classes", "users"];
+const syncPullResponseSchema = z.object({
+	data: z.array(z.unknown()),
+	cursor: z.unknown().optional(),
+	hasMore: z.boolean().optional(),
+});
 
 let syncTimer: ReturnType<typeof setInterval> | null = null;
 let onlineUnsubscribe: (() => void) | null = null;
@@ -75,6 +81,31 @@ async function resolveRecordOperation(scope: SyncScope, id: string) {
 	}
 
 	return "update" as const;
+}
+
+function getExpectedUpdatedAtFromRecord(record: Record<string, unknown>) {
+	const value = record.baseUpdatedAt ?? record.updatedAt;
+	if (value instanceof Date) {
+		return value.toISOString();
+	}
+
+	if (typeof value === "number") {
+		const millis = value < 100000000000 ? value * 1000 : value;
+		const date = new Date(millis);
+		return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+	}
+
+	if (typeof value === "string") {
+		if (/^\d+$/.test(value)) {
+			return getExpectedUpdatedAtFromRecord({
+				updatedAt: Number.parseInt(value, 10),
+			});
+		}
+		const date = new Date(value);
+		return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+	}
+
+	return undefined;
 }
 
 /**
@@ -254,7 +285,7 @@ async function pushScope(scope: SyncScope) {
 				payload: {
 					id,
 					data: record,
-					expectedUpdatedAt: undefined,
+					expectedUpdatedAt: getExpectedUpdatedAtFromRecord(record),
 					idempotencyKey,
 				},
 				idempotencyKey,
@@ -322,11 +353,7 @@ async function pullScope(scope: SyncScope) {
 			return;
 		}
 
-		const resJson = (await response.json()) as {
-			data: unknown[];
-			cursor?: unknown;
-			hasMore?: boolean;
-		};
+		const resJson = syncPullResponseSchema.parse(await response.json());
 		const records = resJson.data.filter(
 			(item): item is Record<string, unknown> =>
 				typeof item === "object" && item !== null,

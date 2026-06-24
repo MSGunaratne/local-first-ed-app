@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { uuidv7 } from "uuidv7";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
+import { buildLocalDataTableResult } from "@/lib/local-data-table";
 import { getQueryClient } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
 import { getLessonByIdFn, getLessonsFn } from "./lessons.actions";
@@ -46,110 +47,13 @@ function getExpectedUpdatedAt(value: unknown): string | undefined {
 	return undefined;
 }
 
-function normalizeComparableValue(value: unknown): string | number | boolean {
-	if (value instanceof Date) {
-		return value.getTime();
-	}
-
-	if (typeof value === "boolean") {
-		return value;
-	}
-
-	if (typeof value === "number") {
-		return value;
-	}
-
-	return String(value ?? "").toLowerCase();
-}
-
-function localValueMatchesFilter(value: unknown, filterValue: unknown) {
-	const localValue = normalizeComparableValue(value);
-	const expectedValue = normalizeComparableValue(filterValue);
-
-	if (typeof localValue === "boolean" || typeof expectedValue === "boolean") {
-		return (
-			localValue === expectedValue ||
-			Number(localValue) === Number(expectedValue)
-		);
-	}
-
-	return localValue === expectedValue;
-}
-
-function getSortableValue(lesson: LessonType, id: string) {
-	const value = lesson[id as keyof LessonType];
-
-	if (value instanceof Date) {
-		return value.getTime();
-	}
-
-	if (typeof value === "number" || typeof value === "string") {
-		return value;
-	}
-
-	return "";
-}
-
 function getLocalLessonList(
 	localLessons: LessonType[],
 	params: DataTableQueryParams,
 ) {
-	const globalFilter = params.globalFilter.trim().toLowerCase();
-
-	const filtered = localLessons.filter((lesson) => {
-		const matchesGlobalFilter =
-			globalFilter.length === 0 ||
-			[lesson.title, lesson.subject, lesson.teacherNotes]
-				.filter((value): value is string => typeof value === "string")
-				.some((value) => value.toLowerCase().includes(globalFilter));
-
-		if (!matchesGlobalFilter) {
-			return false;
-		}
-
-		return params.columnFilters.every((filter) =>
-			localValueMatchesFilter(
-				lesson[filter.id as keyof LessonType],
-				filter.value,
-			),
-		);
+	return buildLocalDataTableResult(localLessons, params, {
+		globalSearchFields: ["title", "subject", "teacherNotes"],
 	});
-
-	const sort = params.sorting[0] ?? { id: "updatedAt", desc: true };
-	const sorted = [...filtered].sort((a, b) => {
-		const aValue = getSortableValue(a, sort.id);
-		const bValue = getSortableValue(b, sort.id);
-
-		if (aValue < bValue) {
-			return sort.desc ? 1 : -1;
-		}
-
-		if (aValue > bValue) {
-			return sort.desc ? -1 : 1;
-		}
-
-		return 0;
-	});
-
-	const pageIndex = params.pagination.pageIndex;
-	const pageSize = params.pagination.pageSize;
-	const total = sorted.length;
-	const pageCount = Math.ceil(total / pageSize);
-	const pageStart = pageIndex * pageSize;
-	const data = sorted.slice(pageStart, pageStart + pageSize);
-
-	return {
-		data,
-		meta: {
-			itemCount: total,
-			total,
-			page: pageIndex,
-			limit: pageSize,
-			pageCount,
-			hasPreviousPage: pageIndex > 0,
-			hasNextPage: pageIndex < pageCount - 1,
-		},
-	};
 }
 
 // ----------------------------------------------------------------------
@@ -191,8 +95,9 @@ export const lessonMutations = {
 		mutationOptions({
 			mutationFn: async (data: LessonInsert) => {
 				const { insertLocal, isReady } = await import("@/lib/local-db");
-				const { enqueue } = await import("@/lib/mutation-queue");
-				const { flushMutationQueue } = await import("@/lib/mutation-queue");
+				const { enqueueAndFlushIfOnline } = await import(
+					"@/lib/mutation-queue"
+				);
 
 				const id = uuidv7();
 				const now = Math.floor(Date.now() / 1000);
@@ -211,7 +116,7 @@ export const lessonMutations = {
 				}
 
 				// 2. Enqueue for background sync
-				await enqueue({
+				await enqueueAndFlushIfOnline({
 					scope: "lessons",
 					type: "create",
 					serverFn: "createLesson",
@@ -219,11 +124,6 @@ export const lessonMutations = {
 					idempotencyKey: id, // Use the same ID as idempotency key
 				});
 
-				// 3. Trigger background flush if online (don't await)
-				const { onlineManager } = await import("@tanstack/react-query");
-				if (onlineManager.isOnline()) {
-					flushMutationQueue();
-				}
 				return { id };
 			},
 			onMutate: async (newLesson) => {
@@ -241,24 +141,25 @@ export const lessonMutations = {
 	update: (id: string) =>
 		mutationOptions({
 			mutationFn: async (data: LessonInsert) => {
-				const { updateLocal, isReady } = await import("@/lib/local-db");
-				const { enqueue, flushMutationQueue } = await import(
+				const { getLocalExpectedUpdatedAt, updateLocal, isReady } =
+					await import("@/lib/local-db");
+				const { enqueueAndFlushIfOnline } = await import(
 					"@/lib/mutation-queue"
 				);
+
+				const expectedUpdatedAt = isReady()
+					? await getLocalExpectedUpdatedAt("lessons", id)
+					: getExpectedUpdatedAt(
+							getQueryClient().getQueryData(lessonQueries.detail(id).queryKey),
+						);
 
 				// 1. Persist to local SQLite immediately
 				if (isReady()) {
 					await updateLocal("lessons", id, data);
 				}
 
-				// 2. Enqueue for background sync
-				const cached = getQueryClient().getQueryData(
-					lessonQueries.detail(id).queryKey,
-				);
-				const expectedUpdatedAt = getExpectedUpdatedAt(cached);
-
 				const idempotencyKey = uuidv7();
-				await enqueue({
+				await enqueueAndFlushIfOnline({
 					scope: "lessons",
 					type: "update",
 					serverFn: "updateLesson",
@@ -266,11 +167,6 @@ export const lessonMutations = {
 					idempotencyKey,
 				});
 
-				// 3. Trigger background flush if online (don't await)
-				const { onlineManager } = await import("@tanstack/react-query");
-				if (onlineManager.isOnline()) {
-					void flushMutationQueue();
-				}
 				return { success: true };
 			},
 			onMutate: async (updatedData) => {
@@ -285,7 +181,6 @@ export const lessonMutations = {
 					queryClient.setQueryData(detailKey, {
 						...previous,
 						...updatedData,
-						updatedAt: new Date(),
 					});
 				}
 
@@ -306,7 +201,7 @@ export const lessonMutations = {
 		mutationOptions({
 			mutationFn: async (id: string) => {
 				const { deleteLocal, isReady } = await import("@/lib/local-db");
-				const { enqueue, flushMutationQueue } = await import(
+				const { enqueueAndFlushIfOnline } = await import(
 					"@/lib/mutation-queue"
 				);
 
@@ -317,7 +212,7 @@ export const lessonMutations = {
 
 				// 2. Enqueue for background sync
 				const idempotencyKey = uuidv7();
-				await enqueue({
+				await enqueueAndFlushIfOnline({
 					scope: "lessons",
 					type: "delete",
 					serverFn: "deleteLesson",
@@ -325,11 +220,6 @@ export const lessonMutations = {
 					idempotencyKey,
 				});
 
-				// 3. Trigger background flush if online (don't await)
-				const { onlineManager } = await import("@tanstack/react-query");
-				if (onlineManager.isOnline()) {
-					void flushMutationQueue();
-				}
 				return { id };
 			},
 			onMutate: async (deletedId) => {

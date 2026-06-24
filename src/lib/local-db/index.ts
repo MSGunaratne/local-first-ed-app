@@ -13,6 +13,7 @@ export {
 	deleteLocal,
 	getLocalAll,
 	getLocalById,
+	getLocalExpectedUpdatedAt,
 	getPendingDeleteRecords,
 	getPendingPushRecords,
 	getSyncCursor,

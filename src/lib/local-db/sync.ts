@@ -4,13 +4,17 @@
 // ----------------------------------------------------------------------
 
 import type { SQLiteBindValue } from "wa-sqlite";
+import { z } from "zod";
 import type { Class } from "@/features/classes/classes.schema";
 import type { Lesson } from "@/features/lessons/lessons.schema";
 import type { User } from "@/features/users/users.schema";
 import { execute, query, transaction } from "@/lib/local-db/init";
+import type { SyncScope } from "@/types/sync";
 
-export type SyncScope = "lessons" | "classes" | "users";
+export type { SyncScope } from "@/types/sync";
+
 type MutableSyncScope = Exclude<SyncScope, "users">;
+const conflictRecordJsonSchema = z.record(z.string(), z.unknown());
 
 type SyncEntityMap = {
 	lessons: Lesson;
@@ -399,6 +403,25 @@ export async function getLocalById(
 	return snakeToCamel<SyncEntity<typeof scope>>(rows[0], colMap);
 }
 
+export async function getLocalExpectedUpdatedAt(
+	scope: MutableSyncScope,
+	id: string,
+): Promise<string | undefined> {
+	const table = TABLE_MAP[scope];
+	const rows = await query<{
+		updated_at?: unknown;
+		base_updated_at?: unknown;
+	}>(`SELECT updated_at, base_updated_at FROM ${table} WHERE id = ? LIMIT 1;`, [
+		id,
+	]);
+	const row = rows[0];
+	if (!row) {
+		return undefined;
+	}
+
+	return serializeExpectedUpdatedAt(row.base_updated_at ?? row.updated_at);
+}
+
 /**
  * Read all non-deleted records from a scope.
  */
@@ -475,6 +498,9 @@ export async function resolveConflict(
 	conflictId: string,
 	resolution: "keep-local" | "accept-remote",
 ): Promise<void> {
+	let resolvedScope: MutableSyncScope | null = null;
+	let resolvedEntityId: string | null = null;
+
 	await transaction(async (exec, qry) => {
 		const rows = await qry<{
 			id: string;
@@ -491,6 +517,9 @@ export async function resolveConflict(
 		const conflict = rows[0];
 		if (!conflict) return;
 		if (conflict.scope !== "lessons" && conflict.scope !== "classes") return;
+
+		resolvedScope = conflict.scope;
+		resolvedEntityId = conflict.entity_id;
 
 		if (resolution === "accept-remote") {
 			const scope = conflict.scope;
@@ -531,6 +560,11 @@ export async function resolveConflict(
 			[conflictId],
 		);
 	});
+
+	if (resolvedScope && resolvedEntityId) {
+		const { removeMutationsForEntity } = await import("@/lib/mutation-queue");
+		await removeMutationsForEntity(resolvedScope, resolvedEntityId);
+	}
 }
 
 type ConflictType = "update-update" | "delete-update";
@@ -541,10 +575,7 @@ function isUnresolvedLocalChange(row: Record<string, unknown>) {
 
 function parseConflictJson(value: string): Record<string, unknown> {
 	try {
-		const parsed = JSON.parse(value) as unknown;
-		return typeof parsed === "object" && parsed !== null
-			? (parsed as Record<string, unknown>)
-			: {};
+		return conflictRecordJsonSchema.parse(JSON.parse(value));
 	} catch {
 		return {};
 	}
@@ -678,6 +709,32 @@ function serializeValue(value: unknown): SQLiteBindValue {
 		return value;
 	}
 	return String(value);
+}
+
+function serializeExpectedUpdatedAt(value: unknown): string | undefined {
+	if (value == null) {
+		return undefined;
+	}
+
+	if (value instanceof Date) {
+		return value.toISOString();
+	}
+
+	if (typeof value === "number") {
+		const millis = value < 100000000000 ? value * 1000 : value;
+		const date = new Date(millis);
+		return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+	}
+
+	if (typeof value === "string") {
+		if (/^\d+$/.test(value)) {
+			return serializeExpectedUpdatedAt(Number.parseInt(value, 10));
+		}
+		const date = new Date(value);
+		return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+	}
+
+	return undefined;
 }
 
 function deserializeValue(value: unknown): unknown {

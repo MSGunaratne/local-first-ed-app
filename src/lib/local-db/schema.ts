@@ -181,6 +181,19 @@ async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
       resolved_at     INTEGER
     );
 
+    CREATE TABLE IF NOT EXISTS _outbox (
+      id                TEXT PRIMARY KEY,
+      scope             TEXT NOT NULL,
+      mutation_type     TEXT NOT NULL,
+      server_fn         TEXT NOT NULL,
+      payload_json      TEXT NOT NULL,
+      idempotency_key   TEXT NOT NULL,
+      status            TEXT NOT NULL DEFAULT 'pending',
+      created_at        INTEGER NOT NULL,
+      retry_count       INTEGER NOT NULL DEFAULT 0,
+      last_error        TEXT
+    );
+
     -- Indexes for common queries
     CREATE INDEX IF NOT EXISTS idx_lesson_subject ON lesson(subject);
     CREATE INDEX IF NOT EXISTS idx_lesson_sync_status ON lesson(sync_status);
@@ -188,6 +201,8 @@ async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_class_sync_status ON class(sync_status);
     CREATE INDEX IF NOT EXISTS idx_user_role ON user(role);
     CREATE INDEX IF NOT EXISTS idx_sync_conflicts_scope_entity ON _sync_conflicts(scope, entity_id);
+    CREATE INDEX IF NOT EXISTS idx_outbox_status_created ON _outbox(status, created_at);
+    CREATE INDEX IF NOT EXISTS idx_outbox_scope_created ON _outbox(scope, created_at);
     CREATE INDEX IF NOT EXISTS idx_student_progress_lesson ON student_progress_event(lesson_id);
     CREATE INDEX IF NOT EXISTS idx_student_progress_sync_status ON student_progress_event(sync_status);
   `,

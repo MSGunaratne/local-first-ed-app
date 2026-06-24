@@ -1,9 +1,14 @@
 import { createMiddleware } from "@tanstack/react-start";
+import { z } from "zod";
 import { checkIdempotencyKey, recordIdempotencyKey } from "@/lib/idempotency";
 
 type ServerFnContext = {
 	signal: AbortSignal;
 };
+
+const idempotencyBodySchema = z.object({
+	idempotencyKey: z.string().optional(),
+});
 
 /**
  * Throws a standard AbortError when a request is already cancelled.
@@ -43,10 +48,9 @@ export const idempotentMiddleware = createMiddleware().server(
 			const cloned = request.clone();
 			const body = await cloned.text();
 			if (body) {
-				const parsed = JSON.parse(body) as Record<string, unknown>;
-				if (typeof parsed.idempotencyKey === "string") {
-					idempotencyKey = parsed.idempotencyKey;
-				}
+				idempotencyKey = idempotencyBodySchema.parse(
+					JSON.parse(body),
+				).idempotencyKey;
 			}
 		} catch {
 			// If parsing fails, just skip idempotency check

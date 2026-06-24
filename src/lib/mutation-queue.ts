@@ -1,247 +1,39 @@
-import { clear, createStore, del, entries, get, set } from "idb-keyval";
 import { uuidv7 } from "uuidv7";
-import type {
-	LessonFeedbackInput,
-	StudentProgressEventInput,
-} from "#/features/analytics/analytics.schema";
+import { execute, query } from "@/lib/local-db/init";
+import {
+	type MutationScope,
+	type MutationServerFnName,
+	type MutationServerFnPayloadMap,
+	mutationPayloadSchemas,
+	type OutboxRow,
+	outboxRowSchema,
+	type QueuedMutation,
+	queuedMutationSchema,
+} from "@/types/sync";
+
+export type {
+	MutationScope,
+	MutationServerFnName,
+	MutationServerFnPayloadMap,
+	MutationStatus,
+	MutationType,
+	QueuedMutation,
+} from "@/types/sync";
 
 // ----------------------------------------------------------------------
 // Application-level mutation queue
-// Replaces Workbox BackgroundSyncPlugin with structured IDB storage.
+// Replaces Workbox BackgroundSyncPlugin with structured SQLite outbox storage.
 // Each pending mutation is stored as a discrete entry, not a serialized
 // HTTP request. Mutations are replayed via server functions in FIFO order
 // with per-mutation error handling and idempotency support.
 // ----------------------------------------------------------------------
 
-const STORE = createStore("mutation-queue", "mutations");
 const MAX_RETRIES = 5;
-
-export type MutationScope =
-	| "lessons"
-	| "classes"
-	| "users"
-	| "students"
-	| "analytics";
-export type MutationType = "create" | "update" | "delete";
-export type MutationStatus = "pending" | "in-flight" | "failed";
-
-type MutationDataRecord = Record<string, unknown>;
-
-type ScopedCreatePayload = MutationDataRecord & {
-	id: string;
-	idempotencyKey?: string;
-};
-
-type ScopedUpdatePayload = {
-	id: string;
-	data: MutationDataRecord;
-	expectedUpdatedAt?: string;
-	idempotencyKey?: string;
-};
-
-type ScopedDeletePayload = {
-	id: string;
-	idempotencyKey?: string;
-};
-
-export interface MutationServerFnPayloadMap {
-	createLesson: ScopedCreatePayload;
-	updateLesson: ScopedUpdatePayload;
-	deleteLesson: ScopedDeletePayload;
-	createClass: ScopedCreatePayload;
-	updateClass: ScopedUpdatePayload;
-	deleteClass: ScopedDeletePayload;
-	createUser: MutationDataRecord;
-	updateUser: {
-		id: string;
-		data: MutationDataRecord;
-		idempotencyKey?: string;
-	};
-	deleteUser: ScopedDeletePayload;
-	submitLessonFeedback: LessonFeedbackInput;
-	submitStudentProgressEvent: StudentProgressEventInput;
-}
-
-export type MutationServerFnName = keyof MutationServerFnPayloadMap;
+const IN_FLIGHT_TIMEOUT_MS = 5 * 60 * 1000;
+let outboxSchemaPromise: Promise<void> | null = null;
 
 function isRecord(payload: unknown): payload is Record<string, unknown> {
 	return typeof payload === "object" && payload !== null;
-}
-
-function hasStringId(
-	payload: unknown,
-): payload is Record<string, unknown> & { id: string } {
-	return (
-		isRecord(payload) && typeof payload.id === "string" && payload.id.length > 0
-	);
-}
-
-function isScopedUpdatePayload(
-	payload: unknown,
-): payload is ScopedUpdatePayload {
-	if (!isRecord(payload)) {
-		return false;
-	}
-
-	if (!hasStringId(payload) || !isRecord(payload.data)) {
-		return false;
-	}
-
-	if (
-		"expectedUpdatedAt" in payload &&
-		typeof payload.expectedUpdatedAt !== "undefined" &&
-		typeof payload.expectedUpdatedAt !== "string"
-	) {
-		return false;
-	}
-
-	if (
-		"idempotencyKey" in payload &&
-		typeof payload.idempotencyKey !== "undefined" &&
-		typeof payload.idempotencyKey !== "string"
-	) {
-		return false;
-	}
-
-	return true;
-}
-
-function isScopedDeletePayload(
-	payload: unknown,
-): payload is ScopedDeletePayload {
-	if (!hasStringId(payload)) {
-		return false;
-	}
-
-	if (
-		"idempotencyKey" in payload &&
-		typeof payload.idempotencyKey !== "undefined" &&
-		typeof payload.idempotencyKey !== "string"
-	) {
-		return false;
-	}
-
-	return true;
-}
-
-function isScopedCreatePayload(
-	payload: unknown,
-): payload is ScopedCreatePayload {
-	if (!hasStringId(payload)) {
-		return false;
-	}
-
-	if (
-		"idempotencyKey" in payload &&
-		typeof payload.idempotencyKey !== "undefined" &&
-		typeof payload.idempotencyKey !== "string"
-	) {
-		return false;
-	}
-
-	return true;
-}
-
-function isUserUpdatePayload(
-	payload: unknown,
-): payload is MutationServerFnPayloadMap["updateUser"] {
-	if (!isRecord(payload)) {
-		return false;
-	}
-
-	if (!hasStringId(payload) || !isRecord(payload.data)) {
-		return false;
-	}
-
-	if (
-		"idempotencyKey" in payload &&
-		typeof payload.idempotencyKey !== "undefined" &&
-		typeof payload.idempotencyKey !== "string"
-	) {
-		return false;
-	}
-
-	return true;
-}
-
-function isValidPayloadForServerFn<K extends MutationServerFnName>(
-	name: K,
-	payload: unknown,
-): payload is MutationServerFnPayloadMap[K] {
-	if (name === "submitLessonFeedback") {
-		if (!isRecord(payload)) {
-			return false;
-		}
-
-		return (
-			typeof payload.idempotencyKey === "string" &&
-			typeof payload.lessonId === "string" &&
-			typeof payload.pseudonymousActorId === "string" &&
-			typeof payload.rating === "number"
-		);
-	}
-
-	if (name === "submitStudentProgressEvent") {
-		if (!isRecord(payload)) {
-			return false;
-		}
-
-		return (
-			typeof payload.idempotencyKey === "string" &&
-			typeof payload.lessonId === "string" &&
-			(payload.status === "started" || payload.status === "completed") &&
-			typeof payload.occurredAt !== "undefined"
-		);
-	}
-
-	switch (name) {
-		case "createLesson":
-		case "createClass":
-			return isScopedCreatePayload(payload);
-		case "updateLesson":
-		case "updateClass":
-			return isScopedUpdatePayload(payload);
-		case "deleteLesson":
-		case "deleteClass":
-		case "deleteUser":
-			return isScopedDeletePayload(payload);
-		case "createUser":
-			return isRecord(payload);
-		case "updateUser":
-			return isUserUpdatePayload(payload);
-		default:
-			return false;
-	}
-}
-
-export interface QueuedMutation {
-	id: string;
-	scope: MutationScope;
-	type: MutationType;
-	serverFn: MutationServerFnName;
-	payload: unknown;
-	idempotencyKey: string;
-	status: MutationStatus;
-	createdAt: number;
-	retryCount: number;
-	lastError?: string;
-}
-
-function isQueuedMutation(value: unknown): value is QueuedMutation {
-	if (!isRecord(value)) {
-		return false;
-	}
-
-	return (
-		typeof value.id === "string" &&
-		typeof value.scope === "string" &&
-		typeof value.type === "string" &&
-		typeof value.serverFn === "string" &&
-		typeof value.idempotencyKey === "string" &&
-		typeof value.status === "string" &&
-		typeof value.createdAt === "number" &&
-		typeof value.retryCount === "number"
-	);
 }
 
 export type EnqueueMutation<K extends MutationServerFnName> = Omit<
@@ -259,6 +51,7 @@ export type EnqueueMutation<K extends MutationServerFnName> = Omit<
 export async function enqueue<K extends MutationServerFnName>(
 	mutation: EnqueueMutation<K>,
 ): Promise<string> {
+	await ensureOutboxSchema();
 	const id = uuidv7();
 	const entry: QueuedMutation = {
 		...mutation,
@@ -267,26 +60,56 @@ export async function enqueue<K extends MutationServerFnName>(
 		createdAt: Date.now(),
 		retryCount: 0,
 	};
-	await set(id, entry, STORE);
+	await insertOutboxEntry(entry);
 	emitChange();
 	return id;
 }
 
+export async function enqueueAndFlushIfOnline<K extends MutationServerFnName>(
+	mutation: EnqueueMutation<K>,
+): Promise<string> {
+	const id = await enqueue(mutation);
+	const { onlineManager } = await import("@tanstack/react-query");
+	if (onlineManager.isOnline()) {
+		void flushMutationQueue();
+	}
+	return id;
+}
+
 export async function getAll(): Promise<QueuedMutation[]> {
-	const all = await entries<string, unknown>(STORE);
+	await ensureOutboxSchema();
+	await resetStaleInFlightMutations();
+	const rawRows = await query<Record<string, unknown>>(
+		`SELECT id, scope, mutation_type, server_fn, payload_json, idempotency_key,
+            status, created_at, retry_count, last_error
+     FROM _outbox
+     ORDER BY created_at ASC;`,
+	);
 	const validMutations: QueuedMutation[] = [];
 
-	for (const [key, value] of all) {
-		if (isQueuedMutation(value)) {
+	for (const rawRow of rawRows) {
+		const rowResult = outboxRowSchema.safeParse(rawRow);
+		if (!rowResult.success) {
+			console.warn("[MutationQueue] Dropping malformed outbox row", rawRow);
+			const id = typeof rawRow.id === "string" ? rawRow.id : null;
+			if (id) {
+				await remove(id);
+			}
+			continue;
+		}
+
+		const row = rowResult.data;
+		const value = outboxRowToMutation(row);
+		if (value) {
 			validMutations.push(value);
 			continue;
 		}
 
 		console.warn(
-			`[MutationQueue] Dropping malformed queue entry "${key}" from IndexedDB`,
-			value,
+			`[MutationQueue] Dropping malformed outbox entry "${row.id}" from SQLite`,
+			row,
 		);
-		await del(key, STORE);
+		await remove(row.id);
 	}
 
 	return validMutations.sort((a, b) => a.createdAt - b.createdAt);
@@ -319,42 +142,47 @@ export async function hasExistingMutation(
 	});
 }
 
+export async function removeMutationsForEntity(
+	scope: MutationScope,
+	entityId: string,
+): Promise<void> {
+	await ensureOutboxSchema();
+	const all = await getAll();
+	const ids = all.flatMap((mutation) =>
+		mutation.scope === scope && getMutationEntityId(mutation) === entityId
+			? [mutation.id]
+			: [],
+	);
+
+	if (ids.length === 0) {
+		return;
+	}
+
+	const placeholders = ids.map(() => "?").join(", ");
+	await execute(`DELETE FROM _outbox WHERE id IN (${placeholders});`, ids);
+	emitChange();
+}
+
 export async function remove(id: string): Promise<void> {
-	await del(id, STORE);
+	await ensureOutboxSchema();
+	await execute("DELETE FROM _outbox WHERE id = ?;", [id]);
 	emitChange();
 }
 
 async function markInFlight(id: string): Promise<void> {
-	const current = await get<QueuedMutation>(id, STORE);
-	if (!current) {
-		return;
-	}
-
-	await set(
-		id,
-		{
-			...current,
-			status: "in-flight" as const,
-		},
-		STORE,
-	);
+	await ensureOutboxSchema();
+	await execute("UPDATE _outbox SET status = 'in-flight' WHERE id = ?;", [id]);
 }
 
 async function markFailed(id: string, error: string): Promise<void> {
-	const current = await get<QueuedMutation>(id, STORE);
-	if (!current) {
-		return;
-	}
-
-	await set(
-		id,
-		{
-			...current,
-			status: "failed" as const,
-			retryCount: current.retryCount + 1,
-			lastError: error,
-		},
-		STORE,
+	await ensureOutboxSchema();
+	await execute(
+		`UPDATE _outbox
+     SET status = 'failed',
+         retry_count = retry_count + 1,
+         last_error = ?
+     WHERE id = ?;`,
+		[error, id],
 	);
 	emitChange();
 }
@@ -397,13 +225,14 @@ export function registerServerFn<K extends MutationServerFnName>(
 	fn: (payload: MutationServerFnPayloadMap[K]) => Promise<unknown>,
 ) {
 	serverFnRegistry.set(name, async (payload) => {
-		if (!isValidPayloadForServerFn(name, payload)) {
+		const result = mutationPayloadSchemas[name].safeParse(payload);
+		if (!result.success) {
 			throw new Error(
 				`Invalid payload for server function "${name}" during replay`,
 			);
 		}
 
-		return fn(payload);
+		return fn(result.data as MutationServerFnPayloadMap[K]);
 	});
 }
 
@@ -444,6 +273,21 @@ function getMutationEntityId(mutation: QueuedMutation): string | null {
 }
 
 async function reconcileLocalStateOnSuccess(mutation: QueuedMutation) {
+	if (mutation.serverFn === "submitStudentProgressEvent") {
+		if (!isRecord(mutation.payload)) {
+			return;
+		}
+		const idempotencyKey = getStringField(mutation.payload, "idempotencyKey");
+		if (!idempotencyKey) {
+			return;
+		}
+		await execute(
+			"UPDATE student_progress_event SET sync_status = 'synced' WHERE idempotency_key = ?;",
+			[idempotencyKey],
+		);
+		return;
+	}
+
 	if (mutation.scope !== "lessons" && mutation.scope !== "classes") {
 		return;
 	}
@@ -522,23 +366,14 @@ async function flushMutationQueueInternal(): Promise<FlushResult> {
 			result.failed++;
 
 			// If it's a 4xx error (client error), don't retry — it won't succeed
-			if (
-				error &&
-				typeof error === "object" &&
-				"status" in error &&
-				typeof (error as { status: number }).status === "number"
-			) {
-				const status = (error as { status: number }).status;
-				if (status >= 400 && status < 500) {
+			if (error && typeof error === "object" && "status" in error) {
+				const status = Reflect.get(error, "status");
+				if (typeof status === "number" && status >= 400 && status < 500) {
 					// Mark as permanently failed by maxing retries
-					const current = await get<QueuedMutation>(mutation.id, STORE);
-					if (current) {
-						await set(
-							mutation.id,
-							{ ...current, retryCount: MAX_RETRIES },
-							STORE,
-						);
-					}
+					await execute("UPDATE _outbox SET retry_count = ? WHERE id = ?;", [
+						MAX_RETRIES,
+						mutation.id,
+					]);
 				}
 			}
 		}
@@ -568,6 +403,96 @@ export function subscribe(listener: () => void): () => void {
 }
 
 export async function clearMutationQueue(): Promise<void> {
-	await clear(STORE);
+	await ensureOutboxSchema();
+	await execute("DELETE FROM _outbox;");
 	emitChange();
+}
+
+async function resetStaleInFlightMutations() {
+	const cutoff = Date.now() - IN_FLIGHT_TIMEOUT_MS;
+	await execute(
+		`UPDATE _outbox
+     SET status = 'pending',
+         last_error = COALESCE(last_error, 'Reset stale in-flight mutation')
+     WHERE status = 'in-flight' AND created_at < ?;`,
+		[cutoff],
+	);
+}
+
+async function ensureOutboxSchema() {
+	outboxSchemaPromise ??= (async () => {
+		await execute(`
+      CREATE TABLE IF NOT EXISTS _outbox (
+        id                TEXT PRIMARY KEY,
+        scope             TEXT NOT NULL,
+        mutation_type     TEXT NOT NULL,
+        server_fn         TEXT NOT NULL,
+        payload_json      TEXT NOT NULL,
+        idempotency_key   TEXT NOT NULL,
+        status            TEXT NOT NULL DEFAULT 'pending',
+        created_at        INTEGER NOT NULL,
+        retry_count       INTEGER NOT NULL DEFAULT 0,
+        last_error        TEXT
+      );
+    `);
+		await execute(
+			"CREATE INDEX IF NOT EXISTS idx_outbox_status_created ON _outbox(status, created_at);",
+		);
+		await execute(
+			"CREATE INDEX IF NOT EXISTS idx_outbox_scope_created ON _outbox(scope, created_at);",
+		);
+	})();
+
+	try {
+		return await outboxSchemaPromise;
+	} catch (error) {
+		outboxSchemaPromise = null;
+		throw error;
+	}
+}
+
+async function insertOutboxEntry(entry: QueuedMutation) {
+	await execute(
+		`INSERT INTO _outbox
+      (id, scope, mutation_type, server_fn, payload_json, idempotency_key,
+       status, created_at, retry_count, last_error)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+		[
+			entry.id,
+			entry.scope,
+			entry.type,
+			entry.serverFn,
+			JSON.stringify(entry.payload),
+			entry.idempotencyKey,
+			entry.status,
+			entry.createdAt,
+			entry.retryCount,
+			entry.lastError ?? null,
+		],
+	);
+}
+
+function outboxRowToMutation(row: OutboxRow): QueuedMutation | null {
+	let payload: unknown;
+	try {
+		payload = JSON.parse(row.payload_json);
+	} catch {
+		return null;
+	}
+
+	const candidate = {
+		id: row.id,
+		scope: row.scope,
+		type: row.mutation_type,
+		serverFn: row.server_fn,
+		payload,
+		idempotencyKey: row.idempotency_key,
+		status: row.status,
+		createdAt: row.created_at,
+		retryCount: row.retry_count,
+		lastError: row.last_error ?? undefined,
+	};
+
+	const result = queuedMutationSchema.safeParse(candidate);
+	return result.success ? result.data : null;
 }

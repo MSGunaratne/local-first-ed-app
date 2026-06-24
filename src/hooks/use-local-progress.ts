@@ -1,4 +1,3 @@
-import { onlineManager } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { uuidv7 } from "uuidv7";
 
@@ -65,8 +64,8 @@ async function recordProgressEvent(
 		[id, lessonId, status, idempotencyKey, occurredAtSeconds],
 	);
 
-	const { enqueue, flushMutationQueue } = await import("@/lib/mutation-queue");
-	await enqueue({
+	const { enqueueAndFlushIfOnline } = await import("@/lib/mutation-queue");
+	await enqueueAndFlushIfOnline({
 		scope: "analytics",
 		type: "create",
 		serverFn: "submitStudentProgressEvent",
@@ -78,10 +77,6 @@ async function recordProgressEvent(
 		},
 		idempotencyKey,
 	});
-
-	if (onlineManager.isOnline()) {
-		void flushMutationQueue();
-	}
 }
 
 export function useLocalProgress() {

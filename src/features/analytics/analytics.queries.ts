@@ -17,12 +17,12 @@ export const analyticsMutations = {
 	submitLessonFeedback: () =>
 		mutationOptions({
 			mutationFn: async (data: Omit<LessonFeedbackInput, "idempotencyKey">) => {
-				const { enqueue, flushMutationQueue } = await import(
+				const { enqueueAndFlushIfOnline } = await import(
 					"@/lib/mutation-queue"
 				);
 				const idempotencyKey = uuidv7();
 
-				await enqueue({
+				await enqueueAndFlushIfOnline({
 					scope: "analytics",
 					type: "create",
 					serverFn: "submitLessonFeedback",
@@ -32,11 +32,6 @@ export const analyticsMutations = {
 					},
 					idempotencyKey,
 				});
-
-				const { onlineManager } = await import("@tanstack/react-query");
-				if (onlineManager.isOnline()) {
-					void flushMutationQueue();
-				}
 
 				return { queued: true };
 			},

@@ -81,6 +81,10 @@ export function ConnectionModeToggle({
 		);
 		await resolveConflict(conflictId, resolution);
 		setConflicts(await getUnresolvedConflicts());
+		if (resolution === "keep-local" && isOnline) {
+			const { syncAll } = await import("@/lib/local-db");
+			void syncAll();
+		}
 	}
 
 	const statusButton = (

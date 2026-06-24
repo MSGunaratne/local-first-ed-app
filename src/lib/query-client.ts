@@ -16,6 +16,11 @@ import { del, get, set } from "idb-keyval";
 import { toast } from "sonner";
 import type { AppError } from "@/db/utils/errors";
 import type { Session } from "@/lib/auth-client";
+import {
+	isPersistedQueryScope,
+	PERSISTED_QUERY_SCOPES,
+} from "@/types/query-cache";
+import { SYNC_SCOPES } from "@/types/sync-constants";
 import { fData } from "@/utils/format-number";
 
 declare module "@tanstack/react-query" {
@@ -43,15 +48,7 @@ const PERSISTENCE_BUSTER = "rq-cache-v2";
 const AUTH_QUERY_KEY = "auth";
 const AUTH_SESSION_QUERY_KEY = [AUTH_QUERY_KEY, "session"] as const;
 const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";
-const REPLAYED_DEFAULT_SCOPES = ["users", "lessons", "classes"] as const;
-
-const PERSISTED_SCOPES = [
-	"lessons",
-	"classes",
-	"users",
-	"students",
-	"auth",
-] as const;
+const REPLAYED_DEFAULT_SCOPES = SYNC_SCOPES;
 
 const STORAGE_BUDGET_BYTES = 50 * 1024 * 1024; // 50 MB
 
@@ -82,7 +79,7 @@ function shouldPersistQuery(
 	if (!scope) {
 		return false;
 	}
-	if (!PERSISTED_SCOPES.includes(scope as (typeof PERSISTED_SCOPES)[number])) {
+	if (!isPersistedQueryScope(scope)) {
 		return false;
 	}
 
@@ -138,7 +135,7 @@ function createScopedIDBPersister(): Persister {
 		},
 
 		restoreClient: async () => {
-			const allScopes = [...PERSISTED_SCOPES, "__other"];
+			const allScopes = [...PERSISTED_QUERY_SCOPES, "__other"];
 			const entries = await Promise.all(
 				allScopes.map(async (scope) => {
 					try {
@@ -181,7 +178,7 @@ function createScopedIDBPersister(): Persister {
 		},
 
 		removeClient: async () => {
-			const allScopes = [...PERSISTED_SCOPES, "__other"];
+			const allScopes = [...PERSISTED_QUERY_SCOPES, "__other"];
 			await Promise.all(
 				allScopes.map((scope) => del(getScopeKey(scope)).catch(() => {})),
 			);
@@ -266,13 +263,35 @@ function getErrorMessage(error: unknown) {
 	}
 
 	if (typeof error === "object" && error !== null) {
-		const errorMessage = (error as { message?: string }).message;
+		const errorMessage = Reflect.get(error, "message");
 		if (typeof errorMessage === "string") {
 			return errorMessage;
 		}
 	}
 
 	return `Unknown error: ${error}`;
+}
+
+function isCancellationError(error: unknown) {
+	if (!(error instanceof Error)) {
+		return false;
+	}
+
+	return (
+		error.name === "AbortError" ||
+		error.name === "CancelledError" ||
+		error.message === "CancelledError" ||
+		error.message.toLowerCase().includes("aborted")
+	);
+}
+
+function getErrorStatus(error: unknown) {
+	if (typeof error === "object" && error !== null && "status" in error) {
+		const status = Reflect.get(error, "status");
+		return typeof status === "number" ? status : null;
+	}
+
+	return null;
 }
 
 // ----------------------------------------------------------------------
@@ -306,6 +325,10 @@ function makeQueryClient() {
 			}
 		},
 		onError: (error, _variables, _context, mutation) => {
+			if (isCancellationError(error)) {
+				return;
+			}
+
 			const { errorMessage } = mutation.meta || {};
 
 			if (errorMessage) {
@@ -333,7 +356,12 @@ function makeQueryClient() {
 				// Keep gcTime >= persisted maxAge to avoid premature eviction.
 				gcTime: CACHE_TIME,
 				retry: (failureCount, error) => {
-					if (error.status >= 400 && error.status < 500) {
+					if (isCancellationError(error)) {
+						return false;
+					}
+
+					const status = getErrorStatus(error);
+					if (status != null && status >= 400 && status < 500) {
 						return false;
 					}
 					return failureCount < 3;
@@ -467,7 +495,18 @@ export async function ensureQueryDataAfterRestore<
 	>,
 ) {
 	initializeQueryPersistence(queryClient);
-	return queryClient.ensureQueryData(options);
+	try {
+		return await queryClient.ensureQueryData(options);
+	} catch (error) {
+		if (isCancellationError(error)) {
+			const cachedData = queryClient.getQueryData<TData>(options.queryKey);
+			if (typeof cachedData !== "undefined") {
+				return cachedData;
+			}
+		}
+
+		throw error;
+	}
 }
 
 export async function clearAuthQueryState() {

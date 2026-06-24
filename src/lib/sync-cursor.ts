@@ -1,7 +1,14 @@
+import { z } from "zod";
+
 export type SyncCursor = {
 	updatedAt: string;
 	id: string;
 };
+
+const syncCursorSchema = z.object({
+	updatedAt: z.string(),
+	id: z.string(),
+});
 
 export function parseSyncCursor(
 	raw: string | null | undefined,
@@ -11,10 +18,7 @@ export function parseSyncCursor(
 	}
 
 	try {
-		const parsed = JSON.parse(raw) as Partial<SyncCursor>;
-		if (typeof parsed.updatedAt === "string" && typeof parsed.id === "string") {
-			return { updatedAt: parsed.updatedAt, id: parsed.id };
-		}
+		return syncCursorSchema.parse(JSON.parse(raw));
 	} catch {
 		const date = new Date(raw);
 		if (!Number.isNaN(date.getTime())) {

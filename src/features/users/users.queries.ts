@@ -42,23 +42,18 @@ export const userMutations = {
 	create: () =>
 		mutationOptions({
 			mutationFn: async (data: UserCreateInput) => {
-				const { enqueue, flushMutationQueue } = await import(
+				const { enqueueAndFlushIfOnline } = await import(
 					"@/lib/mutation-queue"
 				);
 				const idempotencyKey = uuidv7();
 
-				await enqueue({
+				await enqueueAndFlushIfOnline({
 					scope: "users",
 					type: "create",
 					serverFn: "createUser",
 					payload: { ...data, idempotencyKey },
 					idempotencyKey,
 				});
-
-				const { onlineManager } = await import("@tanstack/react-query");
-				if (onlineManager.isOnline()) {
-					void flushMutationQueue();
-				}
 
 				return { queued: true };
 			},
@@ -77,23 +72,18 @@ export const userMutations = {
 	update: (id: string) =>
 		mutationOptions({
 			mutationFn: async (data: UserUpdateInput) => {
-				const { enqueue, flushMutationQueue } = await import(
+				const { enqueueAndFlushIfOnline } = await import(
 					"@/lib/mutation-queue"
 				);
 				const idempotencyKey = uuidv7();
 
-				await enqueue({
+				await enqueueAndFlushIfOnline({
 					scope: "users",
 					type: "update",
 					serverFn: "updateUser",
 					payload: { id, data, idempotencyKey },
 					idempotencyKey,
 				});
-
-				const { onlineManager } = await import("@tanstack/react-query");
-				if (onlineManager.isOnline()) {
-					void flushMutationQueue();
-				}
 
 				return { queued: true };
 			},
@@ -136,23 +126,18 @@ export const userMutations = {
 	delete: () =>
 		mutationOptions({
 			mutationFn: async (id: string) => {
-				const { enqueue, flushMutationQueue } = await import(
+				const { enqueueAndFlushIfOnline } = await import(
 					"@/lib/mutation-queue"
 				);
 				const idempotencyKey = uuidv7();
 
-				await enqueue({
+				await enqueueAndFlushIfOnline({
 					scope: "users",
 					type: "delete",
 					serverFn: "deleteUser",
 					payload: { id, idempotencyKey },
 					idempotencyKey,
 				});
-
-				const { onlineManager } = await import("@tanstack/react-query");
-				if (onlineManager.isOnline()) {
-					void flushMutationQueue();
-				}
 
 				return { queued: true };
 			},
