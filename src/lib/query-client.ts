@@ -20,7 +20,7 @@ import {
 	isPersistedQueryScope,
 	PERSISTED_QUERY_SCOPES,
 } from "@/types/query-cache";
-import { SYNC_SCOPES } from "@/types/sync-constants";
+import { SYNC_SCOPES } from "@/types/sync";
 import { fData } from "@/utils/format-number";
 
 declare module "@tanstack/react-query" {
@@ -571,7 +571,7 @@ export async function clearAllLocalData() {
 
 	// 5. Delete the SQLite database
 	try {
-		const { deleteLocalDb } = await import("@/lib/local-db/init");
+		const { deleteLocalDb } = await import("@/lib/local-db");
 		await deleteLocalDb();
 	} catch (error) {
 		console.error("[Cleanup] Failed to delete SQLite database:", error);

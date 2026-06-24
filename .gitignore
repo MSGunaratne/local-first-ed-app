@@ -12,3 +12,12 @@ dist-ssr
 .vinxi
 __unconfig*
 todos.json
+
+# Test and coverage output
+test-results/
+playwright-report/
+blob-report/
+coverage/
+
+# Generated testing/reporting artifacts
+output/testing/

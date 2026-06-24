@@ -59,7 +59,10 @@ export function Sidebar({
 					)}
 				>
 					{!isCollapsed && (
-						<Link to="/" className="flex items-center gap-2 font-bold text-lg">
+						<Link
+							to="/dashboard"
+							className="flex items-center gap-2 font-bold text-lg"
+						>
 							<img
 								src="/iit-logo.webp"
 								alt={m.common_app_title()}

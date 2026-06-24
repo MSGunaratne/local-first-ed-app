@@ -22,6 +22,10 @@
     "build": "vite build && tsx scripts/verify-sw.ts",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:e2e": "pnpm run build && playwright test",
+    "test:all": "pnpm run typecheck && pnpm run test:unit && pnpm run build && pnpm run test:e2e",
+    "test:report": "node scripts/generate-testing-report.mjs",
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check",
@@ -37,7 +41,7 @@
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "@better-auth/drizzle-adapter": "^1.6.20",
-    "@cloudflare/vite-plugin": "^1.42.1",
+    "@cloudflare/vite-plugin": "^1.42.2",
     "@tailwindcss/vite": "^4.3.1",
     "@tanstack/match-sorter-utils": "latest",
     "@tanstack/react-devtools": "latest",
@@ -66,6 +70,7 @@
     "drizzle-zod": "^0.8.3",
     "idb-keyval": "^6.2.5",
     "lucide-react": "^0.577.0",
+    "pdfjs-dist": "^6.0.227",
     "radix-ui": "^1.6.0",
     "react": "^19.2.7",
     "react-day-picker": "^9.14.0",
@@ -87,6 +92,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.0",
     "@inlang/paraglide-js": "^2.20.1",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/typography": "^0.5.20",
     "@tanstack/devtools-vite": "latest",
     "@testing-library/dom": "^10.4.1",
@@ -109,6 +115,6 @@
     "workbox-precaching": "^7.4.1",
     "workbox-routing": "^7.4.1",
     "workbox-strategies": "^7.4.1",
-    "wrangler": "^4.103.0"
+    "wrangler": "^4.104.0"
   }
 }

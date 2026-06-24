@@ -5,10 +5,14 @@ import {
 } from "#/lib/auth/access";
 import { db } from "@/db";
 import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
-import { buildDrizzleFilter, DataType } from "@/db/utils/drizzle-filter";
+import {
+	buildDrizzleFilter,
+	DataType,
+	getDrizzleSortColumn,
+} from "@/db/utils/drizzle-filter";
 import { ConflictError, NotFoundError, ServerError } from "@/db/utils/errors";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
-import type { Class, ClassInsert } from "./classes.schema";
+import type { ClassInsert } from "./classes.schema";
 import { classes, classInsertSchema } from "./classes.schema";
 
 // ----------------------------------------------------------------------
@@ -42,10 +46,12 @@ export async function getClasses(params: DataTableQueryParams) {
 	// For now, let's assume admins and teachers can see all, or filter later.
 	// If needed, we can add: and(searchFilters, eq(classes.teacherId, session.user.id))
 
-	const sort = sorting?.[0];
-	const sortField = (sort?.id as keyof Class) ?? "createdAt";
-	const isDesc = sort?.desc ?? true;
-	const orderBy = isDesc ? desc(classes[sortField]) : asc(classes[sortField]);
+	const { column, isDesc } = getDrizzleSortColumn(
+		classes,
+		sorting,
+		"createdAt",
+	);
+	const orderBy = isDesc ? desc(column) : asc(column);
 
 	const dataPromise = db
 		.select()

@@ -5,18 +5,6 @@ import type {
 } from "@tanstack/react-table";
 import { z } from "zod";
 
-// ----------------------------------------------------------------------
-// Defaults — exported for use with `stripSearchParams` middleware
-// ----------------------------------------------------------------------
-
-export const DATA_TABLE_SEARCH_DEFAULTS = {
-	pageIndex: 0,
-	pageSize: 10,
-	sorting: [] as { id: string; desc: boolean }[],
-	columnFilters: [] as { id: string; value: unknown }[],
-	globalFilter: "",
-};
-
 /**
  * Schema for data table URL search params.
  *
@@ -31,11 +19,8 @@ export const DATA_TABLE_SEARCH_DEFAULTS = {
  * - `/users?globalFilter=john` = searching
  */
 export const dataTableSearchSchema = z.object({
-	// Pagination - flat params for clean URLs
 	pageIndex: z.number().default(0).catch(0),
 	pageSize: z.number().default(10).catch(10),
-
-	// Sorting - array of sort objects (only in URL when active)
 	sorting: z
 		.array(
 			z.object({
@@ -46,7 +31,6 @@ export const dataTableSearchSchema = z.object({
 		.default([])
 		.catch([]),
 
-	// Column filters (only in URL when active)
 	columnFilters: z
 		.array(
 			z.object({
@@ -57,11 +41,21 @@ export const dataTableSearchSchema = z.object({
 		.default([])
 		.catch([]),
 
-	// Global search filter
 	globalFilter: z.string().default("").catch(""),
 });
 
 export type DataTableSearchParams = z.infer<typeof dataTableSearchSchema>;
+
+const DATA_TABLE_DEFAULT_SORTING: SortingState = [];
+const DATA_TABLE_DEFAULT_COLUMN_FILTERS: ColumnFiltersState = [];
+
+export const DATA_TABLE_SEARCH_DEFAULTS = {
+	pageIndex: 0,
+	pageSize: 10,
+	sorting: DATA_TABLE_DEFAULT_SORTING,
+	columnFilters: DATA_TABLE_DEFAULT_COLUMN_FILTERS,
+	globalFilter: "",
+} satisfies DataTableSearchParams;
 
 export interface DataTableQueryParams {
 	pagination: PaginationState;

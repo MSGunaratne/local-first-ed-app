@@ -8,7 +8,7 @@ import { z } from "zod";
 import type { Session } from "@/lib/auth-client";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { buildLocalDataTableResult } from "@/lib/local-data-table";
-import { getQueryClient } from "@/lib/query-client";
+import { getCachedAuthSession, getQueryClient } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
 import { getClassByIdFn, getClassesFn } from "./classes.actions";
 import type { Class, ClassInsert } from "./classes.schema";
@@ -146,7 +146,6 @@ export const classMutations = {
 				const { enqueueAndFlushIfOnline } = await import(
 					"@/lib/mutation-queue"
 				);
-				const { getCachedAuthSession } = await import("@/lib/query-client");
 
 				const id = uuidv7();
 				const now = Math.floor(Date.now() / 1000);

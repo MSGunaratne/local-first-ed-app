@@ -6,7 +6,7 @@ import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 import { offlineFallback } from "workbox-recipes";
 import { NavigationRoute, registerRoute } from "workbox-routing";
 import { CacheFirst, NetworkFirst, NetworkOnly } from "workbox-strategies";
-import { SYNC_SCOPES } from "./types/sync-constants";
+import { SYNC_SCOPES } from "./types/sync";
 
 declare let self: ServiceWorkerGlobalScope;
 const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";

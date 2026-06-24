@@ -1,4 +1,4 @@
-import { type InferSelectModel, relations, sql } from "drizzle-orm";
+import { type InferSelectModel, sql } from "drizzle-orm";
 import {
 	index,
 	integer,
@@ -183,38 +183,6 @@ export const studentProgressDailyAggregates = sqliteTable(
 		index("idx_student_progress_daily_lesson_id").on(table.lessonId),
 	],
 );
-
-export const analyticsSessionRelations = relations(
-	analyticsSessions,
-	({ many }) => ({
-		events: many(analyticsEvents),
-	}),
-);
-
-export const analyticsEventRelations = relations(
-	analyticsEvents,
-	({ one }) => ({
-		session: one(analyticsSessions, {
-			fields: [analyticsEvents.sessionId],
-			references: [analyticsSessions.id],
-		}),
-		lesson: one(lessons, {
-			fields: [analyticsEvents.lessonId],
-			references: [lessons.id],
-		}),
-		class: one(classes, {
-			fields: [analyticsEvents.classId],
-			references: [classes.id],
-		}),
-	}),
-);
-
-export const lessonFeedbackRelations = relations(lessonFeedback, ({ one }) => ({
-	lesson: one(lessons, {
-		fields: [lessonFeedback.lessonId],
-		references: [lessons.id],
-	}),
-}));
 
 export type AnalyticsSession = InferSelectModel<typeof analyticsSessions>;
 export type AnalyticsEvent = InferSelectModel<typeof analyticsEvents>;

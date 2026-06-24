@@ -82,7 +82,7 @@ function RouteListSkeleton() {
 	);
 }
 
-export const Route = createFileRoute("/_dashboard/")({
+export const Route = createFileRoute("/_dashboard/dashboard")({
 	validateSearch: dashboardSearchSchema,
 	component: DashboardIndex,
 });

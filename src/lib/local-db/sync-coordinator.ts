@@ -7,13 +7,8 @@ import { uuidv7 } from "uuidv7";
 import { z } from "zod";
 import { getClassByIdFn } from "@/features/classes/classes.actions";
 import { getLessonByIdFn } from "@/features/lessons/lessons.actions";
-import type { MutationServerFnName } from "@/types/sync-constants";
-import {
-	enqueue,
-	flushMutationQueue,
-	hasExistingMutation,
-} from "@/lib/mutation-queue";
-import { SYNC_SCOPES, type SyncScope } from "@/types/sync-constants";
+import type { MutationServerFnName } from "@/types/sync";
+import { SYNC_SCOPES, type SyncScope } from "@/types/sync";
 import {
 	getPendingDeleteRecords,
 	getPendingPushRecords,
@@ -192,6 +187,7 @@ export async function syncAll(): Promise<void> {
 		try {
 			// 1. Flush the mutation queue first (high priority changes)
 			console.info("[Sync] Flushing mutation queue...");
+			const { flushMutationQueue } = await import("@/lib/mutation-queue");
 			const flushRes = await flushMutationQueue();
 			console.info(
 				`[Sync] Queue flush: ${flushRes.succeeded} succeeded, ${flushRes.failed} failed.`,
@@ -237,6 +233,10 @@ async function pushScope(scope: SyncScope) {
 	if (scope === "users") {
 		return;
 	}
+
+	const { enqueue, flushMutationQueue, hasExistingMutation } = await import(
+		"@/lib/mutation-queue"
+	);
 
 	// Push modifications
 	console.info(`[Sync:${scope}] Checking for pending modifications to push...`);

@@ -1,4 +1,8 @@
 import { uuidv7 } from "uuidv7";
+import {
+	decryptPayloadJson,
+	encryptPayloadJson,
+} from "@/lib/local-payload-encryption";
 import { execute, query } from "@/lib/local-db/init";
 import {
 	type MutationServerFnPayloadMap,
@@ -7,13 +11,13 @@ import {
 	outboxRowSchema,
 	type QueuedMutation,
 	queuedMutationSchema,
-} from "@/types/sync";
-import { MutationScope, MutationServerFnName } from "#/types/sync-constants";
-
+} from "@/lib/mutation-queue.schema";
+import type { MutationScope, MutationServerFnName } from "@/types/sync";
+import { ValidationError } from "#/db/utils/errors";
 export type {
 	MutationServerFnPayloadMap,
 	QueuedMutation,
-} from "@/types/sync";
+} from "@/lib/mutation-queue.schema";
 
 // ----------------------------------------------------------------------
 // Application-level mutation queue
@@ -29,6 +33,13 @@ let outboxSchemaPromise: Promise<void> | null = null;
 
 function isRecord(payload: unknown): payload is Record<string, unknown> {
 	return typeof payload === "object" && payload !== null;
+}
+
+function shouldEncryptPayload(serverFn: MutationServerFnName) {
+	return (
+		serverFn === "submitLessonFeedback" ||
+		serverFn === "submitStudentProgressEvent"
+	);
 }
 
 export type EnqueueMutation<K extends MutationServerFnName> = Omit<
@@ -94,7 +105,7 @@ export async function getAll(): Promise<QueuedMutation[]> {
 		}
 
 		const row = rowResult.data;
-		const value = outboxRowToMutation(row);
+		const value = await outboxRowToMutation(row);
 		if (value) {
 			validMutations.push(value);
 			continue;
@@ -205,7 +216,7 @@ async function ensureServerFnRegistry() {
 		const { registerAllMutations } = await import(
 			"@/lib/mutation-registration"
 		);
-		registerAllMutations();
+		registerAllMutations(registerServerFn);
 		registryBootstrapped = true;
 	} catch (error) {
 		console.error(
@@ -222,8 +233,9 @@ export function registerServerFn<K extends MutationServerFnName>(
 	serverFnRegistry.set(name, async (payload) => {
 		const result = mutationPayloadSchemas[name].safeParse(payload);
 		if (!result.success) {
-			throw new Error(
+			throw new ValidationError(
 				`Invalid payload for server function "${name}" during replay`,
+				"VALIDATION_ERROR",
 			);
 		}
 
@@ -447,6 +459,10 @@ async function ensureOutboxSchema() {
 }
 
 async function insertOutboxEntry(entry: QueuedMutation) {
+	const payloadJson = shouldEncryptPayload(entry.serverFn)
+		? await encryptPayloadJson(entry.payload)
+		: JSON.stringify(entry.payload);
+
 	await execute(
 		`INSERT INTO _outbox
       (id, scope, mutation_type, server_fn, payload_json, idempotency_key,
@@ -457,7 +473,7 @@ async function insertOutboxEntry(entry: QueuedMutation) {
 			entry.scope,
 			entry.type,
 			entry.serverFn,
-			JSON.stringify(entry.payload),
+			payloadJson,
 			entry.idempotencyKey,
 			entry.status,
 			entry.createdAt,
@@ -467,10 +483,12 @@ async function insertOutboxEntry(entry: QueuedMutation) {
 	);
 }
 
-function outboxRowToMutation(row: OutboxRow): QueuedMutation | null {
+async function outboxRowToMutation(
+	row: OutboxRow,
+): Promise<QueuedMutation | null> {
 	let payload: unknown;
 	try {
-		payload = JSON.parse(row.payload_json);
+		payload = await decryptPayloadJson(row.payload_json);
 	} catch {
 		return null;
 	}

@@ -2,11 +2,15 @@ import { and, asc, count, desc, eq, isNull } from "drizzle-orm";
 import { requireTeacherOrAdminSession } from "#/lib/auth/access";
 import { db } from "@/db";
 import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
-import { buildDrizzleFilter, DataType } from "@/db/utils/drizzle-filter";
+import {
+	buildDrizzleFilter,
+	DataType,
+	getDrizzleSortColumn,
+} from "@/db/utils/drizzle-filter";
 import { ConflictError, NotFoundError, ServerError } from "@/db/utils/errors";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { throwIfAborted } from "@/lib/server-fn";
-import type { Lesson, LessonInsert } from "./lessons.schema";
+import type { LessonInsert } from "./lessons.schema";
 import { lessonInsertSchema, lessons } from "./lessons.schema";
 
 // ----------------------------------------------------------------------
@@ -38,10 +42,12 @@ export async function getLessons(
 	);
 	const whereClause = and(searchFilters, isNull(lessons.deletedAt));
 
-	const sort = sorting?.[0];
-	const sortField = (sort?.id as keyof Lesson) ?? "createdAt";
-	const isDesc = sort?.desc ?? true;
-	const orderBy = isDesc ? desc(lessons[sortField]) : asc(lessons[sortField]);
+	const { column, isDesc } = getDrizzleSortColumn(
+		lessons,
+		sorting,
+		"createdAt",
+	);
+	const orderBy = isDesc ? desc(column) : asc(column);
 
 	const dataPromise = db
 		.select()

@@ -91,17 +91,6 @@ export const assessments = sqliteTable("assessment", {
 
 export type Assessment = InferSelectModel<typeof assessments>;
 
-// export const lessonRelations = relations(lessons, ({ many }) => ({
-// 	assessments: many(assessments),
-// }));
-
-// export const assessmentRelations = relations(assessments, ({ one }) => ({
-// 	lesson: one(lessons, {
-// 		fields: [assessments.lessonId],
-// 		references: [lessons.id],
-// 	}),
-// }));
-
 // -----------------------------------------------------------------------------
 // const flashcardItemSchema = z.object({
 // 	question: z.string().min(1),

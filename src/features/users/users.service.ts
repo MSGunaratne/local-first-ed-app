@@ -3,11 +3,15 @@ import { asc, count, desc, eq } from "drizzle-orm";
 import { requireAdminSession, requireSession } from "#/lib/auth/access";
 import { db } from "@/db";
 import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
-import { buildDrizzleFilter, DataType } from "@/db/utils/drizzle-filter";
+import {
+	buildDrizzleFilter,
+	DataType,
+	getDrizzleSortColumn,
+} from "@/db/utils/drizzle-filter";
 import { NotFoundError, ServerError } from "@/db/utils/errors";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { throwIfAborted } from "@/lib/server-fn";
-import type { User, UserCreateInput, UserUpdateInput } from "./users.schema";
+import type { UserCreateInput, UserUpdateInput } from "./users.schema";
 import {
 	userCreateServerSchema,
 	users,
@@ -48,11 +52,8 @@ export async function getUsers(
 	);
 
 	// Initial naive single-column sort. Extend to multi-sort if needed.
-	const sort = sorting?.[0];
-	const sortField = (sort?.id as keyof User) ?? "createdAt";
-	const isDesc = sort?.desc ?? true; // Default to desc
-
-	const orderBy = isDesc ? desc(users[sortField]) : asc(users[sortField]);
+	const { column, isDesc } = getDrizzleSortColumn(users, sorting, "createdAt");
+	const orderBy = isDesc ? desc(column) : asc(column);
 
 	const dataPromise = db
 		.select()
@@ -101,11 +102,8 @@ export async function exportUsers(
 		userQuickFilterConfig,
 	);
 
-	const sort = sorting?.[0];
-	const sortField = (sort?.id as keyof User) ?? "createdAt";
-	const isDesc = sort?.desc ?? true;
-
-	const orderBy = isDesc ? desc(users[sortField]) : asc(users[sortField]);
+	const { column, isDesc } = getDrizzleSortColumn(users, sorting, "createdAt");
+	const orderBy = isDesc ? desc(column) : asc(column);
 
 	return db.select().from(users).where(userFilters).orderBy(orderBy);
 }

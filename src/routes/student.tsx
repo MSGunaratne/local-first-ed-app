@@ -11,6 +11,14 @@ import { m } from "@/paraglide/messages";
 export const Route = createFileRoute("/student")({ component: StudentLayout });
 
 function StudentLayout() {
+	return (
+		<StudentShell>
+			<Outlet />
+		</StudentShell>
+	);
+}
+
+export function StudentShell({ children }: { children: React.ReactNode }) {
 	const { data: session } = useQuery(authQueries.session());
 	const role = session?.user?.role;
 	const isStaff =
@@ -25,11 +33,15 @@ function StudentLayout() {
 					<span>{m.student_hub()}</span>
 				</div>
 				<div className="flex items-center gap-2 sm:gap-3">
-					{isStaff && (
-						<Button variant="ghost" asChild className="whitespace-nowrap mr-1">
-							<Link to="/lessons">{m.student_back_to_dashboard()}</Link>
-						</Button>
-					)}
+					<Button variant="ghost" asChild className="whitespace-nowrap mr-1">
+						{isStaff ? (
+							<Link to="/dashboard">{m.student_back_to_dashboard()}</Link>
+						) : (
+							<Link to="/sign-in" search={{ returnTo: "/dashboard" }}>
+								{m.student_teacher_dashboard()}
+							</Link>
+						)}
+					</Button>
 					<ParaglideLocaleSwitcher isCollapsed className="h-9 w-9 shrink-0" />
 					<ThemeToggle isCollapsed className="h-9 w-9 shrink-0" />
 					<ConnectionModeToggle compact className="shrink-0" />
@@ -38,7 +50,7 @@ function StudentLayout() {
 
 			{/* Main Content */}
 			<main className="flex-1 container mx-auto py-8 px-4 max-w-5xl">
-				<Outlet />
+				{children}
 			</main>
 		</div>
 	);

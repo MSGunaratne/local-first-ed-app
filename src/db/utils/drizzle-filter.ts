@@ -1,4 +1,4 @@
-import type { ColumnFiltersState } from "@tanstack/react-table";
+import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import type { Column, SQL } from "drizzle-orm";
 import {
 	and,
@@ -116,6 +116,25 @@ type QuickFilterField<T extends SQLiteTable> =
 export type QuickFilterConfig<T extends SQLiteTable> = {
 	fields: QuickFilterField<T>[];
 };
+
+export function getDrizzleSortColumn<T extends SQLiteTable>(
+	table: T,
+	sorting: SortingState | undefined,
+	defaultField: keyof T["_"]["columns"] & string,
+) {
+	const columns = table._.columns;
+	const sort = sorting?.[0];
+	const requestedField = sort?.id;
+	const field =
+		requestedField && requestedField in columns
+			? (requestedField as keyof typeof columns)
+			: defaultField;
+
+	return {
+		column: columns[field],
+		isDesc: sort?.desc ?? true,
+	};
+}
 
 export function related<T extends SQLiteTable, R extends SQLiteTable>(
 	cfg: RelatedQuickFilterField<T, R>,

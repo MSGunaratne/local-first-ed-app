@@ -27,18 +27,42 @@ import {
 import { m } from "@/paraglide/messages";
 import type { Subject } from "@/types/lesson";
 import { SUBJECT_METADATA } from "@/types/lesson";
+import type { z } from "zod";
 
 // ----------------------------------------------------------------------
+
+export type StudentLessonSearch = z.infer<typeof studentSearchSchema>;
 
 export const Route = createFileRoute("/student/")({
 	validateSearch: (search) => studentSearchSchema.parse(search),
 	component: StudentDashboard,
 });
 
-function StudentDashboard() {
+export function StudentDashboard() {
 	const search = useSearch({ from: Route.fullPath });
 	const navigate = useNavigate({ from: Route.fullPath });
 
+	return (
+		<StudentLessonListView
+			search={search}
+			onSearchChange={(updater) => {
+				navigate({ search: updater });
+			}}
+		/>
+	);
+}
+
+export function StudentLessonListView({
+	search,
+	onSearchChange,
+}: {
+	search: StudentLessonSearch;
+	onSearchChange: (
+		updater:
+			| StudentLessonSearch
+			| ((prev: StudentLessonSearch) => StudentLessonSearch),
+	) => void;
+}) {
 	const currentSort = search.sort || "newest";
 	const sorting = [SORT_MAP[currentSort]];
 
@@ -64,34 +88,26 @@ function StudentDashboard() {
 	const showOfflineHint = isError && lessons.length === 0;
 
 	const handleSearch = (value: string) => {
-		navigate({
-			search: (prev) => ({ ...prev, q: value || undefined, page: 1 }),
-		});
+		onSearchChange((prev) => ({ ...prev, q: value || undefined, page: 1 }));
 	};
 
 	const handleSortValChange = (value: string) => {
-		navigate({
-			search: (prev) => ({
-				...prev,
-				sort: value as keyof typeof SORT_MAP,
-			}),
-		});
+		onSearchChange((prev) => ({
+			...prev,
+			sort: value as keyof typeof SORT_MAP,
+		}));
 	};
 
 	const handleSubjectChange = (value: string) => {
-		navigate({
-			search: (prev) => ({
-				...prev,
-				subject: value === "all" ? undefined : (value as Subject),
-				page: 1,
-			}),
-		});
+		onSearchChange((prev) => ({
+			...prev,
+			subject: value === "all" ? undefined : (value as Subject),
+			page: 1,
+		}));
 	};
 
 	const handlePageChange = (newPage: number) => {
-		navigate({
-			search: (prev) => ({ ...prev, page: newPage }),
-		});
+		onSearchChange((prev) => ({ ...prev, page: newPage }));
 	};
 
 	return (
@@ -196,7 +212,7 @@ function StudentDashboard() {
 					{(search.q || search.subject) && (
 						<Button
 							variant="outline"
-							onClick={() => navigate({ search: { page: 1, sort: "newest" } })}
+							onClick={() => onSearchChange({ page: 1, sort: "newest" })}
 							className="mt-6"
 						>
 							{m.student_clear_filters()}

@@ -4,9 +4,11 @@ import { LessonForm } from "@/features/lessons/components/lesson-form";
 import { lessonQueries } from "@/features/lessons/lessons.queries";
 import { m } from "@/paraglide/messages";
 
-export const Route = createLazyFileRoute("/_dashboard/lessons/$lessonId/edit")({
-	component: EditLessonPage,
-});
+export const Route = createLazyFileRoute("/_dashboard/lessons/$lessonId_/edit")(
+	{
+		component: EditLessonPage,
+	},
+);
 
 function EditLessonPage() {
 	const params = Route.useParams();

@@ -54,4 +54,36 @@ describe("Content Mapper Matching Logic", () => {
 		expect(matches.length).toBeGreaterThan(0);
 		expect(matches[0].id).toBe("MAT-GR6-1.1");
 	});
+
+	it("finds ICT matches by curriculum terms", async () => {
+		const matches = await findMatches(
+			"embedded systems processing reliability computer characteristics",
+			Subject.ICT,
+			6,
+		);
+
+		expect(matches.length).toBeGreaterThan(0);
+		expect(matches[0].id).toBe("ICT-GR6-1.1");
+	});
+
+	it("finds mathematics matches for number line concepts", async () => {
+		const matches = await findMatches(
+			"negative numbers integers zero on the number line",
+			Subject.MATH,
+			6,
+		);
+
+		expect(matches.length).toBeGreaterThan(0);
+		expect(matches[0].id).toBe("MAT-GR6-1.2");
+	});
+
+	it("does not return matches for OCR noise without curriculum evidence", async () => {
+		const matches = await findMatches(
+			"@@@ xqz 123 random smudged camera shadow",
+			Subject.ENGLISH,
+			6,
+		);
+
+		expect(matches).toHaveLength(0);
+	});
 });

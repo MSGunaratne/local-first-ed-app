@@ -13,7 +13,7 @@ export type NavItem = {
 export const navConfig: NavItem[] = [
 	{
 		title: "nav_dashboard",
-		path: "/",
+		path: "/dashboard",
 		icon: <LayoutDashboard className="h-4 w-4" />,
 	},
 	{

@@ -8,7 +8,10 @@ import type {
 	VisibilityState,
 } from "@tanstack/react-table";
 import { useCallback, useMemo, useState, useTransition } from "react";
-import type { DataTableSearchParams } from "@/lib/dataTableSearchSchema";
+import {
+	dataTableSearchSchema,
+	type DataTableSearchParams,
+} from "@/lib/dataTableSearchSchema";
 
 // ----------------------------------------------------------------------
 // Constants
@@ -16,6 +19,7 @@ import type { DataTableSearchParams } from "@/lib/dataTableSearchSchema";
 
 const DEFAULT_PAGE_INDEX = 0;
 const DEFAULT_PAGE_SIZE = 10;
+const partialDataTableSearchSchema = dataTableSearchSchema.partial();
 
 // ----------------------------------------------------------------------
 // Types
@@ -85,7 +89,9 @@ export function useServerDataTable(options: UseServerDataTableOptions = {}) {
 		defaultColumnVisibility = {},
 	} = options;
 
-	const search = useSearch({ strict: false }) as Partial<DataTableSearchParams>;
+	const search = partialDataTableSearchSchema.parse(
+		useSearch({ strict: false }),
+	);
 	const navigate = useNavigate();
 	const [isPending, startTransition] = useTransition();
 
@@ -141,7 +147,7 @@ export function useServerDataTable(options: UseServerDataTableOptions = {}) {
 			startTransition(async () => {
 				await navigate({
 					to: ".",
-					search: (prev) => updater(prev as Partial<DataTableSearchParams>),
+					search: (prev) => updater(partialDataTableSearchSchema.parse(prev)),
 					replace: true,
 				});
 			});

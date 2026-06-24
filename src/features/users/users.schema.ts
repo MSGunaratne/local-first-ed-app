@@ -1,4 +1,4 @@
-import { type InferSelectModel, relations, sql } from "drizzle-orm";
+import { type InferSelectModel, sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { uuidv7 } from "uuidv7";
@@ -56,6 +56,8 @@ export const sessions = sqliteTable("session", {
 	impersonatedBy: text("impersonated_by"),
 });
 
+export type Session = InferSelectModel<typeof sessions>;
+
 export const accounts = sqliteTable("account", {
 	id: text("id")
 		.primaryKey()
@@ -102,26 +104,7 @@ export const verifications = sqliteTable("verification", {
 		.$onUpdate(() => new Date()),
 });
 
-export const userRelations = relations(users, ({ many }) => ({
-	sessions: many(sessions),
-	accounts: many(accounts),
-	// classes: many(classes),
-	// studentProfile: one(studentProfiles),
-}));
-
-export const sessionRelations = relations(sessions, ({ one }) => ({
-	user: one(users, {
-		fields: [sessions.userId],
-		references: [users.id],
-	}),
-}));
-
-export const accountRelations = relations(accounts, ({ one }) => ({
-	user: one(users, {
-		fields: [accounts.userId],
-		references: [users.id],
-	}),
-}));
+export type Verification = InferSelectModel<typeof verifications>;
 
 export const userUpdateClientSchema = createInsertSchema(users, {
 	name: (sch) => sch.min(1, "Name is required").trim(),

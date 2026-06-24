@@ -25,9 +25,10 @@ function SyncCoordinatorRunner() {
 				const { registerAllMutations } = await import(
 					"@/lib/mutation-registration"
 				);
+				const { registerServerFn } = await import("@/lib/mutation-queue");
 
 				// 1. Register server functions for the queue first.
-				registerAllMutations();
+				registerAllMutations(registerServerFn);
 
 				// 2. Initialize DB
 				await initLocalDb();

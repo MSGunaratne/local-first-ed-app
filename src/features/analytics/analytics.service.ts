@@ -6,11 +6,16 @@ import {
 	eq,
 	gte,
 	isNotNull,
+	isNull,
 	lte,
 	type SQLWrapper,
 	sql,
 } from "drizzle-orm";
-import { requireAdminSession } from "#/lib/auth/access";
+import { NotFoundError } from "#/db/utils/errors";
+import {
+	requireAdminSession,
+	requireTeacherOrAdminSession,
+} from "#/lib/auth/access";
 import { readServerSession } from "#/lib/auth/session";
 import { db } from "@/db";
 import { lessons } from "@/features/lessons/lessons.schema";
@@ -31,6 +36,79 @@ import {
 } from "./analytics.schema";
 
 const RAW_RETENTION_DAYS = 30;
+
+type QuizBlock = {
+	id: string;
+	question: string;
+};
+
+type QuizAttempt = {
+	questionId: string;
+	question: string;
+	isCorrect: boolean;
+	occurredAt: Date;
+};
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+	return typeof value === "object" && value !== null
+		? (value as Record<string, unknown>)
+		: null;
+}
+
+function getString(value: unknown) {
+	return typeof value === "string" ? value : null;
+}
+
+function collectQuizBlocks(content: unknown): QuizBlock[] {
+	const blocks: QuizBlock[] = [];
+
+	function walk(node: unknown) {
+		const record = asRecord(node);
+		if (!record) return;
+
+		if (record.type === "quiz") {
+			const attrs = asRecord(record.attrs);
+			const question = getString(attrs?.question)?.trim() || "Untitled quiz";
+			const quizId = getString(attrs?.id) || question;
+			blocks.push({ id: quizId, question });
+		}
+
+		const children = record.content;
+		if (Array.isArray(children)) {
+			for (const child of children) {
+				walk(child);
+			}
+		}
+	}
+
+	walk(content);
+	return blocks;
+}
+
+function parseQuizAttempt(
+	payload: unknown,
+	occurredAt: Date,
+): QuizAttempt | null {
+	const record = asRecord(payload);
+	if (!record) return null;
+
+	const interactionType =
+		getString(record.interactionType) ?? getString(record.kind);
+	if (interactionType !== "quiz_answer") return null;
+
+	const isCorrect = record.isCorrect;
+	if (typeof isCorrect !== "boolean") return null;
+
+	const question = getString(record.question)?.trim() || "Untitled quiz";
+	const questionId = getString(record.quizId) || question;
+
+	return {
+		questionId,
+		question,
+		isCorrect,
+		occurredAt,
+	};
+}
 
 function normalizeActorContext(
 	session: Awaited<ReturnType<typeof readServerSession>>,
@@ -556,6 +634,244 @@ export async function getAdminAnalyticsOverview(lookbackDays: number) {
 						]
 					: [],
 			),
+		},
+	};
+}
+
+export async function getLessonAnalyticsDetails(lessonId: string) {
+	await requireTeacherOrAdminSession(
+		"Only teachers and admins can view lesson analytics",
+	);
+
+	const rawSince = new Date(
+		Date.now() - RAW_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+	);
+
+	const selectedLesson = await db.query.lessons.findFirst({
+		where: and(eq(lessons.id, lessonId), isNull(lessons.deletedAt)),
+		with: {
+			feedback: {
+				columns: {
+					rating: true,
+					comment: true,
+					createdAt: true,
+					actorType: true,
+				},
+				orderBy: (feedback, { desc }) => [desc(feedback.createdAt)],
+			},
+			progressAggregates: {
+				columns: {
+					dayUtc: true,
+					startedCount: true,
+					completedCount: true,
+				},
+				orderBy: (progress, { desc }) => [desc(progress.dayUtc)],
+			},
+			analyticsEvents: {
+				columns: {
+					eventType: true,
+					engagementSeconds: true,
+					payloadJson: true,
+					occurredAt: true,
+				},
+				where: (events, { gte }) => gte(events.occurredAt, rawSince),
+				orderBy: (events, { desc }) => [desc(events.occurredAt)],
+			},
+		},
+	});
+
+	if (!selectedLesson) {
+		throw new NotFoundError("Lesson", lessonId);
+	}
+
+	const quizBlocks = collectQuizBlocks(selectedLesson.contentJson);
+	const {
+		feedback: lessonFeedbackRows,
+		progressAggregates: lessonProgressRows,
+		analyticsEvents: lessonAnalyticsEvents,
+		...lesson
+	} = selectedLesson;
+
+	const [feedbackKpi] = await db
+		.select({
+			feedbackCount: count(),
+			avgRating: sql<number>`coalesce(avg(${lessonFeedback.rating}), 0)`,
+		})
+		.from(lessonFeedback)
+		.where(eq(lessonFeedback.lessonId, lessonId));
+
+	const ratingRows = await db
+		.select({
+			rating: lessonFeedback.rating,
+			count: count(),
+		})
+		.from(lessonFeedback)
+		.where(eq(lessonFeedback.lessonId, lessonId))
+		.groupBy(lessonFeedback.rating)
+		.orderBy(desc(lessonFeedback.rating));
+
+	const recentComments = lessonFeedbackRows
+		.filter(
+			(item) =>
+				typeof item.comment === "string" && item.comment.trim().length > 0,
+		)
+		.slice(0, 20);
+
+	const [progressTotals] = await db
+		.select({
+			startedCount: sql<number>`coalesce(sum(${studentProgressDailyAggregates.startedCount}), 0)`,
+			completedCount: sql<number>`coalesce(sum(${studentProgressDailyAggregates.completedCount}), 0)`,
+		})
+		.from(studentProgressDailyAggregates)
+		.where(eq(studentProgressDailyAggregates.lessonId, lessonId));
+
+	const progressByDay = lessonProgressRows.slice(0, 30);
+
+	const [rawEngagement] = await db
+		.select({
+			pageViews: sql<number>`sum(case when ${analyticsEvents.eventType} = 'page_view' then 1 else 0 end)`,
+			lessonStarts: sql<number>`sum(case when ${analyticsEvents.eventType} = 'lesson_started' then 1 else 0 end)`,
+			lessonCompletions: sql<number>`sum(case when ${analyticsEvents.eventType} = 'lesson_completed' then 1 else 0 end)`,
+			activeSeconds: sql<number>`coalesce(sum(${analyticsEvents.engagementSeconds}), 0)`,
+		})
+		.from(analyticsEvents)
+		.where(
+			and(
+				eq(analyticsEvents.lessonId, lessonId),
+				gte(analyticsEvents.occurredAt, rawSince),
+			),
+		);
+
+	const rawQuizEvents = lessonAnalyticsEvents.filter(
+		(event) => event.eventType === "interaction",
+	);
+
+	const quizAttempts = rawQuizEvents.flatMap((row) => {
+		const parsed = parseQuizAttempt(row.payloadJson, row.occurredAt);
+		return parsed ? [parsed] : [];
+	});
+
+	const questionMap = new Map<
+		string,
+		{
+			questionId: string;
+			question: string;
+			attemptCount: number;
+			correctAttemptCount: number;
+			lastAnsweredAt: Date | null;
+		}
+	>();
+
+	for (const block of quizBlocks) {
+		questionMap.set(block.id, {
+			questionId: block.id,
+			question: block.question,
+			attemptCount: 0,
+			correctAttemptCount: 0,
+			lastAnsweredAt: null,
+		});
+	}
+
+	for (const attempt of quizAttempts) {
+		const existing = questionMap.get(attempt.questionId) ??
+			questionMap.get(attempt.question) ?? {
+				questionId: attempt.questionId,
+				question: attempt.question,
+				attemptCount: 0,
+				correctAttemptCount: 0,
+				lastAnsweredAt: null,
+			};
+
+		existing.attemptCount += 1;
+		if (attempt.isCorrect) {
+			existing.correctAttemptCount += 1;
+		}
+		if (
+			!existing.lastAnsweredAt ||
+			attempt.occurredAt > existing.lastAnsweredAt
+		) {
+			existing.lastAnsweredAt = attempt.occurredAt;
+		}
+
+		questionMap.set(existing.questionId, existing);
+	}
+
+	const attemptCount = quizAttempts.length;
+	const correctAttemptCount = quizAttempts.filter(
+		(attempt) => attempt.isCorrect,
+	).length;
+	const startedCount = Number(progressTotals?.startedCount ?? 0);
+	const completedCount = Number(progressTotals?.completedCount ?? 0);
+
+	return {
+		lesson,
+		feedback: {
+			count: Number(feedbackKpi?.feedbackCount ?? 0),
+			avgRating: Number(Number(feedbackKpi?.avgRating ?? 0).toFixed(2)),
+			ratingBreakdown: [5, 4, 3, 2, 1].map((rating) => ({
+				rating,
+				count: Number(
+					ratingRows.find((row) => row.rating === rating)?.count ?? 0,
+				),
+			})),
+			recentComments: recentComments.flatMap((item) =>
+				typeof item.comment === "string" && item.comment
+					? [
+							{
+								rating: item.rating,
+								comment: item.comment,
+								createdAt: item.createdAt,
+								actorType: item.actorType,
+							},
+						]
+					: [],
+			),
+		},
+		progress: {
+			startedCount,
+			completedCount,
+			completionRate:
+				startedCount > 0
+					? Number(((completedCount / startedCount) * 100).toFixed(1))
+					: 0,
+			byDay: progressByDay.map((row) => ({
+				dayUtc: row.dayUtc,
+				startedCount: row.startedCount,
+				completedCount: row.completedCount,
+			})),
+		},
+		engagement: {
+			rawRetentionDays: RAW_RETENTION_DAYS,
+			pageViews: Number(rawEngagement?.pageViews ?? 0),
+			lessonStarts: Number(rawEngagement?.lessonStarts ?? 0),
+			lessonCompletions: Number(rawEngagement?.lessonCompletions ?? 0),
+			activeSeconds: Number(rawEngagement?.activeSeconds ?? 0),
+		},
+		quiz: {
+			rawRetentionDays: RAW_RETENTION_DAYS,
+			authoredQuestionCount: quizBlocks.length,
+			attemptedQuestionCount: Array.from(questionMap.values()).filter(
+				(question) => question.attemptCount > 0,
+			).length,
+			attemptCount,
+			correctAttemptCount,
+			accuracy:
+				attemptCount > 0
+					? Number(((correctAttemptCount / attemptCount) * 100).toFixed(1))
+					: 0,
+			questions: Array.from(questionMap.values()).map((question) => ({
+				...question,
+				accuracy:
+					question.attemptCount > 0
+						? Number(
+								(
+									(question.correctAttemptCount / question.attemptCount) *
+									100
+								).toFixed(1),
+							)
+						: 0,
+			})),
+			recentAttempts: quizAttempts.slice(0, 10),
 		},
 	};
 }

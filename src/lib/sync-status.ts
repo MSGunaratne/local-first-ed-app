@@ -1,7 +1,6 @@
 import { environmentManager, onlineManager } from "@tanstack/react-query";
 import { useEffect, useSyncExternalStore } from "react";
 import { fData } from "#/utils/format-number";
-import * as mutationQueue from "@/lib/mutation-queue";
 import { getQueryClient, getStorageEstimate } from "@/lib/query-client";
 
 // ----------------------------------------------------------------------
@@ -124,8 +123,10 @@ function initializeSyncStatus() {
 	});
 
 	// Track queued mutations (offline queue)
-	mutationQueue.subscribe(() => {
-		void refreshQueuedCount();
+	void import("@/lib/mutation-queue").then((mutationQueue) => {
+		mutationQueue.subscribe(() => {
+			void refreshQueuedCount();
+		});
 	});
 	void refreshQueuedCount();
 	void refreshConflictCount();
@@ -167,6 +168,7 @@ async function refreshStorageUsage() {
 
 async function refreshQueuedCount() {
 	try {
+		const mutationQueue = await import("@/lib/mutation-queue");
 		const all = await mutationQueue.getAll();
 		const pending = all.filter(
 			(m) => m.status === "pending" || m.status === "in-flight",
@@ -194,8 +196,8 @@ async function refreshConflictCount() {
 
 async function flushMutationQueue() {
 	try {
-		const { flushMutationQueue } = await import("@/lib/mutation-queue");
-		const result = await flushMutationQueue();
+		const mutationQueue = await import("@/lib/mutation-queue");
+		const result = await mutationQueue.flushMutationQueue();
 		if (result.succeeded > 0) {
 			updateState({ lastSyncAt: Date.now() });
 		}

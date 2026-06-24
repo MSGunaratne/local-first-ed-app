@@ -4,10 +4,13 @@ import { admin } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import {
 	accountRelations,
-	accounts,
 	sessionRelations,
-	sessions,
 	userRelations,
+} from "#/db/relations";
+import { ServerError } from "#/db/utils/errors";
+import {
+	accounts,
+	sessions,
 	users,
 	verifications,
 } from "#/features/users/users.schema";
@@ -19,7 +22,7 @@ import { db } from "../db";
 const betterAuthUrl = process.env.BETTER_AUTH_URL;
 
 if (!betterAuthUrl) {
-	throw new Error("BETTER_AUTH_URL is required for auth configuration");
+	throw new ServerError("BETTER_AUTH_URL is required for auth configuration");
 }
 
 export const auth = betterAuth({

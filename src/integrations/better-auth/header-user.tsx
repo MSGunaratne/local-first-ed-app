@@ -14,6 +14,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { clearAllLocalData } from "@/lib/query-client";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -31,7 +32,6 @@ export default function BetterAuthHeader({ session }: { session: Session }) {
 		} catch (error) {
 			console.error("Failed server sign out:", error);
 		} finally {
-			const { clearAllLocalData } = await import("@/lib/query-client");
 			await clearAllLocalData();
 			navigate({ to: redirectTo });
 		}

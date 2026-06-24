@@ -40,6 +40,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useOCR } from "@/hooks/use-ocr";
 import { findMatches } from "@/lib/content-mapper";
+import { convertFirstPdfPageToImageFile, isPdfFile } from "@/lib/pdf-to-image";
 import { m } from "@/paraglide/messages";
 import type { Subject } from "@/types/lesson";
 import type { CurriculumItem } from "../lesson.types";
@@ -226,9 +227,18 @@ export function CurationPanel({
 
 	const handleFileUpload = async (files: File[]) => {
 		if (files.length === 0) return;
-		const file = files[0];
-		setUploadedFile(file);
+		const originalFile = files[0];
+
 		try {
+			const file = isPdfFile(originalFile)
+				? await convertFirstPdfPageToImageFile(originalFile)
+				: originalFile;
+
+			if (isPdfFile(originalFile)) {
+				toast.info(m.lessons_pdf_first_page_notice());
+			}
+
+			setUploadedFile(file);
 			await scanImage(file);
 			toast.success(m.lessons_ocr_success());
 		} catch (error) {
@@ -535,7 +545,10 @@ export function CurationPanel({
 									onValueChange={handleFileUpload}
 									dropzoneOptions={{
 										maxFiles: 1,
-										accept: { "image/*": [".png", ".jpg", ".jpeg", ".webp"] },
+										accept: {
+											"image/*": [".png", ".jpg", ".jpeg", ".webp"],
+											"application/pdf": [".pdf"],
+										},
 									}}
 									description={m.lessons_upload_notes_description()}
 								/>

@@ -11,6 +11,7 @@ export const studentProfiles = sqliteTable("student_profile", {
 		.$defaultFn(() => uuidv7()),
 	userId: text("user_id")
 		.notNull()
+		.unique()
 		.references(() => users.id, { onDelete: "cascade" }),
 	gradeLevel: integer("grade_level").notNull(),
 	createdAt: integer("created_at", { mode: "timestamp" })
@@ -23,17 +24,6 @@ export const studentProfiles = sqliteTable("student_profile", {
 });
 
 export type StudentProfile = InferSelectModel<typeof studentProfiles>;
-
-// export const studentProfileRelations = relations(
-// 	studentProfiles,
-// 	({ one, many }) => ({
-// 		user: one(users, {
-// 			fields: [studentProfiles.userId],
-// 			references: [users.id],
-// 		}),
-// 		enrollments: many(enrollments),
-// 	}),
-// );
 
 export const studentProfileInsertSchema = createInsertSchema(studentProfiles, {
 	gradeLevel: z.number().min(6).max(12),

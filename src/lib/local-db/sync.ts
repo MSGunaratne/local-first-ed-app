@@ -9,7 +9,7 @@ import type { Class } from "@/features/classes/classes.schema";
 import type { Lesson } from "@/features/lessons/lessons.schema";
 import type { User } from "@/features/users/users.schema";
 import { execute, query, transaction } from "@/lib/local-db/init";
-import type { SyncScope } from "#/types/sync-constants";
+import type { SyncScope } from "@/types/sync";
 
 type MutableSyncScope = Exclude<SyncScope, "users">;
 const conflictRecordJsonSchema = z.record(z.string(), z.unknown());

@@ -1,3 +1,4 @@
+import { useRouterState } from "@tanstack/react-router";
 import { type NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import {
 	Check,
@@ -8,12 +9,24 @@ import {
 	XCircle,
 } from "lucide-react";
 import { useState } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useAnalytics } from "@/features/analytics/components/analytics-provider";
 import { cn } from "@/lib/utils";
+
+const quizAttrsSchema = z.object({
+	question: z.string().catch(""),
+	options: z.array(z.string()).min(2).catch(["Option 1", "Option 2"]),
+	correctAnswer: z.number().int().nonnegative().catch(0),
+});
+
+const lessonRouteParamsSchema = z.object({
+	lessonId: z.string().min(1),
+});
 
 export function QuizComponent({
 	node,
@@ -21,11 +34,10 @@ export function QuizComponent({
 	editor,
 	deleteNode,
 }: NodeViewProps) {
-	const { question, options, correctAnswer } = node.attrs as {
-		question: string;
-		options: string[];
-		correctAnswer: number;
-	};
+	const { question, options, correctAnswer } = quizAttrsSchema.parse(
+		node.attrs,
+	);
+	const { trackEvent } = useAnalytics();
 
 	const [selectedOption, setSelectedOption] = useState<number | null>(null);
 	const [isSubmitted, setIsSubmitted] = useState(false);
@@ -39,6 +51,36 @@ export function QuizComponent({
 				options[1] === "Option 2")
 		);
 	});
+	const lessonId = useRouterState({
+		select: (state) => {
+			for (const match of [...state.matches].reverse()) {
+				const params = lessonRouteParamsSchema.safeParse(match.params);
+				if (params.success) return params.data.lessonId;
+			}
+			return null;
+		},
+	});
+
+	const handleSubmitAnswer = () => {
+		if (selectedOption === null) return;
+
+		setIsSubmitted(true);
+
+		trackEvent(
+			"interaction",
+			{
+				interactionType: "quiz_answer",
+				quizId: question || "Untitled quiz",
+				question: question || "Untitled quiz",
+				selectedOption,
+				selectedAnswer: options[selectedOption] ?? null,
+				correctAnswer,
+				correctAnswerText: options[correctAnswer] ?? null,
+				isCorrect: selectedOption === correctAnswer,
+			},
+			lessonId ? { lessonId } : undefined,
+		);
+	};
 
 	if (!editor.isEditable) {
 		const isCorrect = selectedOption === correctAnswer;
@@ -89,6 +131,7 @@ export function QuizComponent({
 
 								return (
 									<Label
+										// biome-ignore lint/suspicious/noArrayIndexKey: Quiz options are ordered form fields without stable IDs.
 										key={index}
 										htmlFor={`opt-${index}`}
 										className={itemClass}
@@ -116,7 +159,7 @@ export function QuizComponent({
 
 						{!isSubmitted ? (
 							<Button
-								onClick={() => setIsSubmitted(true)}
+								onClick={handleSubmitAnswer}
 								disabled={selectedOption === null}
 								className="w-full sm:w-auto"
 							>
@@ -247,6 +290,7 @@ export function QuizComponent({
 								const isCorrect = index === correctAnswer;
 								return (
 									<div
+										// biome-ignore lint/suspicious/noArrayIndexKey: Quiz options are ordered form fields without stable IDs.
 										key={index}
 										className={cn(
 											"flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm border transition-all",
@@ -331,6 +375,7 @@ export function QuizComponent({
 							className="space-y-2"
 						>
 							{options.map((option: string, index: number) => (
+								// biome-ignore lint/suspicious/noArrayIndexKey: Quiz options are ordered form fields without stable IDs.
 								<div key={index} className="flex items-center gap-2">
 									<RadioGroupItem
 										value={index.toString()}

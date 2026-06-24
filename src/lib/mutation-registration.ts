@@ -17,13 +17,19 @@ import {
 	deleteUserFn,
 	updateUserFn,
 } from "@/features/users/users.actions";
-import { registerServerFn } from "./mutation-queue";
+import type { MutationServerFnPayloadMap } from "@/lib/mutation-queue.schema";
+import type { MutationServerFnName } from "@/types/sync";
+
+type RegisterServerFn = <K extends MutationServerFnName>(
+	name: K,
+	fn: (payload: MutationServerFnPayloadMap[K]) => Promise<unknown>,
+) => void;
 
 /**
  * Register all server functions that can be enqueued for background sync.
  * This should be called once at application startup.
  */
-export function registerAllMutations() {
+export function registerAllMutations(registerServerFn: RegisterServerFn) {
 	// Lessons
 	registerServerFn("createLesson", async (payload) => {
 		return createLessonFn({ data: payload });

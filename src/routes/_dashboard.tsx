@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import DashboardSidebar from "@/components/dashboard/sidebar";
 import { authQueries } from "@/features/auth/auth.queries";
 import type { Session } from "@/lib/auth-client";
+import { getCachedAuthSession } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/_dashboard")({
@@ -12,7 +13,6 @@ export const Route = createFileRoute("/_dashboard")({
 		try {
 			session = await queryClient.ensureQueryData(authQueries.session());
 		} catch (error) {
-			const { getCachedAuthSession } = await import("@/lib/query-client");
 			session = await getCachedAuthSession();
 			if (!session) {
 				throw error;
