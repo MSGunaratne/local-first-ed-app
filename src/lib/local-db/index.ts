@@ -27,7 +27,6 @@ export {
 	type SyncConflictRecord,
 	type SyncDirection,
 	type SyncResult,
-	type SyncScope,
 	updateLocal,
 } from "./sync";
 

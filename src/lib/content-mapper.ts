@@ -1,7 +1,7 @@
 import type { CurriculumItem } from "@/features/lessons/lesson.types";
 import { Subject } from "@/types/lesson";
 
-const CURRICULUM_FILES = {
+export const CURRICULUM_FILES = {
 	[Subject.ENGLISH]: "/curriculum/english.json",
 	[Subject.MATH]: "/curriculum/mathematics.json",
 	[Subject.ICT]: "/curriculum/ict.json",

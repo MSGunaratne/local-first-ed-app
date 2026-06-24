@@ -11,33 +11,13 @@ import { uuidv7 } from "uuidv7";
 import { z } from "zod";
 import { classes } from "@/features/classes/classes.schema";
 import { lessons } from "@/features/lessons/lessons.schema";
-import { Role } from "@/types/user";
-
-export const ANALYTICS_EVENT_TYPES = [
-	"session_start",
-	"page_view",
-	"engagement_heartbeat",
-	"interaction",
-	"session_end",
-	"lesson_create",
-	"class_view",
-	"lesson_feedback_submitted",
-	"lesson_started",
-	"lesson_completed",
-] as const;
-
-export const ACTOR_TYPES = ["anonymous", "teacher", "admin"] as const;
-export const AUTH_STATES = ["anonymous", "authenticated"] as const;
-export const DEVICE_CLASSES = [
-	"mobile",
-	"tablet",
-	"desktop",
-	"unknown",
-] as const;
-
-export type AnalyticsEventType = (typeof ANALYTICS_EVENT_TYPES)[number];
-export type AnalyticsActorType = (typeof ACTOR_TYPES)[number];
-export type AnalyticsAuthState = (typeof AUTH_STATES)[number];
+import {
+	ANALYTICS_EVENT_TYPES,
+	ACTOR_TYPES,
+	AUTH_STATES,
+	DEVICE_CLASSES,
+} from "#/types/analytics";
+import { Role } from "#/types/user";
 
 export const analyticsSessions = sqliteTable(
 	"analytics_session",

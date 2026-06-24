@@ -8,8 +8,8 @@ import {
 	MUTATION_SERVER_FNS,
 	MUTATION_STATUSES,
 	MUTATION_TYPES,
-	type SYNC_SCOPES,
-} from "@/types/sync-constants";
+	MutationServerFnName,
+} from "#/types/sync-constants";
 
 export {
 	MUTATION_SCOPES,
@@ -17,13 +17,7 @@ export {
 	MUTATION_STATUSES,
 	MUTATION_TYPES,
 	SYNC_SCOPES,
-} from "@/types/sync-constants";
-
-export type MutationScope = (typeof MUTATION_SCOPES)[number];
-export type SyncScope = (typeof SYNC_SCOPES)[number];
-export type MutationType = (typeof MUTATION_TYPES)[number];
-export type MutationStatus = (typeof MUTATION_STATUSES)[number];
-export type MutationServerFnName = (typeof MUTATION_SERVER_FNS)[number];
+} from "#/types/sync-constants";
 
 const mutationDataRecordSchema = z.record(z.string(), z.unknown());
 

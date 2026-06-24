@@ -23,6 +23,7 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAnalyticsIngestRouteImport } from './routes/api/analytics/ingest'
 import { Route as DashboardUsersCreateRouteImport } from './routes/_dashboard/users/create'
 import { Route as DashboardLessonsCreateRouteImport } from './routes/_dashboard/lessons/create'
+import { Route as DashboardLessonsLessonIdRouteImport } from './routes/_dashboard/lessons/$lessonId'
 import { Route as DashboardUsersUserIdEditRouteImport } from './routes/_dashboard/users/$userId.edit'
 import { Route as DashboardLessonsLessonIdEditRouteImport } from './routes/_dashboard/lessons/$lessonId.edit'
 
@@ -97,6 +98,14 @@ const DashboardLessonsCreateRoute = DashboardLessonsCreateRouteImport.update({
 } as any).lazy(() =>
   import('./routes/_dashboard/lessons/create.lazy').then((d) => d.Route),
 )
+const DashboardLessonsLessonIdRoute =
+  DashboardLessonsLessonIdRouteImport.update({
+    id: '/lessons/$lessonId',
+    path: '/lessons/$lessonId',
+    getParentRoute: () => DashboardRoute,
+  } as any).lazy(() =>
+    import('./routes/_dashboard/lessons/$lessonId.lazy').then((d) => d.Route),
+  )
 const DashboardUsersUserIdEditRoute =
   DashboardUsersUserIdEditRouteImport.update({
     id: '/users/$userId/edit',
@@ -105,9 +114,9 @@ const DashboardUsersUserIdEditRoute =
   } as any)
 const DashboardLessonsLessonIdEditRoute =
   DashboardLessonsLessonIdEditRouteImport.update({
-    id: '/lessons/$lessonId/edit',
-    path: '/lessons/$lessonId/edit',
-    getParentRoute: () => DashboardRoute,
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => DashboardLessonsLessonIdRoute,
   } as any).lazy(() =>
     import('./routes/_dashboard/lessons/$lessonId.edit.lazy').then(
       (d) => d.Route,
@@ -120,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof SignUpRoute
   '/student': typeof StudentRouteWithChildren
   '/student/': typeof StudentIndexRoute
+  '/lessons/$lessonId': typeof DashboardLessonsLessonIdRouteWithChildren
   '/lessons/create': typeof DashboardLessonsCreateRoute
   '/users/create': typeof DashboardUsersCreateRoute
   '/api/analytics/ingest': typeof ApiAnalyticsIngestRoute
@@ -136,6 +146,7 @@ export interface FileRoutesByTo {
   '/sign-up': typeof SignUpRoute
   '/': typeof DashboardIndexRoute
   '/student': typeof StudentIndexRoute
+  '/lessons/$lessonId': typeof DashboardLessonsLessonIdRouteWithChildren
   '/lessons/create': typeof DashboardLessonsCreateRoute
   '/users/create': typeof DashboardUsersCreateRoute
   '/api/analytics/ingest': typeof ApiAnalyticsIngestRoute
@@ -155,6 +166,7 @@ export interface FileRoutesById {
   '/student': typeof StudentRouteWithChildren
   '/_dashboard/': typeof DashboardIndexRoute
   '/student/': typeof StudentIndexRoute
+  '/_dashboard/lessons/$lessonId': typeof DashboardLessonsLessonIdRouteWithChildren
   '/_dashboard/lessons/create': typeof DashboardLessonsCreateRoute
   '/_dashboard/users/create': typeof DashboardUsersCreateRoute
   '/api/analytics/ingest': typeof ApiAnalyticsIngestRoute
@@ -174,6 +186,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/student'
     | '/student/'
+    | '/lessons/$lessonId'
     | '/lessons/create'
     | '/users/create'
     | '/api/analytics/ingest'
@@ -190,6 +203,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/'
     | '/student'
+    | '/lessons/$lessonId'
     | '/lessons/create'
     | '/users/create'
     | '/api/analytics/ingest'
@@ -208,6 +222,7 @@ export interface FileRouteTypes {
     | '/student'
     | '/_dashboard/'
     | '/student/'
+    | '/_dashboard/lessons/$lessonId'
     | '/_dashboard/lessons/create'
     | '/_dashboard/users/create'
     | '/api/analytics/ingest'
@@ -330,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLessonsCreateRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/lessons/$lessonId': {
+      id: '/_dashboard/lessons/$lessonId'
+      path: '/lessons/$lessonId'
+      fullPath: '/lessons/$lessonId'
+      preLoaderRoute: typeof DashboardLessonsLessonIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/users/$userId/edit': {
       id: '/_dashboard/users/$userId/edit'
       path: '/users/$userId/edit'
@@ -339,31 +361,45 @@ declare module '@tanstack/react-router' {
     }
     '/_dashboard/lessons/$lessonId/edit': {
       id: '/_dashboard/lessons/$lessonId/edit'
-      path: '/lessons/$lessonId/edit'
+      path: '/edit'
       fullPath: '/lessons/$lessonId/edit'
       preLoaderRoute: typeof DashboardLessonsLessonIdEditRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardLessonsLessonIdRoute
     }
   }
 }
 
+interface DashboardLessonsLessonIdRouteChildren {
+  DashboardLessonsLessonIdEditRoute: typeof DashboardLessonsLessonIdEditRoute
+}
+
+const DashboardLessonsLessonIdRouteChildren: DashboardLessonsLessonIdRouteChildren =
+  {
+    DashboardLessonsLessonIdEditRoute: DashboardLessonsLessonIdEditRoute,
+  }
+
+const DashboardLessonsLessonIdRouteWithChildren =
+  DashboardLessonsLessonIdRoute._addFileChildren(
+    DashboardLessonsLessonIdRouteChildren,
+  )
+
 interface DashboardRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardLessonsLessonIdRoute: typeof DashboardLessonsLessonIdRouteWithChildren
   DashboardLessonsCreateRoute: typeof DashboardLessonsCreateRoute
   DashboardUsersCreateRoute: typeof DashboardUsersCreateRoute
   DashboardLessonsIndexRoute: typeof DashboardLessonsIndexRoute
   DashboardUsersIndexRoute: typeof DashboardUsersIndexRoute
-  DashboardLessonsLessonIdEditRoute: typeof DashboardLessonsLessonIdEditRoute
   DashboardUsersUserIdEditRoute: typeof DashboardUsersUserIdEditRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardLessonsLessonIdRoute: DashboardLessonsLessonIdRouteWithChildren,
   DashboardLessonsCreateRoute: DashboardLessonsCreateRoute,
   DashboardUsersCreateRoute: DashboardUsersCreateRoute,
   DashboardLessonsIndexRoute: DashboardLessonsIndexRoute,
   DashboardUsersIndexRoute: DashboardUsersIndexRoute,
-  DashboardLessonsLessonIdEditRoute: DashboardLessonsLessonIdEditRoute,
   DashboardUsersUserIdEditRoute: DashboardUsersUserIdEditRoute,
 }
 

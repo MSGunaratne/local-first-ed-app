@@ -45,20 +45,25 @@ interface AnalyticsContextValue {
 	trackEvent: (
 		eventType: AnalyticsEventInsert["eventType"],
 		payload?: Record<string, unknown>,
+		overrides?: Partial<
+			Omit<AnalyticsEventInsert, "eventType" | "payloadJson">
+		>,
 	) => void;
 	sessionId: string | null;
 }
 
 const AnalyticsContext = createContext<AnalyticsContextValue | null>(null);
 
-function useEvent<T extends (...args: any[]) => any>(handler: T): T {
-	const handlerRef = useRef<T>(handler);
+function useEvent<Args extends unknown[], Return>(
+	handler: (...args: Args) => Return,
+): (...args: Args) => Return {
+	const handlerRef = useRef(handler);
 	useEffect(() => {
 		handlerRef.current = handler;
 	});
-	return useCallback((...args: Parameters<T>) => {
+	return useCallback((...args: Args) => {
 		return handlerRef.current(...args);
-	}, []) as T;
+	}, []);
 }
 
 const INGEST_URL = "/api/analytics/ingest";
@@ -67,9 +72,9 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 	const router = useRouter();
 	const { data: authSession } = useQuery(authQueries.session());
 	const sessionId = useSelector(analyticsStore, (state) => state.sessionId);
-	const eventsBuffer = useSelector(
+	const eventsBufferLength = useSelector(
 		analyticsStore,
-		(state) => state.eventsBuffer,
+		(state) => state.eventsBuffer.length,
 	);
 
 	const isLocalhost = useMemo(() => {
@@ -253,6 +258,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 		)
 			return;
 		if (!sessionId) return;
+		if (eventsBufferLength === 0) return;
 
 		// When store changes, replace the deferred beacon
 		if (fetchLaterAbortController.current) {
@@ -269,7 +275,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 				activateAfter: 5 * 60 * 1000, // 5 minutes max delay
 			});
 		}
-	}, [sessionId, eventsBuffer, isLocalhost]);
+	}, [sessionId, eventsBufferLength, isLocalhost]);
 
 	// 5. Lifecycle and Visibility
 	useEffect(() => {
@@ -314,10 +320,10 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 	// Buffer auto-flush
 	useEffect(() => {
 		if (isLocalhost) return;
-		if (eventsBuffer.length >= 20) {
+		if (eventsBufferLength >= 20) {
 			flushIngest(false);
 		}
-	}, [eventsBuffer.length, flushIngest, isLocalhost]);
+	}, [eventsBufferLength, flushIngest, isLocalhost]);
 
 	// Global window tracking
 	useEffect(() => {
@@ -330,9 +336,9 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 
 	const contextValue = useMemo<AnalyticsContextValue>(
 		() => ({
-			trackEvent: (type, payload) => {
+			trackEvent: (type, payload, overrides) => {
 				if (isLocalhost) return;
-				pushEvent(type, { payloadJson: payload });
+				pushEvent(type, { ...overrides, payloadJson: payload });
 			},
 			sessionId: isLocalhost ? null : sessionId,
 		}),

@@ -1,8 +1,6 @@
 import { uuidv7 } from "uuidv7";
 import { execute, query } from "@/lib/local-db/init";
 import {
-	type MutationScope,
-	type MutationServerFnName,
 	type MutationServerFnPayloadMap,
 	mutationPayloadSchemas,
 	type OutboxRow,
@@ -10,13 +8,10 @@ import {
 	type QueuedMutation,
 	queuedMutationSchema,
 } from "@/types/sync";
+import { MutationScope, MutationServerFnName } from "#/types/sync-constants";
 
 export type {
-	MutationScope,
-	MutationServerFnName,
 	MutationServerFnPayloadMap,
-	MutationStatus,
-	MutationType,
 	QueuedMutation,
 } from "@/types/sync";
 

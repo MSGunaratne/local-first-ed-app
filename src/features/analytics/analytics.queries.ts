@@ -1,6 +1,9 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import { uuidv7 } from "uuidv7";
-import { getAdminAnalyticsOverviewFn } from "./analytics.actions";
+import {
+	getAdminAnalyticsOverviewFn,
+	getLessonAnalyticsDetailsFn,
+} from "./analytics.actions";
 import type { LessonFeedbackInput } from "./analytics.schema";
 
 export const analyticsQueries = {
@@ -9,6 +12,12 @@ export const analyticsQueries = {
 		queryOptions({
 			queryKey: [...analyticsQueries.all(), "admin-overview", lookbackDays],
 			queryFn: () => getAdminAnalyticsOverviewFn({ data: { lookbackDays } }),
+			staleTime: 60_000,
+		}),
+	lessonDetails: (lessonId: string) =>
+		queryOptions({
+			queryKey: [...analyticsQueries.all(), "lesson-details", lessonId],
+			queryFn: () => getLessonAnalyticsDetailsFn({ data: { id: lessonId } }),
 			staleTime: 60_000,
 		}),
 };

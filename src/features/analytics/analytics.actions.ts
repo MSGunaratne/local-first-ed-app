@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { idInputSchema } from "@/lib/commonServerFnSchema";
 import { baseMiddleware, idempotentMiddleware } from "@/lib/server-fn";
 import {
 	analyticsOverviewInputSchema,
@@ -7,6 +8,7 @@ import {
 } from "./analytics.schema";
 import {
 	getAdminAnalyticsOverview,
+	getLessonAnalyticsDetails,
 	submitLessonFeedback,
 	submitStudentProgressEvent,
 } from "./analytics.service";
@@ -16,6 +18,13 @@ export const getAdminAnalyticsOverviewFn = createServerFn({ method: "GET" })
 	.validator((data) => analyticsOverviewInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		return getAdminAnalyticsOverview(data.lookbackDays);
+	});
+
+export const getLessonAnalyticsDetailsFn = createServerFn({ method: "GET" })
+	.middleware([baseMiddleware])
+	.validator((data) => idInputSchema.parse(data))
+	.handler(async ({ data }) => {
+		return getLessonAnalyticsDetails(data.id);
 	});
 
 export const submitLessonFeedbackFn = createServerFn({ method: "POST" })

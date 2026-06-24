@@ -6,11 +6,10 @@ import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 import { offlineFallback } from "workbox-recipes";
 import { NavigationRoute, registerRoute } from "workbox-routing";
 import { CacheFirst, NetworkFirst, NetworkOnly } from "workbox-strategies";
-import { SYNC_SCOPES } from "@/types/sync-constants";
+import { SYNC_SCOPES } from "./types/sync-constants";
 
 declare let self: ServiceWorkerGlobalScope;
 const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";
-
 
 async function notifyReplaySuccess() {
 	const clientList = await self.clients.matchAll({
@@ -21,7 +20,7 @@ async function notifyReplaySuccess() {
 	for (const client of clientList) {
 		client.postMessage({
 			type: REPLAYED_MUTATIONS_EVENT,
-			queryScopes:SYNC_SCOPES,
+			queryScopes: SYNC_SCOPES,
 		});
 	}
 }

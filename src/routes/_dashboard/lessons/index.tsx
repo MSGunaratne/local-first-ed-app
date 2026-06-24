@@ -139,9 +139,9 @@ function LessonsPage() {
 			columnHelper.accessor("title", {
 				header: m.lessons_table_title(),
 				cell: ({ row }) => (
-					<div className="flex flex-col">
-						<span className="font-medium">{row.original.title}</span>
-					</div>
+					<Link to="/lessons/$lessonId" params={{ lessonId: row.original.id }}>
+						{row.original.title}
+					</Link>
 				),
 			}),
 			columnHelper.accessor("subject", {

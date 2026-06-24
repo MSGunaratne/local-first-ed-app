@@ -20,10 +20,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { analyticsQueries } from "@/features/analytics/analytics.queries";
 import { LessonFeedbackInsights } from "@/features/analytics/components/lesson-feedback-insights";
+import { LearningOutcomesCoverage } from "@/features/curriculum/components/learning-outcomes-coverage";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { Subject } from "@/types/lesson";
 import { asRole } from "@/types/user";
-import { cn } from "@/lib/utils";
 import { fNumber } from "@/utils/format-number";
 
 const dashboardSearchSchema = z.object({
@@ -292,6 +293,8 @@ function AdminDashboardView() {
 					</CardContent>
 				</Card>
 			</div>
+
+			<LearningOutcomesCoverage />
 
 			<LessonFeedbackInsights
 				feedbackInsights={data?.feedbackInsights}

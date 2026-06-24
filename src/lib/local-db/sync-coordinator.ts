@@ -7,19 +7,18 @@ import { uuidv7 } from "uuidv7";
 import { z } from "zod";
 import { getClassByIdFn } from "@/features/classes/classes.actions";
 import { getLessonByIdFn } from "@/features/lessons/lessons.actions";
-import type { MutationServerFnName } from "@/lib/mutation-queue";
+import type { MutationServerFnName } from "@/types/sync-constants";
 import {
 	enqueue,
 	flushMutationQueue,
 	hasExistingMutation,
 } from "@/lib/mutation-queue";
-import { SYNC_SCOPES } from "@/types/sync-constants";
+import { SYNC_SCOPES, type SyncScope } from "@/types/sync-constants";
 import {
 	getPendingDeleteRecords,
 	getPendingPushRecords,
 	getSyncCursor,
 	pullRecords,
-	type SyncScope,
 } from "./index";
 
 const SYNC_INTERVAL = 60000; // 60 seconds
