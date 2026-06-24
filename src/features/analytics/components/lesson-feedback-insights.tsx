@@ -268,7 +268,9 @@ export function LessonFeedbackInsights({
 									<SelectValue placeholder={m.dashboard_filter_by_grade()} />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="all">{m.dashboard_all_grades()}</SelectItem>
+									<SelectItem value="all">
+										{m.dashboard_all_grades()}
+									</SelectItem>
 									{gradeOptions.map((grade) => (
 										<SelectItem key={grade} value={String(grade)}>
 											{m.dashboard_grade_label({ grade: String(grade) })}

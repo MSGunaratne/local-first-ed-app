@@ -246,19 +246,21 @@ function AdminDashboardView() {
 						</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-3">
-						{isLoading
-							? <RouteListSkeleton />
-							: (data?.topRoutes ?? []).slice(0, 5).map((route) => (
-									<div
-										key={route.routeTemplate}
-										className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2"
-									>
-										<p className="font-medium">{route.routeTemplate}</p>
-										<p className="text-sm text-muted-foreground">
-											{fNumber(route.views)} views
-										</p>
-									</div>
-								))}
+						{isLoading ? (
+							<RouteListSkeleton />
+						) : (
+							(data?.topRoutes ?? []).slice(0, 5).map((route) => (
+								<div
+									key={route.routeTemplate}
+									className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2"
+								>
+									<p className="font-medium">{route.routeTemplate}</p>
+									<p className="text-sm text-muted-foreground">
+										{fNumber(route.views)} views
+									</p>
+								</div>
+							))
+						)}
 					</CardContent>
 				</Card>
 
@@ -272,19 +274,21 @@ function AdminDashboardView() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-3">
-						{isLoading
-							? <RouteListSkeleton />
-							: (data?.dropOffRoutes ?? []).slice(0, 5).map((route) => (
-									<div
-										key={route.routeTemplate}
-										className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2"
-									>
-										<p className="font-medium">{route.routeTemplate}</p>
-										<p className="text-sm text-muted-foreground">
-											{fNumber(route.exits)} exits
-										</p>
-									</div>
-								))}
+						{isLoading ? (
+							<RouteListSkeleton />
+						) : (
+							(data?.dropOffRoutes ?? []).slice(0, 5).map((route) => (
+								<div
+									key={route.routeTemplate}
+									className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2"
+								>
+									<p className="font-medium">{route.routeTemplate}</p>
+									<p className="text-sm text-muted-foreground">
+										{fNumber(route.exits)} exits
+									</p>
+								</div>
+							))
+						)}
 					</CardContent>
 				</Card>
 			</div>

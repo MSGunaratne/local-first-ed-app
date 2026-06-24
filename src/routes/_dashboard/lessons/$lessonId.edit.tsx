@@ -9,5 +9,4 @@ export const Route = createFileRoute("/_dashboard/lessons/$lessonId/edit")({
 			lessonQueries.detail(params.lessonId),
 		);
 	},
-
 });

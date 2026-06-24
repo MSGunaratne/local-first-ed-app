@@ -721,7 +721,9 @@ export function EditorField({
 							field.handleChange(json);
 						}}
 						placeholder={placeholder}
-						className={cn(isInvalid && "border-destructive ring-destructive/50")}
+						className={cn(
+							isInvalid && "border-destructive ring-destructive/50",
+						)}
 					/>
 				</Suspense>
 			</div>

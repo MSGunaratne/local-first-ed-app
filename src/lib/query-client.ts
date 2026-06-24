@@ -15,6 +15,7 @@ import {
 import { del, get, set } from "idb-keyval";
 import { toast } from "sonner";
 import type { AppError } from "@/db/utils/errors";
+import type { Session } from "@/lib/auth-client";
 import { fData } from "@/utils/format-number";
 
 declare module "@tanstack/react-query" {
@@ -25,7 +26,10 @@ declare module "@tanstack/react-query" {
 			errorMessage?: string;
 			invalidates?:
 				| ReadonlyArray<QueryKey>
-				| ((ctx: { data: any; variables: any }) => ReadonlyArray<QueryKey>);
+				| ((ctx: {
+						data: unknown;
+						variables: unknown;
+				  }) => ReadonlyArray<QueryKey>);
 			onSettledCallback?: () => void;
 			idempotencyKey?: string;
 		};
@@ -37,6 +41,7 @@ declare module "@tanstack/react-query" {
 const CACHE_TIME = 1000 * 60 * 60 * 24 * 7; // 7 days
 const PERSISTENCE_BUSTER = "rq-cache-v2";
 const AUTH_QUERY_KEY = "auth";
+const AUTH_SESSION_QUERY_KEY = [AUTH_QUERY_KEY, "session"] as const;
 const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";
 const REPLAYED_DEFAULT_SCOPES = ["users", "lessons", "classes"] as const;
 
@@ -486,6 +491,18 @@ export async function clearAuthQueryState() {
 	});
 }
 
+export async function getCachedAuthSession(): Promise<Session | null> {
+	if (environmentManager.isServer()) {
+		return null;
+	}
+
+	const queryClient = getQueryClient();
+	await ensureQueryCacheRestored();
+	return (
+		queryClient.getQueryData<Session | null>(AUTH_SESSION_QUERY_KEY) ?? null
+	);
+}
+
 export async function clearAllLocalData() {
 	if (environmentManager.isServer()) {
 		return;
@@ -522,6 +539,27 @@ export async function clearAllLocalData() {
 	}
 
 	console.info("[Cleanup] Complete local data cleanup finished.");
+}
+
+export async function resetLocalMvpData() {
+	await clearAllLocalData();
+	if (typeof window !== "undefined") {
+		window.location.reload();
+	}
+}
+
+declare global {
+	interface Window {
+		__RESET_LOCAL_MVP_DATA__?: typeof resetLocalMvpData;
+	}
+}
+
+if (
+	typeof window !== "undefined" &&
+	typeof process !== "undefined" &&
+	process.env.NODE_ENV === "development"
+) {
+	window.__RESET_LOCAL_MVP_DATA__ = resetLocalMvpData;
 }
 
 let context:

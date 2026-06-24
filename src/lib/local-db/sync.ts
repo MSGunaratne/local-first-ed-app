@@ -32,6 +32,16 @@ export interface SyncResult {
 	errors: string[];
 }
 
+export interface SyncConflictRecord {
+	id: string;
+	scope: MutableSyncScope;
+	entityId: string;
+	conflictType: "update-update" | "delete-update";
+	localRecord: Record<string, unknown>;
+	remoteRecord: Record<string, unknown>;
+	createdAt: Date;
+}
+
 // Column name maps: local SQLite uses snake_case, Drizzle types use camelCase
 const COLUMN_MAP: { [K in SyncScope]: Record<string, string> } = {
 	lessons: {
@@ -426,10 +436,118 @@ export async function getUnresolvedConflictCount(): Promise<number> {
 	return rows[0]?.count ?? 0;
 }
 
+export async function getUnresolvedConflicts(): Promise<SyncConflictRecord[]> {
+	const rows = await query<{
+		id: string;
+		scope: string;
+		entity_id: string;
+		conflict_type: "update-update" | "delete-update";
+		local_record: string;
+		remote_record: string;
+		created_at: number;
+	}>(
+		`SELECT id, scope, entity_id, conflict_type, local_record, remote_record, created_at
+     FROM _sync_conflicts
+     WHERE resolved_at IS NULL
+     ORDER BY created_at DESC;`,
+	);
+
+	return rows.flatMap((row) => {
+		if (row.scope !== "lessons" && row.scope !== "classes") {
+			return [];
+		}
+
+		return [
+			{
+				id: row.id,
+				scope: row.scope,
+				entityId: row.entity_id,
+				conflictType: row.conflict_type,
+				localRecord: parseConflictJson(row.local_record),
+				remoteRecord: parseConflictJson(row.remote_record),
+				createdAt: new Date(row.created_at * 1000),
+			},
+		];
+	});
+}
+
+export async function resolveConflict(
+	conflictId: string,
+	resolution: "keep-local" | "accept-remote",
+): Promise<void> {
+	await transaction(async (exec, qry) => {
+		const rows = await qry<{
+			id: string;
+			scope: string;
+			entity_id: string;
+			remote_record: string;
+		}>(
+			`SELECT id, scope, entity_id, remote_record
+       FROM _sync_conflicts
+       WHERE id = ? AND resolved_at IS NULL
+       LIMIT 1;`,
+			[conflictId],
+		);
+		const conflict = rows[0];
+		if (!conflict) return;
+		if (conflict.scope !== "lessons" && conflict.scope !== "classes") return;
+
+		if (resolution === "accept-remote") {
+			const scope = conflict.scope;
+			const remoteRecord = parseConflictJson(conflict.remote_record);
+			const table = TABLE_MAP[scope];
+			const colMap = COLUMN_MAP[scope];
+			const mutableRecord = {
+				...remoteRecord,
+				syncStatus: "synced",
+				isDeleted: remoteRecord.deletedAt
+					? true
+					: (remoteRecord.isDeleted ?? false),
+				baseUpdatedAt: remoteRecord.updatedAt,
+			};
+			const snakeRecord = camelToSnake(mutableRecord, colMap);
+			const columns = Object.keys(snakeRecord);
+			const values = Object.values(snakeRecord).map(serializeValue);
+			const placeholders = columns.map(() => "?").join(", ");
+			const updateSet = columns
+				.flatMap((c) => (c !== "id" ? [`${c} = excluded.${c}`] : []))
+				.join(", ");
+
+			await exec(
+				`INSERT INTO ${table} (${columns.join(", ")})
+         VALUES (${placeholders})
+         ON CONFLICT(id) DO UPDATE SET ${updateSet};`,
+				values,
+			);
+		} else {
+			const table = TABLE_MAP[conflict.scope];
+			await exec(`UPDATE ${table} SET sync_status = 'pending' WHERE id = ?;`, [
+				conflict.entity_id,
+			]);
+		}
+
+		await exec(
+			"UPDATE _sync_conflicts SET resolved_at = unixepoch() WHERE id = ?;",
+			[conflictId],
+		);
+	});
+}
+
 type ConflictType = "update-update" | "delete-update";
 
 function isUnresolvedLocalChange(row: Record<string, unknown>) {
 	return row.sync_status === "pending" || row.sync_status === "conflict";
+}
+
+function parseConflictJson(value: string): Record<string, unknown> {
+	try {
+		const parsed = JSON.parse(value) as unknown;
+		return typeof parsed === "object" && parsed !== null
+			? (parsed as Record<string, unknown>)
+			: {};
+	} catch {
+		return {};
+	}
 }
 
 async function recordConflict(

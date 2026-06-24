@@ -13,18 +13,13 @@ interface ProgressMap {
 	[lessonId: string]: ProgressData;
 }
 
-async function readProgressFromSQLite(): Promise<ProgressMap> {
-	const { query } = await import("@/lib/local-db");
-	const rows = await query<{
-		lesson_id: string;
-		progress_status: "started" | "completed";
-		occurred_at: number;
-	}>(`
-    SELECT lesson_id, progress_status, max(occurred_at) as occurred_at
-    FROM student_progress_event
-    GROUP BY lesson_id, progress_status;
-  `);
+type ProgressRow = {
+	lesson_id: string;
+	progress_status: "started" | "completed";
+	occurred_at: number;
+};
 
+export function progressRowsToMap(rows: ProgressRow[]): ProgressMap {
 	const progress: ProgressMap = {};
 	for (const row of rows) {
 		const current = progress[row.lesson_id];
@@ -40,6 +35,17 @@ async function readProgressFromSQLite(): Promise<ProgressMap> {
 	}
 
 	return progress;
+}
+
+async function readProgressFromSQLite(): Promise<ProgressMap> {
+	const { query } = await import("@/lib/local-db");
+	const rows = await query<ProgressRow>(`
+    SELECT lesson_id, progress_status, max(occurred_at) as occurred_at
+    FROM student_progress_event
+    GROUP BY lesson_id, progress_status;
+  `);
+
+	return progressRowsToMap(rows);
 }
 
 async function recordProgressEvent(
@@ -124,7 +130,7 @@ export function useLocalProgress() {
 					[lessonId]: {
 						status: "in-progress" as const,
 						lastAccessed: Date.now(),
-					} 
+					},
 				};
 				void recordProgressEvent(lessonId, "started");
 				return newMap;
@@ -145,7 +151,7 @@ export function useLocalProgress() {
 					[lessonId]: {
 						status: "completed" as const,
 						lastAccessed: Date.now(),
-					}
+					},
 				};
 				void recordProgressEvent(lessonId, "completed");
 				return newMap;

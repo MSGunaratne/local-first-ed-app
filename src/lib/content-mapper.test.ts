@@ -21,10 +21,7 @@ describe("Content Mapper Matching Logic", () => {
 	});
 
 	it("finds matches with Sinhala inflected suffixes", async () => {
-		const matches = await findMatches(
-			"පරිගණකයෙන් ලැබෙන ප්‍රයෝජන",
-			Subject.ICT,
-		);
+		const matches = await findMatches("පරිගණකයෙන් ලැබෙන ප්‍රයෝජන", Subject.ICT);
 
 		expect(matches.length).toBeGreaterThan(0);
 		expect(matches.map((match) => match.id)).toContain("ICT-GR6-1.1");
@@ -48,7 +45,11 @@ describe("Content Mapper Matching Logic", () => {
 	});
 
 	it("uses grade as a boost only after a content match exists", async () => {
-		const matches = await findMatches("place value standard form", Subject.MATH, 6);
+		const matches = await findMatches(
+			"place value standard form",
+			Subject.MATH,
+			6,
+		);
 
 		expect(matches.length).toBeGreaterThan(0);
 		expect(matches[0].id).toBe("MAT-GR6-1.1");

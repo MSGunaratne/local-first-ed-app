@@ -107,12 +107,7 @@ function buildSearchDocuments(items: CurriculumItem[]): SearchDocument[] {
 			outcomeTokens: uniqueTokens(item.learning_outcome ?? ""),
 			summaryTokens: uniqueTokens(item.content_summary ?? ""),
 			searchText: normalizeForMatching(
-				[
-					item.topic,
-					item.learning_outcome,
-					item.content_summary,
-					...keywords,
-				]
+				[item.topic, item.learning_outcome, item.content_summary, ...keywords]
 					.filter(Boolean)
 					.join(" "),
 			),
@@ -213,7 +208,9 @@ function scoreTerm(
 		return 2.5 + Math.min(termTokens.length, 3) * 0.3;
 	}
 
-	const tokenScores = termTokens.map((token) => bestTokenScore(token, textTokens));
+	const tokenScores = termTokens.map((token) =>
+		bestTokenScore(token, textTokens),
+	);
 	const matchedScores = tokenScores.filter((score) => score >= 0.82);
 	if (matchedScores.length === 0) return 0;
 
@@ -259,8 +256,18 @@ function scoreDocument(
 	}
 
 	evidenceScore += scoreTokenField(document.topicTokens, textTokens, 1.4, 4.2);
-	evidenceScore += scoreTokenField(document.summaryTokens, textTokens, 0.45, 2.25);
-	evidenceScore += scoreTokenField(document.outcomeTokens, textTokens, 0.3, 1.8);
+	evidenceScore += scoreTokenField(
+		document.summaryTokens,
+		textTokens,
+		0.45,
+		2.25,
+	);
+	evidenceScore += scoreTokenField(
+		document.outcomeTokens,
+		textTokens,
+		0.3,
+		1.8,
+	);
 
 	if (normalizedText.includes(document.searchText) && document.searchText) {
 		evidenceScore += 1;
@@ -324,7 +331,9 @@ async function loadCurriculum(subjects: Subject[]): Promise<CurriculumItem[]> {
 	return allItems;
 }
 
-async function loadSearchDocuments(subject: Subject): Promise<SearchDocument[]> {
+async function loadSearchDocuments(
+	subject: Subject,
+): Promise<SearchDocument[]> {
 	if (searchDocumentCache.has(subject)) {
 		return searchDocumentCache.get(subject) ?? [];
 	}
@@ -358,7 +367,9 @@ export async function findMatches(
 		if (textTokens.size === 0) return [];
 
 		return documents
-			.map((document) => scoreDocument(document, textTokens, normalizedText, grade))
+			.map((document) =>
+				scoreDocument(document, textTokens, normalizedText, grade),
+			)
 			.filter((result) => result.finalScore > 0)
 			.sort((a, b) => {
 				if (b.finalScore !== a.finalScore) {
