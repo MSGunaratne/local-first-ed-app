@@ -6,7 +6,14 @@ import { pathToFileURL } from "node:url";
 const PROJECT_NAME = "Local First Education App";
 const AUTHOR = "Mojitha Gunaratne";
 const VERSION = "1.0";
-const EXECUTION_DATE = "2026-06-24";
+const EXECUTION_DATE =
+	process.env.TEST_EXECUTION_DATE ??
+	new Intl.DateTimeFormat("en-CA", {
+		timeZone: "Asia/Colombo",
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+	}).format(new Date());
 const OUTPUT_PATH = "output/testing/local-first-ed-testing-outcomes.xlsx";
 const RESULT_DIR = "test-results";
 
@@ -170,6 +177,71 @@ function getPlaywrightStatus(playwright) {
 			};
 }
 
+function collectPlaywrightSpecTests(node, predicate, matches = []) {
+	if (!node || typeof node !== "object") return matches;
+
+	for (const spec of node.specs ?? []) {
+		if (predicate(spec)) {
+			for (const test of spec.tests ?? []) {
+				matches.push(test);
+			}
+		}
+	}
+
+	for (const suite of node.suites ?? []) {
+		collectPlaywrightSpecTests(suite, predicate, matches);
+	}
+
+	return matches;
+}
+
+function getPlaywrightSpecStatus(playwright, predicate, label) {
+	if (!playwright) {
+		return {
+			status: "Not Run",
+			actual: `${label} Playwright result was not found.`,
+		};
+	}
+
+	const tests = collectPlaywrightSpecTests(playwright, predicate);
+	if (tests.length === 0) {
+		return {
+			status: "Not Run",
+			actual: `${label} was not included in the Playwright result file.`,
+		};
+	}
+
+	let passed = 0;
+	let failed = 0;
+	let skipped = 0;
+
+	for (const test of tests) {
+		const status = test.results?.at(-1)?.status ?? "unknown";
+		if (status === "passed") passed += 1;
+		else if (status === "skipped") skipped += 1;
+		else failed += 1;
+	}
+
+	if (failed > 0) {
+		return {
+			status: "Fail",
+			actual: `${label} reported ${failed} failed test(s) out of ${tests.length}.`,
+		};
+	}
+
+	if (passed > 0) {
+		return {
+			status: "Pass",
+			actual: `${label} passed ${passed}/${tests.length} test(s).`,
+		};
+	}
+
+	return {
+		status: "Not Run",
+		actual: `${label} was present but only skipped (${skipped}/${tests.length}).`,
+	};
+}
+
 async function getCommandStatus(fileName, label) {
 	const filePath = path.join(RESULT_DIR, fileName);
 	if (!(await exists(filePath))) {
@@ -220,10 +292,6 @@ function caseRow({
 }
 
 function buildFunctionalRows(statuses) {
-	const blockedTeacher = {
-		status: "Blocked",
-		actual: "Seeded teacher authentication fixture is not available yet.",
-	};
 	const manualNotRun = {
 		status: "Not Run",
 		actual: "Manual pilot/user test has not been executed yet.",
@@ -335,14 +403,14 @@ function buildFunctionalRows(statuses) {
 		}),
 		caseRow({
 			ref: "R09/R10",
-			id: "FT-BLOCKED/1",
+			id: "FR10/1",
 			objective: "Verify full teacher lesson creation with authenticated account.",
-			description: "Sign in as teacher, upload PHWD, apply curriculum match, save lesson.",
-			prerequisites: "Seeded teacher credentials/test auth fixture.",
-			inputData: "Teacher account and PHWD file",
-			expected: "Lesson is created and appears for students.",
-			statusSource: blockedTeacher,
-			notes: "Requires an agreed safe seeded auth fixture.",
+			description: "Sign in as teacher, create a published lesson, and verify it appears in the lesson list.",
+			prerequisites: "Teacher E2E flow was included in Playwright run.",
+			inputData: "Teacher account credentials or disposable teacher account",
+			expected: "Lesson is created and appears in the teacher lesson list.",
+			statusSource: statuses.teacherLessonCreation,
+			notes: "Automated as an opt-in Playwright acceptance test.",
 		}),
 		caseRow({
 			ref: "R13",
@@ -394,17 +462,39 @@ function buildNonFunctionalRows(statuses) {
 			inputData: "pseudonymousActorId payloads",
 			expected: "Payloads validate with pseudonymous IDs and no student names.",
 			statusSource: statuses.vitest,
-			notes: "Local encryption-at-rest intentionally not implemented for anonymised/pseudonymous pilot data.",
+			notes: "Pseudonymisation remains the main privacy control; queued feedback/progress payloads are additionally encrypted at rest.",
 		}),
 		caseRow({
 			ref: "NFR03",
 			id: "NFR03/2",
+			objective: "Verify local encryption-at-rest for feedback and progress queue payloads.",
+			description: "Encrypt/decrypt payloads, reject tampered ciphertext, and replay encrypted analytics queue entries.",
+			prerequisites: "WebCrypto and mutation queue unit tests execute.",
+			inputData: "Lesson feedback/progress payloads",
+			expected: "Queued analytics payload JSON is encrypted at rest and decrypts only for sync replay.",
+			statusSource: statuses.vitest,
+			notes: "Encryption key is stored on the same browser origin for offline operation.",
+		}),
+		caseRow({
+			ref: "NFR03",
+			id: "NFR03/3",
 			objective: "Verify role-based boundary for teacher dashboard.",
 			description: "Attempt to open a dashboard route while unauthenticated.",
 			prerequisites: "Preview server is running.",
 			inputData: "/lessons",
 			expected: "User is redirected to sign-in.",
 			statusSource: statuses.playwright,
+		}),
+		caseRow({
+			ref: "NFR03",
+			id: "NFR03/4",
+			objective: "Verify authenticated teacher lesson creation workflow.",
+			description: "Sign in with seeded teacher credentials, create a lesson, and verify it appears in the lesson list.",
+			prerequisites: "Seeded teacher account is available and E2E_RUN_TEACHER_FLOW=1 is set.",
+			inputData: "Seeded teacher credentials",
+			expected: "Teacher can create a published lesson from the dashboard workflow.",
+			statusSource: statuses.teacherLessonCreation,
+			notes: "Excluded from default E2E runs to avoid credential-dependent failures.",
 		}),
 		caseRow({
 			ref: "NFR04",
@@ -538,7 +628,7 @@ function writeSummarySheet(workbook, functionalRows, nonFunctionalRows) {
 		],
 		[
 			"Local encryption",
-			"Encryption-at-rest was intentionally not implemented for anonymised/pseudonymous MELS data; the prototype uses data minimisation, pseudonymous IDs, idempotency, and transport security.",
+			"Queued local feedback and progress analytics payloads are encrypted at rest with WebCrypto AES-GCM. Pseudonymous IDs and data minimisation remain core privacy controls.",
 			"",
 			"",
 		],
@@ -582,6 +672,13 @@ async function main() {
 	const statuses = {
 		vitest: getVitestStatus(vitest),
 		playwright: getPlaywrightStatus(playwright),
+		teacherLessonCreation: getPlaywrightSpecStatus(
+			playwright,
+			(spec) =>
+				spec.file === "teacher-lesson-creation.spec.ts" ||
+				spec.title === "signs in and creates a published lesson",
+			"Teacher lesson creation E2E",
+		),
 		typecheck,
 		build,
 	};

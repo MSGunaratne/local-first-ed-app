@@ -21,6 +21,7 @@ type OutboxRow = {
 
 const outboxRows: OutboxRow[] = [];
 const progressSyncedKeys: string[] = [];
+const lessonId = "01977f52-0000-7000-8000-000000000001";
 
 vi.mock("@/lib/local-db/init", () => ({
 	execute: vi.fn(async (sql: string, params: unknown[] = []) => {
@@ -88,7 +89,7 @@ describe("mutation queue", () => {
 			scope: "lessons",
 			type: "create",
 			serverFn: "createLesson",
-			payload: { id: "lesson-1", title: "Lesson" },
+			payload: { id: lessonId, title: "Lesson" },
 			idempotencyKey: "lesson-1",
 		});
 
@@ -114,7 +115,7 @@ describe("mutation queue", () => {
 			scope: "lessons",
 			type: "create",
 			serverFn: "createLesson",
-			payload: { id: "lesson-1", title: "Lesson" },
+			payload: { id: lessonId, title: "Lesson" },
 			idempotencyKey: "lesson-1",
 		});
 
@@ -124,7 +125,7 @@ describe("mutation queue", () => {
 			skipped: 0,
 		});
 		expect(serverFn).toHaveBeenCalledWith(
-			expect.objectContaining({ id: "lesson-1" }),
+			expect.objectContaining({ id: lessonId }),
 		);
 		expect(outboxRows).toHaveLength(0);
 	});
@@ -142,7 +143,7 @@ describe("mutation queue", () => {
 			scope: "lessons",
 			type: "create",
 			serverFn: "createLesson",
-			payload: { id: "lesson-1", title: "Lesson" },
+			payload: { id: lessonId, title: "Lesson" },
 			idempotencyKey: "lesson-1",
 		});
 
