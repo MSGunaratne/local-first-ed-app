@@ -37,12 +37,14 @@ pnpm build
 
 ```bash
 pnpm test:unit
+pnpm test:benchmarks
 pnpm test:e2e
 pnpm test:all
 pnpm test:report
 ```
 
 - `test:unit` runs Vitest.
+- `test:benchmarks` runs the thesis benchmark harness and writes `output/testing/benchmark-results.json` plus `output/testing/benchmark-summary.md`.
 - `test:e2e` runs Playwright against the production preview build.
 - `test:all` runs typecheck, unit tests, build, and E2E.
 - `test:report` generates `output/testing/local-first-ed-testing-outcomes.xlsx`.

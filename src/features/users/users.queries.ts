@@ -1,13 +1,19 @@
 import {
 	keepPreviousData,
 	mutationOptions,
+	onlineManager,
 	queryOptions,
 } from "@tanstack/react-query";
 import { uuidv7 } from "uuidv7";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { getQueryClient } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
-import { exportUsersFn, getUserByIdFn, getUsersFn } from "./users.actions";
+import {
+	deleteUserFn,
+	exportUsersFn,
+	getUserByIdFn,
+	getUsersFn,
+} from "./users.actions";
 import type { UserCreateInput, UserUpdateInput } from "./users.schema";
 
 // ----------------------------------------------------------------------
@@ -126,12 +132,15 @@ export const userMutations = {
 	delete: () =>
 		mutationOptions({
 			mutationFn: async (id: string) => {
-				const { enqueueAndFlushIfOnline } = await import(
-					"@/lib/mutation-queue"
-				);
 				const idempotencyKey = uuidv7();
 
-				await enqueueAndFlushIfOnline({
+				if (onlineManager.isOnline()) {
+					await deleteUserFn({ data: { id, idempotencyKey } });
+					return { id };
+				}
+
+				const { enqueue } = await import("@/lib/mutation-queue");
+				await enqueue({
 					scope: "users",
 					type: "delete",
 					serverFn: "deleteUser",
@@ -139,7 +148,7 @@ export const userMutations = {
 					idempotencyKey,
 				});
 
-				return { queued: true };
+				return { queued: true, id };
 			},
 			onMutate: async (deletedId) => {
 				const queryClient = getQueryClient();
