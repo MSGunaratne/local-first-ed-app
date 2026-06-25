@@ -51,6 +51,7 @@ const COLUMN_MAP: { [K in SyncScope]: Record<string, string> } = {
 		title: "title",
 		subject: "subject",
 		gradeLevel: "grade_level",
+		teacherId: "teacher_id",
 		contentJson: "content_json",
 		contentHtml: "content_html",
 		originalImageUrl: "original_image_url",

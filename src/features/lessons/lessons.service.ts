@@ -49,13 +49,26 @@ export async function getLessons(
 	);
 	const orderBy = isDesc ? desc(column) : asc(column);
 
-	const dataPromise = db
-		.select()
-		.from(lessons)
-		.where(whereClause)
-		.orderBy(orderBy)
-		.limit(limit)
-		.offset(page * limit);
+	const dataPromise = db.query.lessons
+		.findMany({
+			where: whereClause,
+			orderBy,
+			limit,
+			offset: page * limit,
+			with: {
+				teacher: {
+					columns: {
+						name: true,
+					},
+				},
+			},
+		})
+		.then((rows) =>
+			rows.map(({ teacher, ...lesson }) => ({
+				...lesson,
+				teacherName: teacher?.name ?? null,
+			})),
+		);
 
 	const totalPromise = db
 		.select({ total: count() })
@@ -80,6 +93,10 @@ export async function getLessons(
 	};
 }
 
+export type LessonListItem = Awaited<
+	ReturnType<typeof getLessons>
+>["data"][number];
+
 export async function getLessonById(id: string) {
 	const selectedLesson = await db.query.lessons.findFirst({
 		where: and(eq(lessons.id, id), isNull(lessons.deletedAt)),
@@ -91,7 +108,7 @@ export async function getLessonById(id: string) {
 }
 
 export async function createLesson(data: LessonInsert & { id?: string }) {
-	await requireTeacherOrAdminSession(
+	const session = await requireTeacherOrAdminSession(
 		"Only teachers and admins can create lessons",
 	);
 
@@ -99,7 +116,7 @@ export async function createLesson(data: LessonInsert & { id?: string }) {
 
 	const [newLesson] = await db
 		.insert(lessons)
-		.values({ ...validatedData, id: data.id })
+		.values({ ...validatedData, id: data.id, teacherId: session.user.id })
 		.returning();
 
 	if (!newLesson) throw new ServerError("Failed to create lesson");

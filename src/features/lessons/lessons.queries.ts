@@ -4,11 +4,14 @@ import {
 	queryOptions,
 } from "@tanstack/react-query";
 import { uuidv7 } from "uuidv7";
+import type { User } from "@/features/users/users.schema";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { buildLocalDataTableResult } from "@/lib/local-data-table";
-import { getQueryClient } from "@/lib/query-client";
+import { cacheSessionUserForLocalInsert } from "@/lib/local-session-user";
+import { getCachedAuthSession, getQueryClient } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
 import { getLessonByIdFn, getLessonsFn } from "./lessons.actions";
+import type { LessonListItem } from "./lessons.service";
 import type { LessonInsert, Lesson as LessonType } from "./lessons.schema";
 
 function asLessonArray(value: unknown): LessonType[] {
@@ -48,12 +51,39 @@ function getExpectedUpdatedAt(value: unknown): string | undefined {
 }
 
 function getLocalLessonList(
-	localLessons: LessonType[],
+	localLessons: LessonListItem[],
 	params: DataTableQueryParams,
 ) {
 	return buildLocalDataTableResult(localLessons, params, {
-		globalSearchFields: ["title", "subject", "teacherNotes"],
+		globalSearchFields: ["title", "subject", "teacherNotes", "teacherName"],
 	});
+}
+
+function asUserArray(value: unknown): User[] {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+
+	return value.filter(
+		(item): item is User =>
+			typeof item === "object" &&
+			item !== null &&
+			typeof (item as { id?: unknown }).id === "string" &&
+			typeof (item as { name?: unknown }).name === "string",
+	);
+}
+
+function toLocalLessonListItems(
+	lessons: LessonType[],
+	users: User[],
+): LessonListItem[] {
+	const userNameById = new Map(users.map((user) => [user.id, user.name]));
+	return lessons.map((lesson) => ({
+		...lesson,
+		teacherName: lesson.teacherId
+			? (userNameById.get(lesson.teacherId) ?? null)
+			: null,
+	}));
 }
 
 // ----------------------------------------------------------------------
@@ -69,7 +99,13 @@ export const lessonQueries = {
 				// Try local SQLite first (especially useful if offline)
 				if (isReady()) {
 					const local = asLessonArray(await getLocalAll("lessons"));
-					if (local.length > 0) return getLocalLessonList(local, params);
+					if (local.length > 0) {
+						const localUsers = asUserArray(await getLocalAll("users"));
+						return getLocalLessonList(
+							toLocalLessonListItems(local, localUsers),
+							params,
+						);
+					}
 				}
 				// Fallback to server
 				return getLessonsFn({ data: params, signal });
@@ -101,9 +137,14 @@ export const lessonMutations = {
 
 				const id = uuidv7();
 				const now = Math.floor(Date.now() / 1000);
+				const session = await getCachedAuthSession();
+				const teacherId = isReady()
+					? await cacheSessionUserForLocalInsert(session)
+					: (session?.user.id ?? null);
 				const completeData = {
 					...data,
 					id,
+					teacherId,
 					createdAt: now,
 					updatedAt: now,
 					syncStatus: "pending",

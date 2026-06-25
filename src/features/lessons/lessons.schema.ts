@@ -5,6 +5,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { uuidv7 } from "uuidv7";
 import { z } from "zod";
 import { QuestionType, Subject, SyncStatus } from "@/types/lesson";
+import { users } from "@/features/users/users.schema";
 import type { FlashcardItem } from "./lesson.types";
 
 export const lessons = sqliteTable("lesson", {
@@ -16,6 +17,9 @@ export const lessons = sqliteTable("lesson", {
 		enum: [Subject.MATH, Subject.ENGLISH, Subject.ICT],
 	}).notNull(),
 	gradeLevel: integer("grade_level").notNull(),
+	teacherId: text("teacher_id").references(() => users.id, {
+		onDelete: "set null",
+	}),
 	// TipTap JSON content (source of truth for editing)
 	contentJson: text("content_json", { mode: "json" }).$type<JSONContent>(),
 	// Pre-rendered HTML (for fast offline rendering without parsing)
@@ -108,6 +112,7 @@ export const lessonInsertSchema = createInsertSchema(lessons, {
 	isPublished: z.boolean(),
 }).omit({
 	id: true,
+	teacherId: true,
 	createdAt: true,
 	updatedAt: true,
 	syncStatus: true,

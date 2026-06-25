@@ -1,7 +1,7 @@
 import { type ZodType, z } from "zod";
 
 export const idInputSchema = z.object({
-	id: z.string(),
+	id: z.uuid(),
 	idempotencyKey: z.string().optional(),
 });
 

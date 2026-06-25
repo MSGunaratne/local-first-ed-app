@@ -106,6 +106,7 @@ async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
       title                 TEXT NOT NULL,
       subject               TEXT NOT NULL,
       grade_level           INTEGER NOT NULL,
+      teacher_id            TEXT REFERENCES user(id) ON DELETE SET NULL,
       content_json          TEXT,
       content_html          TEXT,
       original_image_url    TEXT,
@@ -196,6 +197,7 @@ async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
 
     -- Indexes for common queries
     CREATE INDEX IF NOT EXISTS idx_lesson_subject ON lesson(subject);
+    CREATE INDEX IF NOT EXISTS idx_lesson_teacher ON lesson(teacher_id);
     CREATE INDEX IF NOT EXISTS idx_lesson_sync_status ON lesson(sync_status);
     CREATE INDEX IF NOT EXISTS idx_class_teacher ON class(teacher_id);
     CREATE INDEX IF NOT EXISTS idx_class_sync_status ON class(sync_status);

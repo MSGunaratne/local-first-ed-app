@@ -17,6 +17,7 @@ export const userRelations = relations(users, ({ many, one }) => ({
 	sessions: many(sessions),
 	accounts: many(accounts),
 	classes: many(classes),
+	lessons: many(lessons),
 	studentProfile: one(studentProfiles),
 }));
 
@@ -72,7 +73,11 @@ export const studentProfileRelations = relations(
 
 // ---------------- lessons ----------------
 
-export const lessonRelations = relations(lessons, ({ many }) => ({
+export const lessonRelations = relations(lessons, ({ many, one }) => ({
+	teacher: one(users, {
+		fields: [lessons.teacherId],
+		references: [users.id],
+	}),
 	assessments: many(assessments),
 	feedback: many(lessonFeedback),
 	progressAggregates: many(studentProgressDailyAggregates),

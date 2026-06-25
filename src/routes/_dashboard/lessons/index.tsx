@@ -44,7 +44,7 @@ import {
 	lessonMutations,
 	lessonQueries,
 } from "@/features/lessons/lessons.queries";
-import type { Lesson } from "@/features/lessons/lessons.schema";
+import type { LessonListItem } from "@/features/lessons/lessons.service";
 import { useServerDataTable } from "@/hooks/use-server-data-table";
 import { useConnectionMode } from "@/lib/connection-mode";
 import {
@@ -81,13 +81,13 @@ export const Route = createFileRoute("/_dashboard/lessons/")({
 	component: LessonsPage,
 });
 
-const fallbackData: Lesson[] = [];
+const fallbackData: LessonListItem[] = [];
 
 function DashboardListRoutePending() {
 	return <DataTableRoutePending message={m.lessons_preparing()} />;
 }
 
-const columnHelper = createColumnHelper<Lesson>();
+const columnHelper = createColumnHelper<LessonListItem>();
 
 function LessonsPage() {
 	const {
@@ -111,7 +111,7 @@ function LessonsPage() {
 	}, []);
 
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-	const [rowsToDelete, setRowsToDelete] = useState<Row<Lesson>[]>([]);
+	const [rowsToDelete, setRowsToDelete] = useState<Row<LessonListItem>[]>([]);
 
 	const { mutateAsync: deleteMutation } = useMutation({
 		...lessonMutations.delete(),
@@ -120,7 +120,7 @@ function LessonsPage() {
 		},
 	});
 
-	const handleDeleteSelected = (rows: Row<Lesson>[]) => {
+	const handleDeleteSelected = (rows: Row<LessonListItem>[]) => {
 		setRowsToDelete(rows);
 		setDeleteDialogOpen(true);
 	};
@@ -135,7 +135,7 @@ function LessonsPage() {
 
 	const columns = useMemo(
 		() => [
-			getSelectionColumn<Lesson>(),
+			getSelectionColumn<LessonListItem>(),
 			columnHelper.accessor("title", {
 				header: m.lessons_table_title(),
 				cell: ({ row }) => (
@@ -156,6 +156,11 @@ function LessonsPage() {
 				cell: ({ getValue }) => {
 					return <span>{m.lessons_grade({ grade: getValue<number>() })}</span>;
 				},
+			}),
+			columnHelper.accessor("teacherName", {
+				header: "Created by",
+				cell: ({ getValue }) => getValue() ?? "Unassigned",
+				enableSorting: false,
 			}),
 			columnHelper.accessor("createdAt", {
 				header: m.common_created_at(),

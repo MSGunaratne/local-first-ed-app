@@ -4,6 +4,7 @@ import {
 	and,
 	eq,
 	exists,
+	getTableColumns,
 	gt,
 	gte,
 	inArray,
@@ -122,7 +123,7 @@ export function getDrizzleSortColumn<T extends SQLiteTable>(
 	sorting: SortingState | undefined,
 	defaultField: keyof T["_"]["columns"] & string,
 ) {
-	const columns = table._.columns;
+	const columns = getTableColumns(table);
 	const sort = sorting?.[0];
 	const requestedField = sort?.id;
 	const field =

@@ -3,9 +3,9 @@ import {
 	useNavigate,
 	useSearch,
 } from "@tanstack/react-router";
-import { StudentLessonListView } from "./student/index";
-import { StudentShell } from "./student";
+import { StudentLessonListView } from "@/features/lessons/components/student-lesson-list-view";
 import { studentSearchSchema } from "@/features/lessons/student-search";
+import { StudentShell } from "./student";
 
 export const Route = createFileRoute("/")({
 	validateSearch: (search) => studentSearchSchema.parse(search),

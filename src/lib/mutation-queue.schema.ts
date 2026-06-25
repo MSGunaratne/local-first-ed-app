@@ -15,25 +15,25 @@ const mutationDataRecordSchema = z.record(z.string(), z.unknown());
 
 const scopedCreatePayloadSchema = z
 	.object({
-		id: z.string().min(1),
+		id: z.uuid(),
 		idempotencyKey: z.string().optional(),
 	})
 	.catchall(z.unknown());
 
 const scopedUpdatePayloadSchema = z.object({
-	id: z.string().min(1),
+	id: z.uuid(),
 	data: mutationDataRecordSchema,
 	expectedUpdatedAt: z.string().optional(),
 	idempotencyKey: z.string().optional(),
 });
 
 const scopedDeletePayloadSchema = z.object({
-	id: z.string().min(1),
+	id: z.uuid(),
 	idempotencyKey: z.string().optional(),
 });
 
 const userUpdatePayloadSchema = z.object({
-	id: z.string().min(1),
+	id: z.uuid(),
 	data: mutationDataRecordSchema,
 	idempotencyKey: z.string().optional(),
 });
@@ -57,7 +57,7 @@ export type MutationServerFnPayloadMap = {
 };
 
 export const queuedMutationSchema = z.object({
-	id: z.string().min(1),
+	id: z.uuid(),
 	scope: z.enum(MUTATION_SCOPES),
 	type: z.enum(MUTATION_TYPES),
 	serverFn: z.enum(MUTATION_SERVER_FNS),
@@ -72,7 +72,7 @@ export const queuedMutationSchema = z.object({
 export type QueuedMutation = z.infer<typeof queuedMutationSchema>;
 
 export const outboxRowSchema = z.object({
-	id: z.string().min(1),
+	id: z.uuid(),
 	scope: z.enum(MUTATION_SCOPES),
 	mutation_type: z.enum(MUTATION_TYPES),
 	server_fn: z.enum(MUTATION_SERVER_FNS),
