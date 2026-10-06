@@ -1,4 +1,4 @@
-import type { Table } from "@tanstack/react-table";
+import type { ReactTable, RowData } from "@tanstack/react-table";
 import {
 	ChevronLeft,
 	ChevronRight,
@@ -13,22 +13,23 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import type { DataTableFeatures } from "./data-table-features";
 
-interface DataTablePaginationProps<TData> {
-	table: Table<TData>;
+interface DataTablePaginationProps<TData extends RowData> {
+	table: ReactTable<DataTableFeatures, TData>;
 	pageCount: number;
 	pageSizeOptions?: number[];
 	totalItems?: number;
 }
 
-export function DataTablePagination<TData>({
+export function DataTablePagination<TData extends RowData>({
 	table,
 	pageCount,
 	pageSizeOptions = [10, 20, 30, 50, 100],
 	totalItems,
 }: DataTablePaginationProps<TData>) {
 	"use no memo";
-	const { pageIndex, pageSize } = table.getState().pagination;
+	const { pageIndex, pageSize } = table.state.pagination;
 	const selectedCount = table.getSelectedRowModel().rows.length;
 
 	return (

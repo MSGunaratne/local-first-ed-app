@@ -8,7 +8,7 @@ import * as studentSchema from "@/features/students/students.schema";
 import * as syncSchema from "@/features/sync/sync.schema";
 import * as userSchema from "@/features/users/users.schema";
 
-export const db = drizzle(env.ed_app_db_v2, {
+export const db = drizzle(env.ed_app_db, {
 	schema: {
 		user: userSchema.users,
 		session: userSchema.sessions,

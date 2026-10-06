@@ -1,4 +1,4 @@
-import type { Table as TanStackTable } from "@tanstack/react-table";
+import type { RowData, Table as TanStackTable } from "@tanstack/react-table";
 import { flexRender } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import {
@@ -10,14 +10,15 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import type { DataTableFeatures } from "./data-table-features";
 
-interface DataTableProps<TData> {
-	table: TanStackTable<TData>;
+interface DataTableProps<TData extends RowData> {
+	table: TanStackTable<DataTableFeatures, TData>;
 	isLoading?: boolean;
 	isRefetching?: boolean;
 }
 
-export function DataTable<TData>({
+export function DataTable<TData extends RowData>({
 	table,
 	isLoading,
 	isRefetching,

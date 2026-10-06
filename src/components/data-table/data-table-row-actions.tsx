@@ -1,4 +1,4 @@
-import type { Row, Table } from "@tanstack/react-table";
+import type { Row, RowData, Table } from "@tanstack/react-table";
 import { Download, Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,17 +8,18 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { DataTableFeatures } from "./data-table-features";
 
-interface DataTableRowActionsProps<TData> {
-	table: Table<TData>;
-	onDeleteSelected?: (rows: Row<TData>[]) => void;
+interface DataTableRowActionsProps<TData extends RowData> {
+	table: Table<DataTableFeatures, TData>;
+	onDeleteSelected?: (rows: Row<DataTableFeatures, TData>[]) => void;
 }
 
 /**
  * Bulk actions for selected rows.
  * Shows action buttons when rows are selected.
  */
-export function DataTableRowActions<TData>({
+export function DataTableRowActions<TData extends RowData>({
 	table,
 	onDeleteSelected,
 }: DataTableRowActionsProps<TData>) {
@@ -71,8 +72,8 @@ interface ExportOptions {
 /**
  * Get table data as a 2D array (headers + rows)
  */
-function getTableDataArray<TData>(
-	table: Table<TData>,
+function getTableDataArray<TData extends RowData>(
+	table: Table<DataTableFeatures, TData>,
 	options: ExportOptions = {},
 ): string[][] {
 	const { excludeColumns = ["actions", "select"] } = options;
@@ -111,7 +112,10 @@ function getTableDataArray<TData>(
 /**
  * Export table data to CSV format
  */
-function exportToCSV<TData>(table: Table<TData>, options: ExportOptions = {}) {
+function exportToCSV<TData extends RowData>(
+	table: Table<DataTableFeatures, TData>,
+	options: ExportOptions = {},
+) {
 	const { filename = "export" } = options;
 	const timestamp = new Date().toISOString().split("T")[0];
 	const fullFilename = `${filename}_${timestamp}.csv`;
@@ -153,8 +157,8 @@ function downloadBlob(blob: Blob, filename: string) {
 /**
  * Export table data to the specified format
  */
-export function exportTableData<TData>(
-	table: Table<TData>,
+export function exportTableData<TData extends RowData>(
+	table: Table<DataTableFeatures, TData>,
 	format: ExportFormat,
 	options: ExportOptions = {},
 ) {
@@ -163,8 +167,8 @@ export function exportTableData<TData>(
 	}
 }
 
-interface DataTableExportProps<TData> {
-	table: Table<TData>;
+interface DataTableExportProps<TData extends RowData> {
+	table: Table<DataTableFeatures, TData>;
 	filename?: string;
 	onServerExport?: () => Promise<Record<string, unknown>[]>;
 }
@@ -174,7 +178,7 @@ interface DataTableExportProps<TData> {
  * Supports CSV export — uses server-side export when `onServerExport` is provided,
  * otherwise falls back to exporting current client-side filtered rows.
  */
-export function DataTableExport<TData>({
+export function DataTableExport<TData extends RowData>({
 	table,
 	filename = "data",
 	onServerExport,

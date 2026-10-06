@@ -9,33 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as StudentRouteImport } from './routes/student'
-import { Route as SignUpRouteImport } from './routes/sign-up'
-import { Route as SignInRouteImport } from './routes/sign-in'
-import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as StudentIndexRouteImport } from './routes/student/index'
+import { Route as DashboardRouteImport } from './routes/_dashboard'
+import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as StudentRouteImport } from './routes/student'
 import { Route as DashboardDashboardRouteImport } from './routes/_dashboard/dashboard'
-import { Route as DashboardUsersIndexRouteImport } from './routes/_dashboard/users/index'
+import { Route as StudentIndexRouteImport } from './routes/student/index'
 import { Route as DashboardLessonsIndexRouteImport } from './routes/_dashboard/lessons/index'
-import { Route as StudentLessonsLessonIdRouteImport } from './routes/student/lessons/$lessonId'
-import { Route as ApiSyncSplatRouteImport } from './routes/api/sync/$'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as ApiAnalyticsIngestRouteImport } from './routes/api/analytics/ingest'
-import { Route as DashboardUsersCreateRouteImport } from './routes/_dashboard/users/create'
-import { Route as DashboardLessonsCreateRouteImport } from './routes/_dashboard/lessons/create'
 import { Route as DashboardLessonsLessonIdRouteImport } from './routes/_dashboard/lessons/$lessonId'
-import { Route as DashboardUsersUserIdEditRouteImport } from './routes/_dashboard/users/$userId.edit'
+import { Route as DashboardLessonsCreateRouteImport } from './routes/_dashboard/lessons/create'
+import { Route as DashboardUsersIndexRouteImport } from './routes/_dashboard/users/index'
+import { Route as DashboardUsersCreateRouteImport } from './routes/_dashboard/users/create'
+import { Route as ApiAnalyticsIngestRouteImport } from './routes/api/analytics/ingest'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiSyncSplatRouteImport } from './routes/api/sync/$'
+import { Route as StudentLessonsLessonIdRouteImport } from './routes/student/lessons/$lessonId'
 import { Route as DashboardLessonsLessonIdEditRouteImport } from './routes/_dashboard/lessons/$lessonId_.edit'
+import { Route as DashboardUsersUserIdEditRouteImport } from './routes/_dashboard/users/$userId.edit'
 
-const StudentRoute = StudentRouteImport.update({
-  id: '/student',
-  path: '/student',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SignUpRoute = SignUpRouteImport.update({
-  id: '/sign-up',
-  path: '/sign-up',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/_dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignInRoute = SignInRouteImport.update({
@@ -43,67 +42,31 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/_dashboard',
+const SignUpRoute = SignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const StudentRoute = StudentRouteImport.update({
+  id: '/student',
+  path: '/student',
   getParentRoute: () => rootRouteImport,
-} as any)
-const StudentIndexRoute = StudentIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => StudentRoute,
 } as any)
 const DashboardDashboardRoute = DashboardDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardUsersIndexRoute = DashboardUsersIndexRouteImport.update({
-  id: '/users/',
-  path: '/users/',
-  getParentRoute: () => DashboardRoute,
+const StudentIndexRoute = StudentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudentRoute,
 } as any)
 const DashboardLessonsIndexRoute = DashboardLessonsIndexRouteImport.update({
   id: '/lessons/',
   path: '/lessons/',
   getParentRoute: () => DashboardRoute,
 } as any)
-const StudentLessonsLessonIdRoute = StudentLessonsLessonIdRouteImport.update({
-  id: '/lessons/$lessonId',
-  path: '/lessons/$lessonId',
-  getParentRoute: () => StudentRoute,
-} as any)
-const ApiSyncSplatRoute = ApiSyncSplatRouteImport.update({
-  id: '/api/sync/$',
-  path: '/api/sync/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAnalyticsIngestRoute = ApiAnalyticsIngestRouteImport.update({
-  id: '/api/analytics/ingest',
-  path: '/api/analytics/ingest',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardUsersCreateRoute = DashboardUsersCreateRouteImport.update({
-  id: '/users/create',
-  path: '/users/create',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardLessonsCreateRoute = DashboardLessonsCreateRouteImport.update({
-  id: '/lessons/create',
-  path: '/lessons/create',
-  getParentRoute: () => DashboardRoute,
-} as any).lazy(() =>
-  import('./routes/_dashboard/lessons/create.lazy').then((d) => d.Route),
-)
 const DashboardLessonsLessonIdRoute =
   DashboardLessonsLessonIdRouteImport.update({
     id: '/lessons/$lessonId',
@@ -112,12 +75,43 @@ const DashboardLessonsLessonIdRoute =
   } as any).lazy(() =>
     import('./routes/_dashboard/lessons/$lessonId.lazy').then((d) => d.Route),
   )
-const DashboardUsersUserIdEditRoute =
-  DashboardUsersUserIdEditRouteImport.update({
-    id: '/users/$userId/edit',
-    path: '/users/$userId/edit',
-    getParentRoute: () => DashboardRoute,
-  } as any)
+const DashboardLessonsCreateRoute = DashboardLessonsCreateRouteImport.update({
+  id: '/lessons/create',
+  path: '/lessons/create',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/_dashboard/lessons/create.lazy').then((d) => d.Route),
+)
+const DashboardUsersIndexRoute = DashboardUsersIndexRouteImport.update({
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardUsersCreateRoute = DashboardUsersCreateRouteImport.update({
+  id: '/users/create',
+  path: '/users/create',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const ApiAnalyticsIngestRoute = ApiAnalyticsIngestRouteImport.update({
+  id: '/api/analytics/ingest',
+  path: '/api/analytics/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSyncSplatRoute = ApiSyncSplatRouteImport.update({
+  id: '/api/sync/$',
+  path: '/api/sync/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentLessonsLessonIdRoute = StudentLessonsLessonIdRouteImport.update({
+  id: '/lessons/$lessonId',
+  path: '/lessons/$lessonId',
+  getParentRoute: () => StudentRoute,
+} as any)
 const DashboardLessonsLessonIdEditRoute =
   DashboardLessonsLessonIdEditRouteImport.update({
     id: '/lessons/$lessonId_/edit',
@@ -128,6 +122,12 @@ const DashboardLessonsLessonIdEditRoute =
       (d) => d.Route,
     ),
   )
+const DashboardUsersUserIdEditRoute =
+  DashboardUsersUserIdEditRouteImport.update({
+    id: '/users/$userId/edit',
+    path: '/users/$userId/edit',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -260,25 +260,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/student': {
-      id: '/student'
-      path: '/student'
-      fullPath: '/student'
-      preLoaderRoute: typeof StudentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sign-up': {
-      id: '/sign-up'
-      path: '/sign-up'
-      fullPath: '/sign-up'
-      preLoaderRoute: typeof SignUpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sign-in': {
-      id: '/sign-in'
-      path: '/sign-in'
-      fullPath: '/sign-in'
-      preLoaderRoute: typeof SignInRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_dashboard': {
@@ -288,19 +274,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/student/': {
-      id: '/student/'
-      path: '/'
-      fullPath: '/student/'
-      preLoaderRoute: typeof StudentIndexRouteImport
-      parentRoute: typeof StudentRoute
+    '/sign-up': {
+      id: '/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof SignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student': {
+      id: '/student'
+      path: '/student'
+      fullPath: '/student'
+      preLoaderRoute: typeof StudentRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_dashboard/dashboard': {
       id: '/_dashboard/dashboard'
@@ -309,60 +302,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDashboardRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/_dashboard/users/': {
-      id: '/_dashboard/users/'
-      path: '/users'
-      fullPath: '/users/'
-      preLoaderRoute: typeof DashboardUsersIndexRouteImport
-      parentRoute: typeof DashboardRoute
+    '/student/': {
+      id: '/student/'
+      path: '/'
+      fullPath: '/student/'
+      preLoaderRoute: typeof StudentIndexRouteImport
+      parentRoute: typeof StudentRoute
     }
     '/_dashboard/lessons/': {
       id: '/_dashboard/lessons/'
       path: '/lessons'
       fullPath: '/lessons/'
       preLoaderRoute: typeof DashboardLessonsIndexRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/student/lessons/$lessonId': {
-      id: '/student/lessons/$lessonId'
-      path: '/lessons/$lessonId'
-      fullPath: '/student/lessons/$lessonId'
-      preLoaderRoute: typeof StudentLessonsLessonIdRouteImport
-      parentRoute: typeof StudentRoute
-    }
-    '/api/sync/$': {
-      id: '/api/sync/$'
-      path: '/api/sync/$'
-      fullPath: '/api/sync/$'
-      preLoaderRoute: typeof ApiSyncSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/analytics/ingest': {
-      id: '/api/analytics/ingest'
-      path: '/api/analytics/ingest'
-      fullPath: '/api/analytics/ingest'
-      preLoaderRoute: typeof ApiAnalyticsIngestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_dashboard/users/create': {
-      id: '/_dashboard/users/create'
-      path: '/users/create'
-      fullPath: '/users/create'
-      preLoaderRoute: typeof DashboardUsersCreateRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/_dashboard/lessons/create': {
-      id: '/_dashboard/lessons/create'
-      path: '/lessons/create'
-      fullPath: '/lessons/create'
-      preLoaderRoute: typeof DashboardLessonsCreateRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/lessons/$lessonId': {
@@ -372,18 +323,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLessonsLessonIdRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/_dashboard/users/$userId/edit': {
-      id: '/_dashboard/users/$userId/edit'
-      path: '/users/$userId/edit'
-      fullPath: '/users/$userId/edit'
-      preLoaderRoute: typeof DashboardUsersUserIdEditRouteImport
+    '/_dashboard/lessons/create': {
+      id: '/_dashboard/lessons/create'
+      path: '/lessons/create'
+      fullPath: '/lessons/create'
+      preLoaderRoute: typeof DashboardLessonsCreateRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/users/': {
+      id: '/_dashboard/users/'
+      path: '/users'
+      fullPath: '/users/'
+      preLoaderRoute: typeof DashboardUsersIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/users/create': {
+      id: '/_dashboard/users/create'
+      path: '/users/create'
+      fullPath: '/users/create'
+      preLoaderRoute: typeof DashboardUsersCreateRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/api/analytics/ingest': {
+      id: '/api/analytics/ingest'
+      path: '/api/analytics/ingest'
+      fullPath: '/api/analytics/ingest'
+      preLoaderRoute: typeof ApiAnalyticsIngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sync/$': {
+      id: '/api/sync/$'
+      path: '/api/sync/$'
+      fullPath: '/api/sync/$'
+      preLoaderRoute: typeof ApiSyncSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/lessons/$lessonId': {
+      id: '/student/lessons/$lessonId'
+      path: '/lessons/$lessonId'
+      fullPath: '/student/lessons/$lessonId'
+      preLoaderRoute: typeof StudentLessonsLessonIdRouteImport
+      parentRoute: typeof StudentRoute
     }
     '/_dashboard/lessons/$lessonId_/edit': {
       id: '/_dashboard/lessons/$lessonId_/edit'
       path: '/lessons/$lessonId/edit'
       fullPath: '/lessons/$lessonId/edit'
       preLoaderRoute: typeof DashboardLessonsLessonIdEditRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/users/$userId/edit': {
+      id: '/_dashboard/users/$userId/edit'
+      path: '/users/$userId/edit'
+      fullPath: '/users/$userId/edit'
+      preLoaderRoute: typeof DashboardUsersUserIdEditRouteImport
       parentRoute: typeof DashboardRoute
     }
   }

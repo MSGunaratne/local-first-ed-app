@@ -34,10 +34,10 @@
     "deploy": "pnpm run build && wrangler deploy",
     "cf-typegen": "wrangler types",
     "db:generate": "drizzle-kit generate",
-    "db:migrate:local": "wrangler d1 migrations apply ed_app_db_v2 --local",
-    "db:migrate:remote": "wrangler d1 migrations apply ed_app_db_v2 --remote",
-    "db:query:local": "wrangler d1 execute ed_app_db_v2 --local --command",
-    "db:query:remote": "wrangler d1 execute ed_app_db_v2 --remote --command"
+    "db:migrate:local": "wrangler d1 migrations apply ed_app_db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply ed_app_db --remote",
+    "db:query:local": "wrangler d1 execute ed_app_db --local --command",
+    "db:query:remote": "wrangler d1 execute ed_app_db --remote --command"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -107,7 +107,7 @@
     "dotenv": "^17.4.2",
     "jsdom": "^28.1.0",
     "tsx": "^4.23.15",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "vite": "^7.3.6",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.7",

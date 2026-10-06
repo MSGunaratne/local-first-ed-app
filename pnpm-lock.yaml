@@ -164,7 +164,7 @@ importers:
         version: 2.5.15
       '@inlang/paraglide-js':
         specifier: ^2.25.4
-        version: 2.25.4(typescript@5.9.3)(vite@7.3.6(@types/node@24.19.1)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15))
+        version: 2.25.4(typescript@6.0.3)(vite@7.3.6(@types/node@24.19.1)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15))
       '@playwright/test':
         specifier: ^1.63.0
         version: 1.63.0
@@ -205,14 +205,14 @@ importers:
         specifier: ^4.23.15
         version: 4.23.15
       typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
       vite:
         specifier: ^7.3.6
         version: 7.3.6(@types/node@24.19.1)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)
       vite-tsconfig-paths:
         specifier: ^5.1.4
-        version: 5.1.4(typescript@5.9.3)(vite@7.3.6(@types/node@24.19.1)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15))
+        version: 5.1.4(typescript@6.0.3)(vite@7.3.6(@types/node@24.19.1)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15))
       vitest:
         specifier: ^3.2.7
         version: 3.2.7(@types/node@24.19.1)(jiti@2.7.0)(jsdom@28.1.0(@noble/hashes@2.4.0))(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)
@@ -5861,8 +5861,8 @@ packages:
     resolution: {integrity: sha512-phPGCwqr2+Qo0fwniCE8e4pKnGu/yFb5nD5Y8bf0EEeiI5GklnACYA9GFy/DrAeRrKHXvHn+1SUsOWgJp6RO+g==}
     engines: {node: '>= 0.4'}
 
-  typescript@5.9.3:
-    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -7683,7 +7683,7 @@ snapshots:
   '@img/sharp-win32-x64@0.35.4':
     optional: true
 
-  '@inlang/paraglide-js@2.25.4(typescript@5.9.3)(vite@7.3.6(@types/node@24.19.1)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15))':
+  '@inlang/paraglide-js@2.25.4(typescript@6.0.3)(vite@7.3.6(@types/node@24.19.1)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15))':
     dependencies:
       '@inlang/recommend-sherlock': 0.2.1
       '@inlang/sdk': 3.0.6
@@ -7693,9 +7693,9 @@ snapshots:
       json5: 2.2.3
       unplugin: 2.3.11
       urlpattern-polyfill: 10.1.0
-      valibot: 1.5.0(typescript@5.9.3)
+      valibot: 1.5.0(typescript@6.0.3)
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 6.0.3
       vite: 7.3.6(@types/node@24.19.1)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)
 
   '@inlang/recommend-sherlock@0.2.1':
@@ -11706,9 +11706,9 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  tsconfck@3.1.6(typescript@5.9.3):
+  tsconfck@3.1.6(typescript@6.0.3):
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 6.0.3
 
   tslib@2.8.1: {}
 
@@ -11754,7 +11754,7 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typescript@5.9.3: {}
+  typescript@6.0.3: {}
 
   ufo@1.6.4: {}
 
@@ -11844,9 +11844,9 @@ snapshots:
 
   uuidv7@1.2.1: {}
 
-  valibot@1.5.0(typescript@5.9.3):
+  valibot@1.5.0(typescript@6.0.3):
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 6.0.3
 
   vite-node@3.2.4(@types/node@24.19.1)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15):
     dependencies:
@@ -11869,11 +11869,11 @@ snapshots:
       - tsx
       - yaml
 
-  vite-tsconfig-paths@5.1.4(typescript@5.9.3)(vite@7.3.6(@types/node@24.19.1)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)):
+  vite-tsconfig-paths@5.1.4(typescript@6.0.3)(vite@7.3.6(@types/node@24.19.1)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)):
     dependencies:
       debug: 4.4.3
       globrex: 0.1.2
-      tsconfck: 3.1.6(typescript@5.9.3)
+      tsconfck: 3.1.6(typescript@6.0.3)
     optionalDependencies:
       vite: 7.3.6(@types/node@24.19.1)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)
     transitivePeerDependencies:

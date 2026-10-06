@@ -30,9 +30,6 @@ export const auth = betterAuth({
 	baseURL: betterAuthUrl,
 
 	trustedOrigins: [betterAuthUrl],
-	experimental: {
-		joins: true,
-	},
 
 	database: drizzleAdapter(db, {
 		provider: "sqlite",
@@ -79,6 +76,7 @@ export const auth = betterAuth({
 		useSecureCookies: process.env.NODE_ENV === "production",
 		database: {
 			generateId: false,
+			joins: true,
 		},
 	},
 

@@ -5,22 +5,20 @@ import {
 	stripSearchParams,
 } from "@tanstack/react-router";
 import type { Row } from "@tanstack/react-table";
-import {
-	createColumnHelper,
-	getCoreRowModel,
-	useReactTable,
-} from "@tanstack/react-table";
+import { createColumnHelper, useTable } from "@tanstack/react-table";
 import { Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatPhoneNumber } from "react-phone-number-input";
 import {
 	DataTable,
 	DataTableExport,
+	type DataTableFeatures,
 	DataTablePagination,
 	DataTableRoutePending,
 	DataTableRowActions,
 	DataTableToolbar,
 	DataTableViewOptions,
+	dataTableFeatures,
 	getSelectionColumn,
 } from "@/components/data-table";
 import {
@@ -86,7 +84,7 @@ function DashboardListRoutePending() {
 	return <DataTableRoutePending message={m.users_preparing()} />;
 }
 
-const columnHelper = createColumnHelper<User>();
+const columnHelper = createColumnHelper<DataTableFeatures, User>();
 
 function UsersPage() {
 	const { session } = Route.useRouteContext();
@@ -112,7 +110,9 @@ function UsersPage() {
 	}, []);
 
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-	const [rowsToDelete, setRowsToDelete] = useState<Row<User>[]>([]);
+	const [rowsToDelete, setRowsToDelete] = useState<
+		Row<DataTableFeatures, User>[]
+	>([]);
 
 	const { mutateAsync: deleteMutation } = useMutation({
 		...userMutations.delete(),
@@ -121,7 +121,7 @@ function UsersPage() {
 		},
 	});
 
-	const handleDeleteSelected = (rows: Row<User>[]) => {
+	const handleDeleteSelected = (rows: Row<DataTableFeatures, User>[]) => {
 		setRowsToDelete(rows);
 		setDeleteDialogOpen(true);
 	};
@@ -144,94 +144,95 @@ function UsersPage() {
 	);
 
 	const columns = useMemo(
-		() => [
-			...(canManageUsers ? [getSelectionColumn<User>()] : []),
-			columnHelper.accessor("name", {
-				header: m.users_table_name(),
-				cell: ({ row }) => (
-					<div className="flex flex-col">
-						<span className="font-medium">{row.original.name}</span>
-						<span className="text-sm text-muted-foreground">
-							{row.original.email}
-						</span>
-					</div>
-				),
-			}),
-			columnHelper.accessor("email", {
-				header: m.users_table_email(),
-			}),
-			columnHelper.accessor("phoneNumber", {
-				header: m.users_table_phone(),
-				cell: ({ getValue }) => {
-					const value = getValue<string | null>();
-					return value ? formatPhoneNumber(value) : "—";
-				},
-			}),
-			columnHelper.accessor("role", {
-				header: m.users_table_role(),
-				cell: ({ getValue }) => {
-					const role = getValue<User["role"]>();
-					const roleMetadata = ROLE_METADATA[role];
-					return (
-						<Badge variant="default" color={roleMetadata.color}>
-							{roleMetadata.label}
-						</Badge>
-					);
-				},
-			}),
-			columnHelper.accessor("createdAt", {
-				header: m.common_created_at(),
-				cell: ({ getValue }) => fDate(getValue()),
-			}),
-			columnHelper.display({
-				id: "actions",
-				header: () => <span className="sr-only">{m.common_actions()}</span>,
-				cell: ({ row }) =>
-					canManageUsers || row.original.id === session.user.id ? (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button variant="ghost" size="icon" className="h-8 w-8">
-									<MoreHorizontal className="h-4 w-4" />
-									<span className="sr-only">{m.common_open_menu()}</span>
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								<DropdownMenuItem asChild>
-									<Link
-										to="/users/$userId/edit"
-										params={{ userId: row.original.id }}
-									>
-										<Edit className="mr-2 h-4 w-4" />
-										{m.common_edit()}
-									</Link>
-								</DropdownMenuItem>
-								{canManageUsers && (
-									<DropdownMenuItem
-										className="text-destructive"
-										onClick={() => {
-											setRowsToDelete([row]);
-											setDeleteDialogOpen(true);
-										}}
-									>
-										<Trash2 className="mr-2 h-4 w-4" />
-										{m.common_delete()}
+		() =>
+			columnHelper.columns([
+				...(canManageUsers ? [getSelectionColumn<User>()] : []),
+				columnHelper.accessor("name", {
+					header: m.users_table_name(),
+					cell: ({ row }) => (
+						<div className="flex flex-col">
+							<span className="font-medium">{row.original.name}</span>
+							<span className="text-sm text-muted-foreground">
+								{row.original.email}
+							</span>
+						</div>
+					),
+				}),
+				columnHelper.accessor("email", {
+					header: m.users_table_email(),
+				}),
+				columnHelper.accessor("phoneNumber", {
+					header: m.users_table_phone(),
+					cell: ({ getValue }) => {
+						const value = getValue<string | null>();
+						return value ? formatPhoneNumber(value) : "—";
+					},
+				}),
+				columnHelper.accessor("role", {
+					header: m.users_table_role(),
+					cell: ({ getValue }) => {
+						const role = getValue<User["role"]>();
+						const roleMetadata = ROLE_METADATA[role];
+						return (
+							<Badge variant="default" color={roleMetadata.color}>
+								{roleMetadata.label}
+							</Badge>
+						);
+					},
+				}),
+				columnHelper.accessor("createdAt", {
+					header: m.common_created_at(),
+					cell: ({ getValue }) => fDate(getValue()),
+				}),
+				columnHelper.display({
+					id: "actions",
+					header: () => <span className="sr-only">{m.common_actions()}</span>,
+					cell: ({ row }) =>
+						canManageUsers || row.original.id === session.user.id ? (
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button variant="ghost" size="icon" className="h-8 w-8">
+										<MoreHorizontal className="h-4 w-4" />
+										<span className="sr-only">{m.common_open_menu()}</span>
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end">
+									<DropdownMenuItem asChild>
+										<Link
+											to="/users/$userId/edit"
+											params={{ userId: row.original.id }}
+										>
+											<Edit className="mr-2 h-4 w-4" />
+											{m.common_edit()}
+										</Link>
 									</DropdownMenuItem>
-								)}
-							</DropdownMenuContent>
-						</DropdownMenu>
-					) : null,
-				enableSorting: false,
-				enableHiding: false,
-			}),
-		],
+									{canManageUsers && (
+										<DropdownMenuItem
+											className="text-destructive"
+											onClick={() => {
+												setRowsToDelete([row]);
+												setDeleteDialogOpen(true);
+											}}
+										>
+											<Trash2 className="mr-2 h-4 w-4" />
+											{m.common_delete()}
+										</DropdownMenuItem>
+									)}
+								</DropdownMenuContent>
+							</DropdownMenu>
+						) : null,
+					enableSorting: false,
+					enableHiding: false,
+				}),
+			]),
 		[canManageUsers, session.user.id],
 	);
 
-	const table = useReactTable({
+	const table = useTable({
+		features: dataTableFeatures,
 		data: data?.data ?? fallbackData,
 		columns,
 		pageCount: data?.meta.pageCount ?? -1,
-		getCoreRowModel: getCoreRowModel(),
 		getRowId: (row) => row.id,
 		// Manual modes for server-side operations
 		manualPagination: true,

@@ -1,4 +1,4 @@
-import type { Table } from "@tanstack/react-table";
+import type { RowData, Table } from "@tanstack/react-table";
 import { Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,16 +9,17 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { DataTableFeatures } from "./data-table-features";
 
-interface DataTableViewOptionsProps<TData> {
-	table: Table<TData>;
+interface DataTableViewOptionsProps<TData extends RowData> {
+	table: Table<DataTableFeatures, TData>;
 }
 
 /**
  * Column visibility toggle dropdown.
  * Allows users to show/hide columns in the table.
  */
-export function DataTableViewOptions<TData>({
+export function DataTableViewOptions<TData extends RowData>({
 	table,
 }: DataTableViewOptionsProps<TData>) {
 	"use no memo";

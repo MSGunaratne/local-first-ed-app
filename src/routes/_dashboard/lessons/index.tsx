@@ -5,11 +5,7 @@ import {
 	stripSearchParams,
 } from "@tanstack/react-router";
 import type { Row } from "@tanstack/react-table";
-import {
-	createColumnHelper,
-	getCoreRowModel,
-	useReactTable,
-} from "@tanstack/react-table";
+import { createColumnHelper, useTable } from "@tanstack/react-table";
 import {
 	AlertTriangle,
 	Check,
@@ -25,11 +21,13 @@ import { useEffect, useMemo, useState } from "react";
 import {
 	DataTable,
 	DataTableExport,
+	type DataTableFeatures,
 	DataTablePagination,
 	DataTableRoutePending,
 	DataTableRowActions,
 	DataTableToolbar,
 	DataTableViewOptions,
+	dataTableFeatures,
 	getSelectionColumn,
 } from "@/components/data-table";
 import {
@@ -97,7 +95,7 @@ function DashboardListRoutePending() {
 	return <DataTableRoutePending message={m.lessons_preparing()} />;
 }
 
-const columnHelper = createColumnHelper<LessonListItem>();
+const columnHelper = createColumnHelper<DataTableFeatures, LessonListItem>();
 
 function LessonsPage() {
 	const {
@@ -121,7 +119,9 @@ function LessonsPage() {
 	}, []);
 
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-	const [rowsToDelete, setRowsToDelete] = useState<Row<LessonListItem>[]>([]);
+	const [rowsToDelete, setRowsToDelete] = useState<
+		Row<DataTableFeatures, LessonListItem>[]
+	>([]);
 
 	const { mutateAsync: deleteMutation } = useMutation({
 		...lessonMutations.delete(),
@@ -130,7 +130,9 @@ function LessonsPage() {
 		},
 	});
 
-	const handleDeleteSelected = (rows: Row<LessonListItem>[]) => {
+	const handleDeleteSelected = (
+		rows: Row<DataTableFeatures, LessonListItem>[],
+	) => {
 		setRowsToDelete(rows);
 		setDeleteDialogOpen(true);
 	};
@@ -144,165 +146,171 @@ function LessonsPage() {
 	};
 
 	const columns = useMemo(
-		() => [
-			getSelectionColumn<LessonListItem>(),
-			columnHelper.accessor("title", {
-				header: m.lessons_table_title(),
-				cell: ({ row }) => (
-					<Link to="/lessons/$lessonId" params={{ lessonId: row.original.id }}>
-						{row.original.title}
-					</Link>
-				),
-			}),
-			columnHelper.accessor("subject", {
-				header: m.lessons_table_subject(),
-				cell: ({ getValue }) => {
-					const subject = getValue<string>();
-					return <Badge variant="secondary">{subject.toUpperCase()}</Badge>;
-				},
-			}),
-			columnHelper.accessor("gradeLevel", {
-				header: m.lessons_table_grade(),
-				cell: ({ getValue }) => {
-					return <span>{m.lessons_grade({ grade: getValue<number>() })}</span>;
-				},
-			}),
-			columnHelper.accessor("teacherName", {
-				header: "Created by",
-				cell: ({ getValue }) => getValue() ?? "Unassigned",
-				enableSorting: false,
-			}),
-			columnHelper.accessor("createdAt", {
-				header: m.common_created_at(),
-				cell: ({ getValue }) => fDate(getValue()),
-			}),
-			columnHelper.accessor("syncStatus", {
-				header: "Sync",
-				cell: ({ getValue }) => {
-					const status = getValue();
-					if (status === "pending") {
+		() =>
+			columnHelper.columns([
+				getSelectionColumn<LessonListItem>(),
+				columnHelper.accessor("title", {
+					header: m.lessons_table_title(),
+					cell: ({ row }) => (
+						<Link
+							to="/lessons/$lessonId"
+							params={{ lessonId: row.original.id }}
+						>
+							{row.original.title}
+						</Link>
+					),
+				}),
+				columnHelper.accessor("subject", {
+					header: m.lessons_table_subject(),
+					cell: ({ getValue }) => {
+						const subject = getValue<string>();
+						return <Badge variant="secondary">{subject.toUpperCase()}</Badge>;
+					},
+				}),
+				columnHelper.accessor("gradeLevel", {
+					header: m.lessons_table_grade(),
+					cell: ({ getValue }) => {
+						return (
+							<span>{m.lessons_grade({ grade: getValue<number>() })}</span>
+						);
+					},
+				}),
+				columnHelper.accessor("teacherName", {
+					header: "Created by",
+					cell: ({ getValue }) => getValue() ?? "Unassigned",
+					enableSorting: false,
+				}),
+				columnHelper.accessor("createdAt", {
+					header: m.common_created_at(),
+					cell: ({ getValue }) => fDate(getValue()),
+				}),
+				columnHelper.accessor("syncStatus", {
+					header: "Sync",
+					cell: ({ getValue }) => {
+						const status = getValue();
+						if (status === "pending") {
+							return (
+								<Badge
+									variant="outline"
+									className="gap-1 text-xs bg-amber-500/10 text-amber-600 border-amber-200 hover:bg-amber-500/10 shrink-0 select-none"
+								>
+									<Clock className="h-3 w-3 animate-pulse" />
+									{m.lessons_sync_pending()}
+								</Badge>
+							);
+						}
+						if (status === "conflict") {
+							return (
+								<Badge
+									variant="destructive"
+									className="gap-1 text-xs shrink-0 select-none"
+								>
+									<AlertTriangle className="h-3 w-3" />
+									{m.lessons_sync_conflict()}
+								</Badge>
+							);
+						}
 						return (
 							<Badge
 								variant="outline"
-								className="gap-1 text-xs bg-amber-500/10 text-amber-600 border-amber-200 hover:bg-amber-500/10 shrink-0 select-none"
+								className="gap-1 text-xs bg-green-500/10 text-green-600 border-green-200 hover:bg-green-500/10 shrink-0 select-none"
 							>
-								<Clock className="h-3 w-3 animate-pulse" />
-								{m.lessons_sync_pending()}
+								<Check className="h-3 w-3" />
+								{m.lessons_sync_confirmed()}
 							</Badge>
 						);
-					}
-					if (status === "conflict") {
-						return (
-							<Badge
-								variant="destructive"
-								className="gap-1 text-xs shrink-0 select-none"
-							>
-								<AlertTriangle className="h-3 w-3" />
-								{m.lessons_sync_conflict()}
-							</Badge>
-						);
-					}
-					return (
-						<Badge
-							variant="outline"
-							className="gap-1 text-xs bg-green-500/10 text-green-600 border-green-200 hover:bg-green-500/10 shrink-0 select-none"
-						>
-							<Check className="h-3 w-3" />
-							{m.lessons_sync_confirmed()}
-						</Badge>
-					);
-				},
-				enableSorting: false,
-			}),
-			columnHelper.display({
-				id: "actions",
-				header: () => <span className="sr-only">{m.common_actions()}</span>,
-				cell: ({ row }) => (
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" size="icon" className="h-8 w-8">
-								<MoreHorizontal className="h-4 w-4" />
-								<span className="sr-only">{m.common_open_menu()}</span>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							{row.original.isPublished && (
+					},
+					enableSorting: false,
+				}),
+				columnHelper.display({
+					id: "actions",
+					header: () => <span className="sr-only">{m.common_actions()}</span>,
+					cell: ({ row }) => (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="ghost" size="icon" className="h-8 w-8">
+									<MoreHorizontal className="h-4 w-4" />
+									<span className="sr-only">{m.common_open_menu()}</span>
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								{row.original.isPublished && (
+									<DropdownMenuItem asChild>
+										<Link
+											to="/student/lessons/$lessonId"
+											params={{ lessonId: row.original.id }}
+										>
+											<Eye className="mr-2 h-4 w-4" />
+											{m.common_preview()}
+										</Link>
+									</DropdownMenuItem>
+								)}
 								<DropdownMenuItem asChild>
 									<Link
-										to="/student/lessons/$lessonId"
+										to="/lessons/$lessonId/edit"
 										params={{ lessonId: row.original.id }}
 									>
-										<Eye className="mr-2 h-4 w-4" />
-										{m.common_preview()}
+										<Edit className="mr-2 h-4 w-4" />
+										{m.common_edit()}
 									</Link>
 								</DropdownMenuItem>
-							)}
-							<DropdownMenuItem asChild>
-								<Link
-									to="/lessons/$lessonId/edit"
-									params={{ lessonId: row.original.id }}
-								>
-									<Edit className="mr-2 h-4 w-4" />
-									{m.common_edit()}
-								</Link>
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								disabled={!row.original.isPublished || !isOnline}
-								onClick={() => {
-									const shareUrl = `${window.location.origin}/student/lessons/${row.original.id}`;
-									const shareText = `Check out this lesson: ${row.original.title}`;
+								<DropdownMenuItem
+									disabled={!row.original.isPublished || !isOnline}
+									onClick={() => {
+										const shareUrl = `${window.location.origin}/student/lessons/${row.original.id}`;
+										const shareText = `Check out this lesson: ${row.original.title}`;
 
-									if (navigator.share) {
-										navigator
-											.share({
-												title: row.original.title,
-												text: shareText,
-												url: shareUrl,
-											})
-											.catch((error) => {
-												if (error.name !== "AbortError") {
-													window.open(
-														`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
-														"_blank",
-													);
-												}
-											});
-									} else {
-										window.open(
-											`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
-											"_blank",
-										);
-									}
-								}}
-							>
-								<Share className="mr-2 h-4 w-4" />
-								{m.common_share()}
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								className="text-destructive"
-								onClick={() => {
-									setRowsToDelete([row]);
-									setDeleteDialogOpen(true);
-								}}
-							>
-								<Trash2 className="mr-2 h-4 w-4" />
-								{m.common_delete()}
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				),
-				enableSorting: false,
-				enableHiding: false,
-			}),
-		],
+										if (navigator.share) {
+											navigator
+												.share({
+													title: row.original.title,
+													text: shareText,
+													url: shareUrl,
+												})
+												.catch((error) => {
+													if (error.name !== "AbortError") {
+														window.open(
+															`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
+															"_blank",
+														);
+													}
+												});
+										} else {
+											window.open(
+												`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
+												"_blank",
+											);
+										}
+									}}
+								>
+									<Share className="mr-2 h-4 w-4" />
+									{m.common_share()}
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									className="text-destructive"
+									onClick={() => {
+										setRowsToDelete([row]);
+										setDeleteDialogOpen(true);
+									}}
+								>
+									<Trash2 className="mr-2 h-4 w-4" />
+									{m.common_delete()}
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					),
+					enableSorting: false,
+					enableHiding: false,
+				}),
+			]),
 		[isOnline],
 	);
 
-	const table = useReactTable({
+	const table = useTable({
+		features: dataTableFeatures,
 		data: data?.data ?? fallbackData,
 		columns,
 		pageCount: data?.meta.pageCount ?? -1,
-		getCoreRowModel: getCoreRowModel(),
 		getRowId: (row) => row.id,
 		manualPagination: true,
 		manualSorting: true,

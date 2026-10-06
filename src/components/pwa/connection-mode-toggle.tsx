@@ -186,121 +186,124 @@ export function ConnectionModeToggle({
 								<span className="text-xs font-semibold">{operationCount}</span>
 							</Button>
 						</PopoverTrigger>
-					<PopoverContent align="end" className="w-80">
-						<PopoverHeader>
-							<PopoverTitle>Local change status</PopoverTitle>
-						</PopoverHeader>
-						<div className="mt-3 max-h-80 space-y-3 overflow-y-auto">
-							{conflicts.length === 0 && operations.length === 0 ? (
-								<p className="text-sm text-muted-foreground">
-									Loading local changes...
-								</p>
-							) : (
-								conflicts.map((conflict) => (
-									<div
-										key={conflict.id}
-										className="rounded-md border bg-muted/30 p-3"
-									>
-										<div className="flex items-start justify-between gap-3">
-											<div className="min-w-0">
-												<p className="truncate text-sm font-medium">
-													{getConflictTitle(conflict)}
-												</p>
-												<p className="mt-1 text-xs text-muted-foreground">
-													Changed:{" "}
-													{getChangedFields(conflict).join(", ") ||
-														"record state"}
-												</p>
-												{(conflict.localUpdatedAt ||
-													conflict.remoteUpdatedAt) && (
-													<p className="mt-1 text-[11px] text-muted-foreground">
-														Local{" "}
-														{conflict.localUpdatedAt?.toLocaleString() ??
-															"unknown"}{" "}
-														· Server{" "}
-														{conflict.remoteUpdatedAt?.toLocaleString() ??
-															"unknown"}
+						<PopoverContent align="end" className="w-80">
+							<PopoverHeader>
+								<PopoverTitle>Local change status</PopoverTitle>
+							</PopoverHeader>
+							<div className="mt-3 max-h-80 space-y-3 overflow-y-auto">
+								{conflicts.length === 0 && operations.length === 0 ? (
+									<p className="text-sm text-muted-foreground">
+										Loading local changes...
+									</p>
+								) : (
+									conflicts.map((conflict) => (
+										<div
+											key={conflict.id}
+											className="rounded-md border bg-muted/30 p-3"
+										>
+											<div className="flex items-start justify-between gap-3">
+												<div className="min-w-0">
+													<p className="truncate text-sm font-medium">
+														{getConflictTitle(conflict)}
 													</p>
-												)}
-												<p className="text-xs text-muted-foreground">
-													{conflict.scope} · {conflict.conflictType}
-												</p>
+													<p className="mt-1 text-xs text-muted-foreground">
+														Changed:{" "}
+														{getChangedFields(conflict).join(", ") ||
+															"record state"}
+													</p>
+													{(conflict.localUpdatedAt ||
+														conflict.remoteUpdatedAt) && (
+														<p className="mt-1 text-[11px] text-muted-foreground">
+															Local{" "}
+															{conflict.localUpdatedAt?.toLocaleString() ??
+																"unknown"}{" "}
+															· Server{" "}
+															{conflict.remoteUpdatedAt?.toLocaleString() ??
+																"unknown"}
+														</p>
+													)}
+													<p className="text-xs text-muted-foreground">
+														{conflict.scope} · {conflict.conflictType}
+													</p>
+												</div>
 											</div>
-										</div>
-										<div className="mt-3 flex gap-2">
-											<Button
-												type="button"
-												size="sm"
-												variant="outline"
-												className="h-8 flex-1"
-												onClick={() =>
-													void resolveStoredConflict(
-														conflict.id,
-														"accept-remote",
-													)
-												}
-											>
-												Accept remote
-											</Button>
-											<Button
-												type="button"
-												size="sm"
-												className="h-8 flex-1"
-												onClick={() =>
-													void resolveStoredConflict(conflict.id, "keep-local")
-												}
-											>
-												Keep local
-											</Button>
-										</div>
-									</div>
-								))
-							)}
-							{operations.map((operation) => (
-								<div
-									key={operation.id}
-									className="rounded-md border bg-muted/30 p-3"
-								>
-									<p className="text-sm font-medium">
-										{getOperationStatusLabel(operation)}
-									</p>
-									<p className="mt-1 text-xs text-muted-foreground">
-										{operation.scope} · {operation.type}
-										{operation.lastError ? ` · ${operation.lastError}` : ""}
-									</p>
-									{(operation.status === "blocked" ||
-										operation.status === "conflict" ||
-										operation.status === "corrupt") && (
-										<div className="mt-3 flex gap-2">
-											<Button
-												size="sm"
-												variant="outline"
-												className="h-8 flex-1"
-												onClick={() =>
-													void resolveQueuedOperation(operation, "discard")
-												}
-											>
-												Discard local
-											</Button>
-											{operation.status !== "corrupt" && (
+											<div className="mt-3 flex gap-2">
 												<Button
+													type="button"
+													size="sm"
+													variant="outline"
+													className="h-8 flex-1"
+													onClick={() =>
+														void resolveStoredConflict(
+															conflict.id,
+															"accept-remote",
+														)
+													}
+												>
+													Accept remote
+												</Button>
+												<Button
+													type="button"
 													size="sm"
 													className="h-8 flex-1"
 													onClick={() =>
-														void resolveQueuedOperation(operation, "retry")
+														void resolveStoredConflict(
+															conflict.id,
+															"keep-local",
+														)
 													}
 												>
-													{operation.status === "conflict"
-														? "Keep local"
-														: "Retry"}
+													Keep local
 												</Button>
-											)}
+											</div>
 										</div>
-									)}
-								</div>
-							))}
-						</div>
-					</PopoverContent>
+									))
+								)}
+								{operations.map((operation) => (
+									<div
+										key={operation.id}
+										className="rounded-md border bg-muted/30 p-3"
+									>
+										<p className="text-sm font-medium">
+											{getOperationStatusLabel(operation)}
+										</p>
+										<p className="mt-1 text-xs text-muted-foreground">
+											{operation.scope} · {operation.type}
+											{operation.lastError ? ` · ${operation.lastError}` : ""}
+										</p>
+										{(operation.status === "blocked" ||
+											operation.status === "conflict" ||
+											operation.status === "corrupt") && (
+											<div className="mt-3 flex gap-2">
+												<Button
+													size="sm"
+													variant="outline"
+													className="h-8 flex-1"
+													onClick={() =>
+														void resolveQueuedOperation(operation, "discard")
+													}
+												>
+													Discard local
+												</Button>
+												{operation.status !== "corrupt" && (
+													<Button
+														size="sm"
+														className="h-8 flex-1"
+														onClick={() =>
+															void resolveQueuedOperation(operation, "retry")
+														}
+													>
+														{operation.status === "conflict"
+															? "Keep local"
+															: "Retry"}
+													</Button>
+												)}
+											</div>
+										)}
+									</div>
+								))}
+							</div>
+						</PopoverContent>
 					</Popover>
 				)}
 			</div>

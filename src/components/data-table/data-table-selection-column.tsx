@@ -1,5 +1,6 @@
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, RowData } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
+import type { DataTableFeatures } from "./data-table-features";
 
 /**
  * Creates a selection column for row selection.
@@ -9,7 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
  *
  * @example
  * ```tsx
- * const table = useReactTable({
+ * const table = useTable({
+ *   features: dataTableFeatures,
  *   getRowId: (row) => row.id, // Required!
  *   enableRowSelection: true,
  *   onRowSelectionChange: setRowSelection,
@@ -23,20 +25,28 @@ import { Checkbox } from "@/components/ui/checkbox";
  * ];
  * ```
  */
-export function getSelectionColumn<TData>(): ColumnDef<TData> {
+export function getSelectionColumn<TData extends RowData>(): ColumnDef<
+	DataTableFeatures,
+	TData
+> {
 	return {
 		id: "select",
-		header: ({ table }) => (
-			<Checkbox
-				checked={
-					table.getIsAllPageRowsSelected() ||
-					(table.getIsSomePageRowsSelected() && "indeterminate")
-				}
-				onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-				aria-label="Select all rows on this page"
-				className="translate-y-[2px]"
-			/>
-		),
+		header: ({ table }) => {
+			const isAllSelected = table.getIsAllPageRowsSelected();
+			const isSomeSelected =
+				table.getIsSomePageRowsSelected() && !isAllSelected;
+
+			return (
+				<Checkbox
+					checked={
+						isAllSelected ? true : isSomeSelected ? "indeterminate" : false
+					}
+					onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+					aria-label="Select all rows on this page"
+					className="translate-y-[2px]"
+				/>
+			);
+		},
 		cell: ({ row }) => (
 			<Checkbox
 				checked={row.getIsSelected()}

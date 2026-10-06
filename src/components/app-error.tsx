@@ -1,4 +1,8 @@
-import { Link, useRouter } from "@tanstack/react-router";
+import {
+	type ErrorComponentProps,
+	Link,
+	useRouter,
+} from "@tanstack/react-router";
 import { AlertCircle, Home, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,8 +14,14 @@ import {
 } from "@/components/ui/card";
 import { m } from "@/paraglide/messages";
 
-export function AppError({ error }: { error: Error }) {
+export function AppError({ error }: ErrorComponentProps) {
 	const router = useRouter();
+	const errorMessage =
+		error instanceof Error
+			? error.message
+			: typeof error === "string"
+				? error
+				: JSON.stringify(error);
 
 	return (
 		<div className="flex h-screen w-full flex-col items-center justify-center bg-background p-4 animate-in fade-in duration-300">
@@ -28,7 +38,7 @@ export function AppError({ error }: { error: Error }) {
 					<p>{m.error_unexpected_desc()}</p>
 					{process.env.NODE_ENV === "development" && (
 						<div className="mt-4 rounded-md bg-muted p-2 text-left text-xs font-mono text-foreground overflow-auto max-h-32">
-							{error.message}
+							{errorMessage}
 						</div>
 					)}
 				</CardContent>

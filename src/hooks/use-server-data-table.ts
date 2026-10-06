@@ -5,7 +5,7 @@ import type {
 	PaginationState,
 	RowSelectionState,
 	SortingState,
-	VisibilityState,
+	ColumnVisibilityState,
 } from "@tanstack/react-table";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import {
@@ -31,7 +31,7 @@ type UseServerDataTableOptions = {
 	/** Default sorting when not specified in URL */
 	defaultSorting?: SortingState;
 	/** Default column visibility */
-	defaultColumnVisibility?: VisibilityState;
+	defaultColumnVisibility?: ColumnVisibilityState;
 };
 
 type ServerDataTableHandlers = {
@@ -40,7 +40,7 @@ type ServerDataTableHandlers = {
 	onColumnFiltersChange: OnChangeFn<ColumnFiltersState>;
 	onGlobalFilterChange: OnChangeFn<string>;
 	onRowSelectionChange: OnChangeFn<RowSelectionState>;
-	onColumnVisibilityChange: OnChangeFn<VisibilityState>;
+	onColumnVisibilityChange: OnChangeFn<ColumnVisibilityState>;
 };
 
 type ServerDataTableQueryParams = {
@@ -127,9 +127,8 @@ export function useServerDataTable(options: UseServerDataTableOptions = {}) {
 	// ---------------------------------------------------------------------------
 
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-		defaultColumnVisibility,
-	);
+	const [columnVisibility, setColumnVisibility] =
+		useState<ColumnVisibilityState>(defaultColumnVisibility);
 
 	// ---------------------------------------------------------------------------
 	// Handler Factory

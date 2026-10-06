@@ -1,14 +1,19 @@
 import { createAccessControl } from "better-auth/plugins/access";
 import { adminAc, defaultStatements } from "better-auth/plugins/admin/access";
-import { ReportAction, UserAction } from "src/types/permission";
-import { Role } from "src/types/user";
+import { ReportAction, UserAction } from "@/types/permission";
+import { Role } from "@/types/user";
 
 // ----------------------------------------------------------------------
 
 const statement = {
 	...defaultStatements,
-	user: Object.values(UserAction),
-	report: Object.values(ReportAction),
+	user: [
+		UserAction.VIEW,
+		UserAction.CREATE,
+		UserAction.UPDATE,
+		UserAction.DELETE,
+	],
+	report: [ReportAction.VIEW, ReportAction.EXPORT],
 } as const;
 
 export const ac = createAccessControl(statement);

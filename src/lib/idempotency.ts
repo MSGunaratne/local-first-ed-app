@@ -18,7 +18,7 @@ let ensureTablePromise: Promise<void> | null = null;
 
 async function ensureIdempotencyTable() {
 	ensureTablePromise ??= (async () => {
-		await env.ed_app_db_v2
+		await env.ed_app_db
 			.prepare(
 				`CREATE TABLE IF NOT EXISTS idempotency_keys (
 					key TEXT PRIMARY KEY NOT NULL,
@@ -30,7 +30,7 @@ async function ensureIdempotencyTable() {
 				);`,
 			)
 			.run();
-		await env.ed_app_db_v2
+		await env.ed_app_db
 			.prepare(
 				"CREATE INDEX IF NOT EXISTS idx_idempotency_keys_created_at ON idempotency_keys(created_at);",
 			)
@@ -63,7 +63,7 @@ export async function claimIdempotencyKey(
 	requestHash: string,
 ): Promise<IdempotencyClaim> {
 	await ensureIdempotencyTable();
-	const insertResult = await env.ed_app_db_v2
+	const insertResult = await env.ed_app_db
 		.prepare(
 			`INSERT OR IGNORE INTO idempotency_keys
 				(key, request_hash, status, response_body, created_at, updated_at)
@@ -73,7 +73,7 @@ export async function claimIdempotencyKey(
 		.run();
 	if (insertResult.meta.changes > 0) return { status: "acquired" };
 
-	const row = await env.ed_app_db_v2
+	const row = await env.ed_app_db
 		.prepare(
 			`SELECT request_hash AS requestHash, status, response_body AS responseBody
 			 FROM idempotency_keys WHERE key = ? LIMIT 1;`,
@@ -108,7 +108,7 @@ export async function completeIdempotencyKey(
 	} catch {
 		serialized = null;
 	}
-	await env.ed_app_db_v2
+	await env.ed_app_db
 		.prepare(
 			`UPDATE idempotency_keys
 			 SET status = 'completed', response_body = ?, updated_at = unixepoch()
@@ -116,7 +116,7 @@ export async function completeIdempotencyKey(
 		)
 		.bind(serialized, key, requestHash)
 		.run();
-	await env.ed_app_db_v2
+	await env.ed_app_db
 		.prepare(
 			"DELETE FROM idempotency_keys WHERE created_at < (unixepoch() - ?);",
 		)
@@ -129,7 +129,7 @@ export async function releaseIdempotencyKey(
 	requestHash: string,
 ): Promise<void> {
 	await ensureIdempotencyTable();
-	await env.ed_app_db_v2
+	await env.ed_app_db
 		.prepare(
 			`DELETE FROM idempotency_keys
 			 WHERE key = ? AND request_hash = ? AND status = 'in_progress';`,
