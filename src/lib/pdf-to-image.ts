@@ -1,8 +1,3 @@
-import * as pdfjs from "pdfjs-dist";
-import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.mjs?url";
-
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
-
 export interface PdfToImageOptions {
 	scale?: number;
 	outputName?: string;
@@ -19,7 +14,7 @@ export function isPdfFile(file: File): boolean {
 
 function createOutputName(file: File, explicitName?: string): string {
 	if (explicitName) return explicitName;
-	return file.name.replace(/\.pdf$/i, "") + "-page-1.png";
+	return `${file.name.replace(/\.pdf$/i, "")}-page-1.png`;
 }
 
 function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
@@ -41,6 +36,17 @@ export async function convertFirstPdfPageToImageFile(
 	if (!isPdfFile(file)) {
 		throw new Error("Only PDF files can be converted.");
 	}
+	if (typeof window === "undefined" || typeof document === "undefined") {
+		throw new Error("PDF conversion is only available in the browser.");
+	}
+
+	// pdfjs evaluates DOMMatrix at module initialization. Keeping both imports
+	// behind the browser boundary prevents lesson-form SSR from loading it.
+	const [pdfjs, workerModule] = await Promise.all([
+		import("pdfjs-dist"),
+		import("pdfjs-dist/build/pdf.worker.mjs?url"),
+	]);
+	pdfjs.GlobalWorkerOptions.workerSrc = workerModule.default;
 
 	const arrayBuffer = await file.arrayBuffer();
 	const loadingTask = pdfjs.getDocument({ data: new Uint8Array(arrayBuffer) });

@@ -3,13 +3,15 @@
 // Push: local changes → server, Pull: server changes → local
 // ----------------------------------------------------------------------
 
+import { uuidv7 } from "uuidv7";
 import type { SQLiteBindValue } from "wa-sqlite";
 import { z } from "zod";
 import type { Class } from "@/features/classes/classes.schema";
 import type { Lesson } from "@/features/lessons/lessons.schema";
 import type { User } from "@/features/users/users.schema";
-import { execute, query, transaction } from "@/lib/local-db/init";
-import type { SyncScope } from "@/types/sync";
+import { query, transaction } from "@/lib/local-db/init";
+import type { EnqueueMutation } from "@/lib/mutation-queue";
+import type { MutationServerFnName, SyncChange, SyncScope } from "@/types/sync";
 
 type MutableSyncScope = Exclude<SyncScope, "users">;
 const conflictRecordJsonSchema = z.record(z.string(), z.unknown());
@@ -42,6 +44,8 @@ export interface SyncConflictRecord {
 	localRecord: Record<string, unknown>;
 	remoteRecord: Record<string, unknown>;
 	createdAt: Date;
+	localUpdatedAt: Date | null;
+	remoteUpdatedAt: Date | null;
 }
 
 // Column name maps: local SQLite uses snake_case, Drizzle types use camelCase
@@ -53,7 +57,6 @@ const COLUMN_MAP: { [K in SyncScope]: Record<string, string> } = {
 		gradeLevel: "grade_level",
 		teacherId: "teacher_id",
 		contentJson: "content_json",
-		contentHtml: "content_html",
 		originalImageUrl: "original_image_url",
 		linkedCurriculumIds: "linked_curriculum_ids",
 		estimatedDuration: "estimated_duration",
@@ -66,7 +69,7 @@ const COLUMN_MAP: { [K in SyncScope]: Record<string, string> } = {
 		syncStatus: "sync_status",
 		isDeleted: "is_deleted",
 		deletedAt: "deleted_at",
-		baseUpdatedAt: "base_updated_at",
+		baseRevision: "base_revision",
 		createdAt: "created_at",
 		updatedAt: "updated_at",
 	},
@@ -81,21 +84,13 @@ const COLUMN_MAP: { [K in SyncScope]: Record<string, string> } = {
 		syncStatus: "sync_status",
 		isDeleted: "is_deleted",
 		deletedAt: "deleted_at",
-		baseUpdatedAt: "base_updated_at",
+		baseRevision: "base_revision",
 	},
 	users: {
 		id: "id",
 		name: "name",
-		email: "email",
-		emailVerified: "email_verified",
-		image: "image",
-		phoneNumber: "phone_number",
-		createdAt: "created_at",
 		updatedAt: "updated_at",
 		role: "role",
-		banned: "banned",
-		banReason: "ban_reason",
-		banExpires: "ban_expires",
 	},
 };
 
@@ -104,6 +99,15 @@ const TABLE_MAP: Record<SyncScope, string> = {
 	classes: "class",
 	users: "user",
 };
+
+type LocalTxExec = (
+	sql: string,
+	params?: readonly SQLiteBindValue[],
+) => Promise<void>;
+type LocalTxQuery = <T extends Record<string, unknown>>(
+	sql: string,
+	params?: readonly SQLiteBindValue[],
+) => Promise<T[]>;
 
 // ----------------------------------------------------------------------
 // Pull: server → local
@@ -116,8 +120,8 @@ const TABLE_MAP: Record<SyncScope, string> = {
  */
 export async function pullRecords(
 	scope: SyncScope,
-	records: Array<Record<string, unknown>>,
-	cursor?: string | null,
+	changes: SyncChange[],
+	revision: number,
 ): Promise<SyncResult> {
 	const result: SyncResult = {
 		scope,
@@ -127,259 +131,224 @@ export async function pullRecords(
 	};
 
 	console.info(
-		`[Sync:Pull] Scope: ${scope}, Received ${records.length} records`,
+		`[Sync:Pull] Scope: ${scope}, Received ${changes.length} changes`,
 	);
 	const table = TABLE_MAP[scope];
 	const colMap = COLUMN_MAP[scope];
 
 	await transaction(async (exec, qry) => {
-		for (const record of records) {
-			try {
-				const id = typeof record.id === "string" ? record.id : null;
-				if (!id) {
-					result.errors.push(`Skipped ${scope} record without string id`);
+		for (const change of changes) {
+			const id = change.entityId;
+			if (!id) throw new Error(`Received ${scope} change without an entity id`);
+
+			const existingRows =
+				scope === "lessons" || scope === "classes"
+					? await qry<Record<string, unknown>>(
+							`SELECT * FROM ${table} WHERE id = ? LIMIT 1;`,
+							[id],
+						)
+					: [];
+			const existing = existingRows[0];
+
+			if (change.operation === "delete") {
+				if (existing && isUnresolvedLocalChange(existing)) {
+					await recordConflict(exec, {
+						scope: scope as MutableSyncScope,
+						entityId: id,
+						conflictType: "delete-update",
+						localRecord: existing,
+						remoteRecord: {
+							id,
+							deletedAt: new Date().toISOString(),
+							serverRevision: change.revision,
+						},
+					});
+				} else {
+					await exec(`DELETE FROM ${table} WHERE id = ?;`, [id]);
+				}
+				result.recordsProcessed++;
+				continue;
+			}
+
+			const record = change.data;
+			if (!record)
+				throw new Error(`Upsert change ${change.revision} has no data`);
+
+			const mutableRecord =
+				scope === "lessons" || scope === "classes"
+					? {
+							...record,
+							syncStatus: "synced",
+							isDeleted: record.deletedAt ? true : (record.isDeleted ?? false),
+							baseRevision: change.revision,
+						}
+					: record;
+			const snakeRecord = camelToSnake(mutableRecord, colMap);
+
+			if (scope === "lessons" || scope === "classes") {
+				if (existing && isUnresolvedLocalChange(existing)) {
+					await recordConflict(exec, {
+						scope,
+						entityId: id,
+						conflictType: "update-update",
+						localRecord: existing,
+						remoteRecord: record,
+					});
+					result.recordsProcessed++;
 					continue;
 				}
+			}
 
-				const mutableRecord =
-					scope === "lessons" || scope === "classes"
-						? {
-								...record,
-								syncStatus: "synced",
-								isDeleted: record.deletedAt
-									? true
-									: (record.isDeleted ?? false),
-								baseUpdatedAt: record.updatedAt,
-							}
-						: record;
-				const snakeRecord = camelToSnake(mutableRecord, colMap);
+			const columns = Object.keys(snakeRecord);
+			const values = Object.values(snakeRecord).map(serializeValue);
+			const placeholders = columns.map(() => "?").join(", ");
+			const updateSet = columns
+				.flatMap((c) => (c !== "id" ? [`${c} = excluded.${c}`] : []))
+				.join(", ");
 
-				if (scope === "lessons" || scope === "classes") {
-					const existingRows = await qry<Record<string, unknown>>(
-						`SELECT * FROM ${table} WHERE id = ? LIMIT 1;`,
-						[id],
-					);
-					const existing = existingRows[0];
-
-					if (existing && isUnresolvedLocalChange(existing)) {
-						await recordConflict(exec, {
-							scope,
-							entityId: id,
-							conflictType: record.deletedAt
-								? "delete-update"
-								: "update-update",
-							localRecord: existing,
-							remoteRecord: record,
-						});
-						result.recordsProcessed++;
-						continue;
-					}
-				}
-
-				const columns = Object.keys(snakeRecord);
-				const values = Object.values(snakeRecord).map(serializeValue);
-				const placeholders = columns.map(() => "?").join(", ");
-				const updateSet = columns
-					.flatMap((c) => (c !== "id" ? [`${c} = excluded.${c}`] : []))
-					.join(", ");
-
-				const sql = `INSERT INTO ${table} (${columns.join(", ")})
+			const sql = `INSERT INTO ${table} (${columns.join(", ")})
           VALUES (${placeholders})
           ON CONFLICT(id) DO UPDATE SET ${updateSet};`;
 
-				await exec(sql, values);
-				result.recordsProcessed++;
-			} catch (error) {
-				console.error(`[Sync:Pull] Failed to upsert ${scope}:`, error);
-				result.errors.push(
-					`Failed to upsert ${scope} record: ${error instanceof Error ? error.message : String(error)}`,
-				);
-			}
+			await exec(sql, values);
+			result.recordsProcessed++;
 		}
-	});
 
-	// Update sync cursor
-	if (cursor && result.errors.length === 0) {
-		console.info(
-			`[Sync:Pull] ${scope} pull complete: ${result.recordsProcessed} processed`,
+		await exec(
+			`INSERT INTO _sync_cursors (scope, revision, synced_at)
+       VALUES (?, ?, unixepoch())
+       ON CONFLICT(scope) DO UPDATE SET revision = excluded.revision, synced_at = unixepoch();`,
+			[scope, revision],
 		);
-		await execute(
-			`INSERT OR REPLACE INTO _sync_cursors (scope, cursor, synced_at)
-       VALUES (?, ?, unixepoch());`,
-			[scope, cursor],
-		);
-	}
+	});
 
 	return result;
 }
 
-// ----------------------------------------------------------------------
-// Push: local → server
-// Returns records that need to be synced to the server
-// ----------------------------------------------------------------------
-
-/**
- * Get all locally modified records that need to be pushed to the server.
- * Returns records with sync_status = 'pending'.
- */
-export async function getPendingPushRecords(
-	scope: MutableSyncScope,
-): Promise<Array<MutableSyncEntity<typeof scope>>> {
-	const table = TABLE_MAP[scope];
-	const colMap = COLUMN_MAP[scope];
-
-	const rows = await query<Record<string, unknown>>(
-		`SELECT * FROM ${table} WHERE sync_status = 'pending' AND is_deleted = 0;`,
-	);
-
-	return rows.map((row) =>
-		snakeToCamel<MutableSyncEntity<typeof scope>>(row, colMap),
-	);
-}
-
-/**
- * Get locally soft-deleted records that need to be synced.
- */
-export async function getPendingDeleteRecords(
-	scope: MutableSyncScope,
-): Promise<string[]> {
-	const table = TABLE_MAP[scope];
-	const rows = await query<{ id: string }>(
-		`SELECT id FROM ${table} WHERE is_deleted = 1 AND sync_status = 'pending';`,
-	);
-
-	return rows.map((row) => row.id);
-}
-
-/**
- * Mark records as synced after successful push to server.
- */
-export async function markSynced(
-	scope: SyncScope,
-	ids: string[],
-): Promise<void> {
-	if (ids.length === 0) return;
-
-	const table = TABLE_MAP[scope];
-	const placeholders = ids.map(() => "?").join(", ");
-	await execute(
-		`UPDATE ${table} SET sync_status = 'synced' WHERE id IN (${placeholders});`,
-		ids,
-	);
-}
-
-/**
- * Permanently remove soft-deleted records after server confirms deletion.
- */
-export async function purgeSynced(
-	scope: SyncScope,
-	ids: string[],
-): Promise<void> {
-	if (ids.length === 0) return;
-
-	const table = TABLE_MAP[scope];
-	const placeholders = ids.map(() => "?").join(", ");
-	await execute(`DELETE FROM ${table} WHERE id IN (${placeholders});`, ids);
-}
+// Queue-backed writes below are the only push path. The coordinator never scans
+// local entity state to infer creates or deletes.
 
 // ----------------------------------------------------------------------
 // Local Write Operations
 // Used when the app writes offline — marks records as pending sync
 // ----------------------------------------------------------------------
 
-/**
- * Insert a record locally, marking it as pending sync.
- */
-export async function insertLocal(
+async function insertLocalWithTx(
+	exec: LocalTxExec,
 	scope: SyncScope,
 	record: Record<string, unknown>,
-): Promise<void> {
-	console.info(
-		`[LocalWrite:${scope}] Inserting record...`,
-		record.id || "no-id",
-	);
+) {
 	const table = TABLE_MAP[scope];
-	const colMap = COLUMN_MAP[scope];
 	const snakeRecord = camelToSnake(
 		{ ...record, syncStatus: "pending" },
-		colMap,
+		COLUMN_MAP[scope],
 	);
-
 	const columns = Object.keys(snakeRecord);
-	const values = Object.values(snakeRecord).map(serializeValue);
-	const placeholders = columns.map(() => "?").join(", ");
-
-	await execute(
-		`INSERT INTO ${table} (${columns.join(", ")}) VALUES (${placeholders});`,
-		values,
+	await exec(
+		`INSERT INTO ${table} (${columns.join(", ")}) VALUES (${columns
+			.map(() => "?")
+			.join(", ")});`,
+		Object.values(snakeRecord).map(serializeValue),
 	);
-	console.info(`[LocalWrite:${scope}] Done.`);
 }
 
-/**
- * Update a record locally, marking it as pending sync.
- */
-export async function updateLocal(
-	scope: SyncScope,
+async function updateLocalWithTx(
+	exec: LocalTxExec,
+	qry: LocalTxQuery,
+	scope: MutableSyncScope,
 	id: string,
 	data: Record<string, unknown>,
-): Promise<void> {
+) {
 	const table = TABLE_MAP[scope];
-	const colMap = COLUMN_MAP[scope];
-
-	await transaction(async (exec, qry) => {
-		const existingRows = await qry<Record<string, unknown>>(
-			`SELECT sync_status, updated_at, base_updated_at FROM ${table} WHERE id = ? LIMIT 1;`,
-			[id],
-		);
-		const existing = existingRows[0];
-		const baseUpdatedAt =
-			existing?.sync_status === "pending" ||
-			existing?.sync_status === "conflict"
-				? existing.base_updated_at
-				: existing?.updated_at;
-
-		const snakeData = camelToSnake(
-			{
-				...data,
-				syncStatus: "pending",
-				baseUpdatedAt,
-				updatedAt: Math.floor(Date.now() / 1000),
-			},
-			colMap,
-		);
-
-		const setClauses = Object.keys(snakeData)
-			.map((col) => `${col} = ?`)
-			.join(", ");
-		const values = [...Object.values(snakeData).map(serializeValue), id];
-
-		await exec(`UPDATE ${table} SET ${setClauses} WHERE id = ?;`, values);
-	});
+	const existingRows = await qry<Record<string, unknown>>(
+		`SELECT id FROM ${table} WHERE id = ? LIMIT 1;`,
+		[id],
+	);
+	const existing = existingRows[0];
+	if (!existing) throw new Error(`Cannot update missing local ${scope}:${id}`);
+	const snakeData = camelToSnake(
+		{
+			...data,
+			syncStatus: "pending",
+			updatedAt: Math.floor(Date.now() / 1000),
+		},
+		COLUMN_MAP[scope],
+	);
+	await exec(
+		`UPDATE ${table} SET ${Object.keys(snakeData)
+			.map((column) => `${column} = ?`)
+			.join(", ")} WHERE id = ?;`,
+		[...Object.values(snakeData).map(serializeValue), id],
+	);
 }
 
-/**
- * Soft-delete a record locally, marking it as pending sync.
- */
-export async function deleteLocal(scope: SyncScope, id: string): Promise<void> {
+async function deleteLocalWithTx(
+	exec: LocalTxExec,
+	qry: LocalTxQuery,
+	scope: MutableSyncScope,
+	id: string,
+) {
 	const table = TABLE_MAP[scope];
-	await transaction(async (exec, qry) => {
-		const existingRows = await qry<Record<string, unknown>>(
-			`SELECT sync_status, updated_at, base_updated_at FROM ${table} WHERE id = ? LIMIT 1;`,
-			[id],
-		);
-		const existing = existingRows[0];
-		const baseUpdatedAt =
-			existing?.sync_status === "pending" ||
-			existing?.sync_status === "conflict"
-				? existing.base_updated_at
-				: existing?.updated_at;
+	const rows = await qry<Record<string, unknown>>(
+		`SELECT id FROM ${table} WHERE id = ? LIMIT 1;`,
+		[id],
+	);
+	const existing = rows[0];
+	if (!existing) return;
+	await exec(
+		`UPDATE ${table}
+     SET is_deleted = 1, deleted_at = unixepoch(), sync_status = 'pending',
+		 updated_at = unixepoch()
+     WHERE id = ?;`,
+		[id],
+	);
+}
 
-		await exec(
-			`UPDATE ${table} SET is_deleted = 1, deleted_at = unixepoch(), sync_status = 'pending', base_updated_at = ?, updated_at = unixepoch() WHERE id = ?;`,
-			[serializeValue(baseUpdatedAt), id],
-		);
+async function commitLocalMutation<K extends MutationServerFnName>(
+	mutation: EnqueueMutation<K>,
+	localWrite: (exec: LocalTxExec, qry: LocalTxQuery) => Promise<void>,
+) {
+	let queuedId = mutation.idempotencyKey;
+	await transaction(async (exec, qry) => {
+		await localWrite(exec, qry);
+		const { enqueueUsingTransaction } = await import("@/lib/mutation-queue");
+		const queued = await enqueueUsingTransaction(mutation, exec, qry);
+		queuedId = queued.id;
 	});
+	const { flushIfOnline } = await import("@/lib/mutation-queue");
+	await flushIfOnline();
+	return queuedId;
+}
+
+export function insertLocalAndEnqueue<K extends MutationServerFnName>(
+	scope: MutableSyncScope,
+	record: Record<string, unknown>,
+	mutation: EnqueueMutation<K>,
+) {
+	return commitLocalMutation(mutation, (exec) =>
+		insertLocalWithTx(exec, scope, record),
+	);
+}
+
+export function updateLocalAndEnqueue<K extends MutationServerFnName>(
+	scope: MutableSyncScope,
+	id: string,
+	data: Record<string, unknown>,
+	mutation: EnqueueMutation<K>,
+) {
+	return commitLocalMutation(mutation, (exec, qry) =>
+		updateLocalWithTx(exec, qry, scope, id, data),
+	);
+}
+
+export function deleteLocalAndEnqueue<K extends MutationServerFnName>(
+	scope: MutableSyncScope,
+	id: string,
+	mutation: EnqueueMutation<K>,
+) {
+	return commitLocalMutation(mutation, (exec, qry) =>
+		deleteLocalWithTx(exec, qry, scope, id),
+	);
 }
 
 /**
@@ -402,23 +371,17 @@ export async function getLocalById(
 	return snakeToCamel<SyncEntity<typeof scope>>(rows[0], colMap);
 }
 
-export async function getLocalExpectedUpdatedAt(
+export async function getLocalExpectedRevision(
 	scope: MutableSyncScope,
 	id: string,
-): Promise<string | undefined> {
+): Promise<number | undefined> {
 	const table = TABLE_MAP[scope];
-	const rows = await query<{
-		updated_at?: unknown;
-		base_updated_at?: unknown;
-	}>(`SELECT updated_at, base_updated_at FROM ${table} WHERE id = ? LIMIT 1;`, [
-		id,
-	]);
+	const rows = await query<{ base_revision?: number }>(
+		`SELECT base_revision FROM ${table} WHERE id = ? LIMIT 1;`,
+		[id],
+	);
 	const row = rows[0];
-	if (!row) {
-		return undefined;
-	}
-
-	return serializeExpectedUpdatedAt(row.base_updated_at ?? row.updated_at);
+	return row ? Number(row.base_revision ?? 0) : undefined;
 }
 
 /**
@@ -443,12 +406,12 @@ export async function getLocalAll(
 // Sync cursor helpers
 // ----------------------------------------------------------------------
 
-export async function getSyncCursor(scope: SyncScope): Promise<string | null> {
-	const rows = await query<{ cursor: string }>(
-		"SELECT cursor FROM _sync_cursors WHERE scope = ?;",
+export async function getSyncCursor(scope: SyncScope): Promise<number> {
+	const rows = await query<{ revision: number }>(
+		"SELECT revision FROM _sync_cursors WHERE scope = ?;",
 		[scope],
 	);
-	return rows[0]?.cursor ?? null;
+	return Number(rows[0]?.revision ?? 0);
 }
 
 export async function getUnresolvedConflictCount(): Promise<number> {
@@ -467,8 +430,11 @@ export async function getUnresolvedConflicts(): Promise<SyncConflictRecord[]> {
 		local_record: string;
 		remote_record: string;
 		created_at: number;
+		local_updated_at: number | null;
+		remote_updated_at: number | null;
 	}>(
-		`SELECT id, scope, entity_id, conflict_type, local_record, remote_record, created_at
+		`SELECT id, scope, entity_id, conflict_type, local_record, remote_record,
+            created_at, local_updated_at, remote_updated_at
      FROM _sync_conflicts
      WHERE resolved_at IS NULL
      ORDER BY created_at DESC;`,
@@ -488,6 +454,12 @@ export async function getUnresolvedConflicts(): Promise<SyncConflictRecord[]> {
 				localRecord: parseConflictJson(row.local_record),
 				remoteRecord: parseConflictJson(row.remote_record),
 				createdAt: new Date(row.created_at * 1000),
+				localUpdatedAt: row.local_updated_at
+					? new Date(row.local_updated_at * 1000)
+					: null,
+				remoteUpdatedAt: row.remote_updated_at
+					? new Date(row.remote_updated_at * 1000)
+					: null,
 			},
 		];
 	});
@@ -505,9 +477,11 @@ export async function resolveConflict(
 			id: string;
 			scope: string;
 			entity_id: string;
+			conflict_type: "update-update" | "delete-update";
+			local_record: string;
 			remote_record: string;
 		}>(
-			`SELECT id, scope, entity_id, remote_record
+			`SELECT id, scope, entity_id, conflict_type, local_record, remote_record
        FROM _sync_conflicts
        WHERE id = ? AND resolved_at IS NULL
        LIMIT 1;`,
@@ -525,33 +499,101 @@ export async function resolveConflict(
 			const remoteRecord = parseConflictJson(conflict.remote_record);
 			const table = TABLE_MAP[scope];
 			const colMap = COLUMN_MAP[scope];
-			const mutableRecord = {
-				...remoteRecord,
-				syncStatus: "synced",
-				isDeleted: remoteRecord.deletedAt
-					? true
-					: (remoteRecord.isDeleted ?? false),
-				baseUpdatedAt: remoteRecord.updatedAt,
-			};
-			const snakeRecord = camelToSnake(mutableRecord, colMap);
-			const columns = Object.keys(snakeRecord);
-			const values = Object.values(snakeRecord).map(serializeValue);
-			const placeholders = columns.map(() => "?").join(", ");
-			const updateSet = columns
-				.flatMap((c) => (c !== "id" ? [`${c} = excluded.${c}`] : []))
-				.join(", ");
+			if (conflict.conflict_type === "delete-update") {
+				await exec(`DELETE FROM ${table} WHERE id = ?;`, [conflict.entity_id]);
+				await exec("DELETE FROM _outbox WHERE scope = ? AND entity_id = ?;", [
+					scope,
+					conflict.entity_id,
+				]);
+			} else {
+				const mutableRecord = {
+					...remoteRecord,
+					syncStatus: "synced",
+					isDeleted: remoteRecord.deletedAt
+						? true
+						: (remoteRecord.isDeleted ?? false),
+					baseRevision: remoteRecord.serverRevision,
+				};
+				const snakeRecord = camelToSnake(mutableRecord, colMap);
+				const columns = Object.keys(snakeRecord);
+				const values = Object.values(snakeRecord).map(serializeValue);
+				const placeholders = columns.map(() => "?").join(", ");
+				const updateSet = columns
+					.flatMap((c) => (c !== "id" ? [`${c} = excluded.${c}`] : []))
+					.join(", ");
 
-			await exec(
-				`INSERT INTO ${table} (${columns.join(", ")})
+				await exec(
+					`INSERT INTO ${table} (${columns.join(", ")})
          VALUES (${placeholders})
          ON CONFLICT(id) DO UPDATE SET ${updateSet};`,
-				values,
-			);
+					values,
+				);
+				await exec("DELETE FROM _outbox WHERE scope = ? AND entity_id = ?;", [
+					scope,
+					conflict.entity_id,
+				]);
+			}
 		} else {
 			const table = TABLE_MAP[conflict.scope];
-			await exec(`UPDATE ${table} SET sync_status = 'pending' WHERE id = ?;`, [
-				conflict.entity_id,
-			]);
+			const remoteRecord = parseConflictJson(conflict.remote_record);
+			const serverRevision =
+				typeof remoteRecord.serverRevision === "number"
+					? remoteRecord.serverRevision
+					: 0;
+			await exec(
+				`UPDATE ${table} SET sync_status = 'pending', base_revision = ? WHERE id = ?;`,
+				[serverRevision, conflict.entity_id],
+			);
+
+			if (conflict.conflict_type === "delete-update") {
+				await exec("DELETE FROM _outbox WHERE scope = ? AND entity_id = ?;", [
+					conflict.scope,
+					conflict.entity_id,
+				]);
+				const local = snakeToCamel<Record<string, unknown>>(
+					parseConflictJson(conflict.local_record),
+					COLUMN_MAP[conflict.scope],
+				);
+				const idempotencyKey = uuidv7();
+				const { enqueueUsingTransaction } = await import(
+					"@/lib/mutation-queue"
+				);
+				await enqueueUsingTransaction(
+					{
+						scope: conflict.scope,
+						type: "update",
+						serverFn:
+							conflict.scope === "lessons" ? "restoreLesson" : "restoreClass",
+						payload: {
+							id: conflict.entity_id,
+							data: local,
+							expectedRevision: serverRevision,
+							idempotencyKey,
+						},
+						idempotencyKey,
+					},
+					exec,
+					qry,
+				);
+			} else {
+				const queued = await qry<{ id: string; payload_json: string }>(
+					"SELECT id, payload_json FROM _outbox WHERE scope = ? AND entity_id = ?;",
+					[conflict.scope, conflict.entity_id],
+				);
+				for (const mutation of queued) {
+					const payload = parseConflictJson(mutation.payload_json);
+					await exec(
+						`UPDATE _outbox SET payload_json = ?, status = 'pending',
+             next_attempt_at = ?, error_kind = NULL, last_error = NULL
+             WHERE id = ?;`,
+						[
+							JSON.stringify({ ...payload, expectedRevision: serverRevision }),
+							Date.now(),
+							mutation.id,
+						],
+					);
+				}
+			}
 		}
 
 		await exec(
@@ -560,9 +602,9 @@ export async function resolveConflict(
 		);
 	});
 
-	if (resolvedScope && resolvedEntityId) {
-		const { removeMutationsForEntity } = await import("@/lib/mutation-queue");
-		await removeMutationsForEntity(resolvedScope, resolvedEntityId);
+	if (resolution === "keep-local" && resolvedScope && resolvedEntityId) {
+		const { flushIfOnline } = await import("@/lib/mutation-queue");
+		await flushIfOnline();
 	}
 }
 
@@ -598,8 +640,9 @@ async function recordConflict(
 ) {
 	await exec(
 		`INSERT OR REPLACE INTO _sync_conflicts
-      (id, scope, entity_id, conflict_type, local_record, remote_record, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, unixepoch());`,
+      (id, scope, entity_id, conflict_type, local_record, remote_record, created_at,
+       local_updated_at, remote_updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, unixepoch(), ?, ?);`,
 		[
 			`${scope}:${entityId}`,
 			scope,
@@ -607,6 +650,8 @@ async function recordConflict(
 			conflictType,
 			JSON.stringify(localRecord),
 			JSON.stringify(remoteRecord),
+			serializeValue(localRecord.updated_at ?? localRecord.updatedAt),
+			serializeValue(remoteRecord.updatedAt),
 		],
 	);
 
@@ -681,9 +726,7 @@ function snakeToCamel<T extends Record<string, unknown>>(
 
 		// Hydrate booleans: SQLite stores boolean mode as 0/1
 		if (
-			(camelKey.startsWith("is") ||
-				camelKey === "emailVerified" ||
-				camelKey === "banned") &&
+			camelKey.startsWith("is") &&
 			typeof val === "number" &&
 			(val === 0 || val === 1)
 		) {
@@ -708,32 +751,6 @@ function serializeValue(value: unknown): SQLiteBindValue {
 		return value;
 	}
 	return String(value);
-}
-
-function serializeExpectedUpdatedAt(value: unknown): string | undefined {
-	if (value == null) {
-		return undefined;
-	}
-
-	if (value instanceof Date) {
-		return value.toISOString();
-	}
-
-	if (typeof value === "number") {
-		const millis = value < 100000000000 ? value * 1000 : value;
-		const date = new Date(millis);
-		return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
-	}
-
-	if (typeof value === "string") {
-		if (/^\d+$/.test(value)) {
-			return serializeExpectedUpdatedAt(Number.parseInt(value, 10));
-		}
-		const date = new Date(value);
-		return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
-	}
-
-	return undefined;
 }
 
 function deserializeValue(value: unknown): unknown {

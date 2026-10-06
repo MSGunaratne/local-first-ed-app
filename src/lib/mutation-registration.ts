@@ -5,24 +5,24 @@ import {
 import {
 	createClassFn,
 	deleteClassFn,
+	restoreClassFn,
 	updateClassFn,
 } from "@/features/classes/classes.actions";
 import {
 	createLessonFn,
 	deleteLessonFn,
+	restoreLessonFn,
 	updateLessonFn,
 } from "@/features/lessons/lessons.actions";
-import {
-	createUserFn,
-	deleteUserFn,
-	updateUserFn,
-} from "@/features/users/users.actions";
 import type { MutationServerFnPayloadMap } from "@/lib/mutation-queue.schema";
 import type { MutationServerFnName } from "@/types/sync";
 
 type RegisterServerFn = <K extends MutationServerFnName>(
 	name: K,
-	fn: (payload: MutationServerFnPayloadMap[K]) => Promise<unknown>,
+	fn: (
+		payload: MutationServerFnPayloadMap[K],
+		signal?: AbortSignal,
+	) => Promise<unknown>,
 ) => void;
 
 /**
@@ -31,77 +31,76 @@ type RegisterServerFn = <K extends MutationServerFnName>(
  */
 export function registerAllMutations(registerServerFn: RegisterServerFn) {
 	// Lessons
-	registerServerFn("createLesson", async (payload) => {
-		return createLessonFn({ data: payload });
+	registerServerFn("createLesson", async (payload, signal) => {
+		return createLessonFn({ data: payload, signal });
 	});
 
-	registerServerFn("updateLesson", async (payload) => {
+	registerServerFn("updateLesson", async (payload, signal) => {
 		return updateLessonFn({
 			data: {
 				id: payload.id,
 				data: payload.data,
-				expectedUpdatedAt: payload.expectedUpdatedAt,
+				expectedRevision: payload.expectedRevision,
 				idempotencyKey: payload.idempotencyKey,
 			},
+			signal,
 		});
 	});
 
-	registerServerFn("deleteLesson", async (payload) => {
+	registerServerFn("deleteLesson", async (payload, signal) => {
 		return deleteLessonFn({
-			data: { id: payload.id, idempotencyKey: payload.idempotencyKey },
+			data: {
+				id: payload.id,
+				expectedRevision: payload.expectedRevision,
+				idempotencyKey: payload.idempotencyKey,
+			},
+			signal,
 		});
+	});
+
+	registerServerFn("restoreLesson", async (payload, signal) => {
+		return restoreLessonFn({ data: payload, signal });
 	});
 
 	// Classes
-	registerServerFn("createClass", async (payload) => {
-		return createClassFn({ data: payload });
+	registerServerFn("createClass", async (payload, signal) => {
+		return createClassFn({ data: payload, signal });
 	});
 
-	registerServerFn("updateClass", async (payload) => {
+	registerServerFn("updateClass", async (payload, signal) => {
 		return updateClassFn({
 			data: {
 				id: payload.id,
 				data: payload.data,
-				expectedUpdatedAt: payload.expectedUpdatedAt,
+				expectedRevision: payload.expectedRevision,
 				idempotencyKey: payload.idempotencyKey,
 			},
+			signal,
 		});
 	});
 
-	registerServerFn("deleteClass", async (payload) => {
+	registerServerFn("deleteClass", async (payload, signal) => {
 		return deleteClassFn({
-			data: { id: payload.id, idempotencyKey: payload.idempotencyKey },
-		});
-	});
-
-	// Users
-	registerServerFn("createUser", async (payload) => {
-		return createUserFn({ data: payload });
-	});
-
-	registerServerFn("updateUser", async (payload) => {
-		return updateUserFn({
 			data: {
 				id: payload.id,
-				data: payload.data,
+				expectedRevision: payload.expectedRevision,
 				idempotencyKey: payload.idempotencyKey,
 			},
+			signal,
 		});
 	});
 
-	registerServerFn("deleteUser", async (payload) => {
-		return deleteUserFn({
-			data: { id: payload.id, idempotencyKey: payload.idempotencyKey },
-		});
+	registerServerFn("restoreClass", async (payload, signal) => {
+		return restoreClassFn({ data: payload, signal });
 	});
 
 	// Analytics
 
-	registerServerFn("submitLessonFeedback", async (payload) => {
-		return submitLessonFeedbackFn({ data: payload });
+	registerServerFn("submitLessonFeedback", async (payload, signal) => {
+		return submitLessonFeedbackFn({ data: payload, signal });
 	});
 
-	registerServerFn("submitStudentProgressEvent", async (payload) => {
-		return submitStudentProgressEventFn({ data: payload });
+	registerServerFn("submitStudentProgressEvent", async (payload, signal) => {
+		return submitStudentProgressEventFn({ data: payload, signal });
 	});
 }

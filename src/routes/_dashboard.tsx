@@ -3,11 +3,16 @@ import { Suspense } from "react";
 import DashboardSidebar from "@/components/dashboard/sidebar";
 import { authQueries } from "@/features/auth/auth.queries";
 import type { Session } from "@/lib/auth-client";
-import { getCachedAuthSession } from "@/lib/query-client";
+import {
+	ensureQueryCacheRestored,
+	getCachedAuthSession,
+	setQueryCacheIdentity,
+} from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/_dashboard")({
 	beforeLoad: async ({ context: { queryClient }, location }) => {
+		await ensureQueryCacheRestored(queryClient);
 		let session: Session | null | undefined;
 
 		try {
@@ -25,6 +30,10 @@ export const Route = createFileRoute("/_dashboard")({
 				search: { returnTo: location.href },
 			});
 		}
+
+		// Finish the user-scoped cache transition before child route loaders can
+		// create queries. Otherwise the transition may remove an active loader query.
+		await setQueryCacheIdentity(session.user.id);
 
 		return { session };
 	},

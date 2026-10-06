@@ -4,6 +4,7 @@ import {
 	ArrowLeft,
 	BarChart3,
 	CheckCircle2,
+	ChevronDown,
 	Clock,
 	Edit,
 	Eye,
@@ -13,6 +14,7 @@ import {
 	Target,
 	Users,
 } from "lucide-react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,9 +35,9 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { analyticsQueries } from "@/features/analytics/analytics.queries";
 import { lessonQueries } from "@/features/lessons/lessons.queries";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { SUBJECT_METADATA } from "@/types/lesson";
 import { fNumber, fPercent } from "@/utils/format-number";
@@ -200,6 +202,12 @@ function LessonDetailsPage() {
 	);
 	const { data } = analyticsQuery;
 
+	const [activeAccordion, setActiveAccordion] = useState<string | null>(
+		"feedback",
+	);
+	const toggleAccordion = (value: string) => {
+		setActiveAccordion((prev) => (prev === value ? null : value));
+	};
 	const lessonQuizCount = countQuizBlocks(lesson.contentJson);
 	const hasQuiz = (data?.quiz.authoredQuestionCount ?? lessonQuizCount) > 0;
 	const completionRate = data?.progress.completionRate ?? 0;
@@ -324,328 +332,492 @@ function LessonDetailsPage() {
 
 					{!hasQuiz && <NoQuizNotice />}
 
-					<Tabs defaultValue="feedback" className="space-y-4">
-						<TabsList className="w-full justify-start overflow-x-auto">
-							<TabsTrigger value="feedback">
-								<MessageSquareText className="h-4 w-4" />
-								{m.lesson_details_feedback_tab()}
-							</TabsTrigger>
-							{hasQuiz && (
-								<TabsTrigger value="quiz">
-									<Target className="h-4 w-4" />
-									{m.lesson_details_quiz_tab()}
-								</TabsTrigger>
-							)}
-							<TabsTrigger value="progress">
-								<BarChart3 className="h-4 w-4" />
-								{m.lesson_details_progress_tab()}
-							</TabsTrigger>
-						</TabsList>
-
-						<TabsContent value="feedback" className="space-y-4">
-							<div className="grid gap-4 lg:grid-cols-[360px_1fr]">
-								<Card>
-									<CardHeader>
-										<CardTitle>{m.lesson_details_review_summary()}</CardTitle>
-										<CardDescription>
-											{m.lesson_details_review_summary_desc()}
-										</CardDescription>
-									</CardHeader>
-									<CardContent className="space-y-4">
-										<div className="flex items-center gap-3">
-											<div className="text-4xl font-black">
-												{fNumber(data.feedback.avgRating, {
-													minimumFractionDigits: 1,
-													maximumFractionDigits: 2,
-												})}
-											</div>
-											<div>
-												<div className="flex items-center gap-0.5">
-													{renderStars(data.feedback.avgRating)}
-												</div>
-												<p className="mt-1 text-sm text-muted-foreground">
-													{m.lesson_details_rating_desc({
-														count: fNumber(data.feedback.count),
-													})}
-												</p>
-											</div>
-										</div>
-
-										<div className="space-y-2">
-											{data.feedback.ratingBreakdown.map((item) => {
-												const percent =
-													data.feedback.count > 0
-														? (item.count / data.feedback.count) * 100
-														: 0;
-
-												return (
-													<div
-														key={item.rating}
-														className="grid grid-cols-[3rem_1fr_3rem] items-center gap-2 text-sm"
-													>
-														<span>{item.rating} star</span>
-														<Progress value={percent} />
-														<span className="text-right text-muted-foreground">
-															{fNumber(item.count)}
-														</span>
+					<div className="space-y-4">
+						{/* Feedback Accordion Section */}
+						<div className="border border-muted rounded-xl overflow-hidden shadow-sm bg-card">
+							<button
+								type="button"
+								onClick={() => toggleAccordion("feedback")}
+								className="w-full p-4 flex items-center justify-between font-bold text-base bg-muted/10 hover:bg-muted/20 border-b transition-colors select-none text-left"
+							>
+								<div className="flex items-center gap-2">
+									<MessageSquareText className="h-5 w-5 text-primary" />
+									<span>{m.lesson_details_feedback_tab()}</span>
+								</div>
+								<ChevronDown
+									className={cn(
+										"h-4 w-4 text-muted-foreground transition-transform duration-200",
+										activeAccordion === "feedback" && "rotate-180",
+									)}
+								/>
+							</button>
+							{activeAccordion === "feedback" && (
+								<div className="p-4 md:p-6 animate-fadeIn space-y-4">
+									<div className="grid gap-4 lg:grid-cols-[360px_1fr]">
+										<Card>
+											<CardHeader>
+												<CardTitle>
+													{m.lesson_details_review_summary()}
+												</CardTitle>
+												<CardDescription>
+													{m.lesson_details_review_summary_desc()}
+												</CardDescription>
+											</CardHeader>
+											<CardContent className="space-y-4">
+												<div className="flex items-center gap-3">
+													<div className="text-4xl font-black">
+														{fNumber(data.feedback.avgRating, {
+															minimumFractionDigits: 1,
+															maximumFractionDigits: 2,
+														})}
 													</div>
-												);
-											})}
-										</div>
-									</CardContent>
-								</Card>
-
-								<Card>
-									<CardHeader>
-										<CardTitle>{m.lesson_details_comments()}</CardTitle>
-										<CardDescription>
-											{m.lesson_details_comments_desc()}
-										</CardDescription>
-									</CardHeader>
-									<CardContent>
-										<ScrollArea className="h-80 pr-3">
-											<div className="space-y-3">
-												{data.feedback.recentComments.map((comment) => (
-													<div
-														key={`${String(comment.createdAt)}-${comment.comment.slice(0, 20)}`}
-														className="rounded-lg border bg-muted/30 p-3"
-													>
-														<div className="flex items-center justify-between gap-3">
-															<div className="flex items-center gap-1">
-																{renderStars(comment.rating)}
-															</div>
-															<span className="text-xs text-muted-foreground">
-																{fDateTime(comment.createdAt)}
-															</span>
+													<div>
+														<div className="flex items-center gap-0.5">
+															{renderStars(data.feedback.avgRating)}
 														</div>
-														<p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
-															{comment.comment}
+														<p className="mt-1 text-sm text-muted-foreground">
+															{m.lesson_details_rating_desc({
+																count: fNumber(data.feedback.count),
+															})}
 														</p>
 													</div>
-												))}
-												{data.feedback.recentComments.length === 0 && (
-													<p className="text-sm text-muted-foreground">
-														{m.lesson_details_no_comments()}
-													</p>
-												)}
-											</div>
-										</ScrollArea>
-									</CardContent>
-								</Card>
-							</div>
-						</TabsContent>
-
-						{hasQuiz && (
-							<TabsContent value="quiz" className="space-y-4">
-								<div className="grid gap-4 lg:grid-cols-[360px_1fr]">
-									<Card>
-										<CardHeader>
-											<CardTitle>{m.lesson_details_quiz_progress()}</CardTitle>
-											<CardDescription>
-												{m.lesson_details_quiz_progress_desc({
-													days: data.quiz.rawRetentionDays,
-												})}
-											</CardDescription>
-										</CardHeader>
-										<CardContent className="space-y-5">
-											<div className="space-y-2">
-												<div className="flex justify-between text-sm">
-													<span className="font-medium">
-														{m.lesson_details_answered_questions()}
-													</span>
-													<span className="text-muted-foreground">
-														{fNumber(data.quiz.attemptedQuestionCount)} /{" "}
-														{fNumber(data.quiz.authoredQuestionCount)}
-													</span>
 												</div>
-												<Progress
-													value={
-														data.quiz.authoredQuestionCount > 0
-															? (data.quiz.attemptedQuestionCount /
-																	data.quiz.authoredQuestionCount) *
-																100
-															: 0
-													}
-												/>
-											</div>
-											<div className="space-y-2">
-												<div className="flex justify-between text-sm">
-													<span className="font-medium">
-														{m.lesson_details_quiz_accuracy()}
-													</span>
-													<span className="text-muted-foreground">
-														{fPercent(data.quiz.accuracy)}
-													</span>
-												</div>
-												<Progress value={data.quiz.accuracy} />
-											</div>
-										</CardContent>
-									</Card>
 
-									<Card>
-										<CardHeader>
-											<CardTitle>
-												{m.lesson_details_question_breakdown()}
-											</CardTitle>
-											<CardDescription>
-												{m.lesson_details_question_breakdown_desc()}
-											</CardDescription>
-										</CardHeader>
-										<CardContent>
-											<Table>
-												<TableHeader>
-													<TableRow>
-														<TableHead>{m.lesson_details_question()}</TableHead>
-														<TableHead>{m.lesson_details_attempts()}</TableHead>
-														<TableHead>{m.lesson_details_accuracy()}</TableHead>
-														<TableHead>
-															{m.lesson_details_last_answered()}
-														</TableHead>
-													</TableRow>
-												</TableHeader>
-												<TableBody>
-													{data.quiz.questions.map((question) => (
-														<TableRow key={question.questionId}>
-															<TableCell className="max-w-[28rem] whitespace-normal font-medium">
-																{question.question}
-															</TableCell>
-															<TableCell>
-																{fNumber(question.attemptCount)}
-															</TableCell>
-															<TableCell>
-																{fPercent(question.accuracy)}
-															</TableCell>
-															<TableCell>
-																{question.lastAnsweredAt
-																	? fDateTime(question.lastAnsweredAt)
-																	: m.lesson_details_not_answered()}
-															</TableCell>
-														</TableRow>
-													))}
-													{data.quiz.questions.length === 0 && (
-														<TableRow>
-															<TableCell
-																colSpan={4}
-																className="py-8 text-center text-muted-foreground"
+												<div className="space-y-2">
+													{data.feedback.ratingBreakdown.map((item) => {
+														const percent =
+															data.feedback.count > 0
+																? (item.count / data.feedback.count) * 100
+																: 0;
+
+														return (
+															<div
+																key={item.rating}
+																className="grid grid-cols-[3rem_1fr_3rem] items-center gap-2 text-sm"
 															>
-																{m.lesson_details_no_quiz_questions()}
-															</TableCell>
-														</TableRow>
-													)}
-												</TableBody>
-											</Table>
-										</CardContent>
-									</Card>
+																<span>{item.rating} star</span>
+																<Progress value={percent} />
+																<span className="text-right text-muted-foreground">
+																	{fNumber(item.count)}
+																</span>
+															</div>
+														);
+													})}
+												</div>
+											</CardContent>
+										</Card>
+
+										<Card>
+											<CardHeader>
+												<CardTitle>{m.lesson_details_comments()}</CardTitle>
+												<CardDescription>
+													{m.lesson_details_comments_desc()}
+												</CardDescription>
+											</CardHeader>
+											<CardContent>
+												<ScrollArea className="h-80 pr-3">
+													<div className="space-y-3">
+														{data.feedback.recentComments.map((comment) => (
+															<div
+																key={`${String(comment.createdAt)}-${comment.comment.slice(0, 20)}`}
+																className="rounded-lg border bg-muted/30 p-3"
+															>
+																<div className="flex items-center justify-between gap-3">
+																	<div className="flex items-center gap-1">
+																		{renderStars(comment.rating)}
+																	</div>
+																	<span className="text-xs text-muted-foreground">
+																		{fDateTime(comment.createdAt)}
+																	</span>
+																</div>
+																<p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
+																	{comment.comment}
+																</p>
+															</div>
+														))}
+														{data.feedback.recentComments.length === 0 && (
+															<p className="text-sm text-muted-foreground">
+																{m.lesson_details_no_comments()}
+															</p>
+														)}
+													</div>
+												</ScrollArea>
+											</CardContent>
+										</Card>
+									</div>
 								</div>
-							</TabsContent>
+							)}
+						</div>
+
+						{/* Quiz Accordion Section */}
+						{hasQuiz && (
+							<div className="border border-muted rounded-xl overflow-hidden shadow-sm bg-card">
+								<button
+									type="button"
+									onClick={() => toggleAccordion("quiz")}
+									className="w-full p-4 flex items-center justify-between font-bold text-base bg-muted/10 hover:bg-muted/20 border-b transition-colors select-none text-left"
+								>
+									<div className="flex items-center gap-2">
+										<Target className="h-5 w-5 text-primary" />
+										<span>{m.lesson_details_quiz_tab()}</span>
+									</div>
+									<ChevronDown
+										className={cn(
+											"h-4 w-4 text-muted-foreground transition-transform duration-200",
+											activeAccordion === "quiz" && "rotate-180",
+										)}
+									/>
+								</button>
+								{activeAccordion === "quiz" && (
+									<div className="p-4 md:p-6 animate-fadeIn space-y-4">
+										<div className="grid gap-4 lg:grid-cols-[360px_1fr]">
+											<Card>
+												<CardHeader>
+													<CardTitle>
+														{m.lesson_details_quiz_progress()}
+													</CardTitle>
+													<CardDescription>
+														{m.lesson_details_quiz_progress_desc({
+															days: data.quiz.rawRetentionDays,
+														})}
+													</CardDescription>
+												</CardHeader>
+												<CardContent className="space-y-5">
+													<div className="space-y-2">
+														<div className="flex justify-between text-sm">
+															<span className="font-medium">
+																{m.lesson_details_answered_questions()}
+															</span>
+															<span className="text-muted-foreground">
+																{fNumber(data.quiz.attemptedQuestionCount)} /{" "}
+																{fNumber(data.quiz.authoredQuestionCount)}
+															</span>
+														</div>
+														<Progress
+															value={
+																data.quiz.authoredQuestionCount > 0
+																	? (data.quiz.attemptedQuestionCount /
+																			data.quiz.authoredQuestionCount) *
+																		100
+																	: 0
+															}
+														/>
+													</div>
+													<div className="space-y-2">
+														<div className="flex justify-between text-sm">
+															<span className="font-medium">
+																{m.lesson_details_quiz_accuracy()}
+															</span>
+															<span className="text-muted-foreground">
+																{fPercent(data.quiz.accuracy)}
+															</span>
+														</div>
+														<Progress value={data.quiz.accuracy} />
+													</div>
+												</CardContent>
+											</Card>
+
+											<Card>
+												<CardHeader>
+													<CardTitle>
+														{m.lesson_details_question_breakdown()}
+													</CardTitle>
+													<CardDescription>
+														{m.lesson_details_question_breakdown_desc()}
+													</CardDescription>
+												</CardHeader>
+												<CardContent className="p-2 sm:p-6">
+													{/* Desktop View Table */}
+													<div className="hidden sm:block">
+														<Table>
+															<TableHeader>
+																<TableRow>
+																	<TableHead>
+																		{m.lesson_details_question()}
+																	</TableHead>
+																	<TableHead>
+																		{m.lesson_details_attempts()}
+																	</TableHead>
+																	<TableHead>
+																		{m.lesson_details_accuracy()}
+																	</TableHead>
+																	<TableHead>
+																		{m.lesson_details_last_answered()}
+																	</TableHead>
+																</TableRow>
+															</TableHeader>
+															<TableBody>
+																{data.quiz.questions.map((question) => (
+																	<TableRow key={question.questionId}>
+																		<TableCell className="max-w-[28rem] whitespace-normal font-medium">
+																			{question.question}
+																		</TableCell>
+																		<TableCell>
+																			{fNumber(question.attemptCount)}
+																		</TableCell>
+																		<TableCell>
+																			{fPercent(question.accuracy)}
+																		</TableCell>
+																		<TableCell>
+																			{question.lastAnsweredAt
+																				? fDateTime(question.lastAnsweredAt)
+																				: m.lesson_details_not_answered()}
+																		</TableCell>
+																	</TableRow>
+																))}
+																{data.quiz.questions.length === 0 && (
+																	<TableRow>
+																		<TableCell
+																			colSpan={4}
+																			className="py-8 text-center text-muted-foreground"
+																		>
+																			{m.lesson_details_no_quiz_questions()}
+																		</TableCell>
+																	</TableRow>
+																)}
+															</TableBody>
+														</Table>
+													</div>
+
+													{/* Mobile View Cards */}
+													<div className="block sm:hidden space-y-3">
+														{data.quiz.questions.map((question) => (
+															<div
+																key={question.questionId}
+																className="rounded-xl border bg-muted/10 p-3.5 space-y-2 text-xs"
+															>
+																<div className="flex flex-col gap-1 border-b pb-2">
+																	<span className="text-[10px] font-bold text-muted-foreground uppercase select-none">
+																		{m.lesson_details_question()}
+																	</span>
+																	<p className="font-semibold text-foreground leading-snug">
+																		{question.question}
+																	</p>
+																</div>
+																<div className="grid grid-cols-2 gap-2 text-muted-foreground select-none">
+																	<div>
+																		{m.lesson_details_attempts()}:{" "}
+																		<span className="font-bold text-foreground">
+																			{fNumber(question.attemptCount)}
+																		</span>
+																	</div>
+																	<div>
+																		{m.lesson_details_accuracy()}:{" "}
+																		<span className="font-bold text-foreground">
+																			{fPercent(question.accuracy)}
+																		</span>
+																	</div>
+																</div>
+																<div className="text-[10px] text-muted-foreground select-none pt-1">
+																	{m.lesson_details_last_answered()}:{" "}
+																	<span className="text-foreground font-medium">
+																		{question.lastAnsweredAt
+																			? fDateTime(question.lastAnsweredAt)
+																			: m.lesson_details_not_answered()}
+																	</span>
+																</div>
+															</div>
+														))}
+														{data.quiz.questions.length === 0 && (
+															<div className="py-8 text-center text-muted-foreground text-sm border border-dashed rounded-lg bg-muted/5 select-none">
+																{m.lesson_details_no_quiz_questions()}
+															</div>
+														)}
+													</div>
+												</CardContent>
+											</Card>
+										</div>
+									</div>
+								)}
+							</div>
 						)}
 
-						<TabsContent value="progress" className="space-y-4">
-							<div className="grid gap-4 lg:grid-cols-[360px_1fr]">
-								<Card>
-									<CardHeader>
-										<CardTitle>{m.lesson_details_completion()}</CardTitle>
-										<CardDescription>
-											{m.lesson_details_progress_summary_desc()}
-										</CardDescription>
-									</CardHeader>
-									<CardContent className="space-y-5">
-										<div className="space-y-2">
-											<div className="flex justify-between text-sm">
-												<span className="font-medium">
-													{m.lesson_details_completion_rate()}
-												</span>
-												<span className="text-muted-foreground">
-													{fPercent(completionRate)}
-												</span>
-											</div>
-											<Progress value={completionRate} />
-										</div>
-										<div className="grid grid-cols-2 gap-3 text-sm">
-											<div className="rounded-md bg-muted/50 p-3">
-												<p className="text-muted-foreground">
-													{m.lesson_details_started()}
-												</p>
-												<p className="text-2xl font-black">
-													{fNumber(data.progress.startedCount)}
-												</p>
-											</div>
-											<div className="rounded-md bg-muted/50 p-3">
-												<p className="text-muted-foreground">
-													{m.lesson_details_completed()}
-												</p>
-												<p className="text-2xl font-black">
-													{fNumber(data.progress.completedCount)}
-												</p>
-											</div>
-										</div>
-										<div className="flex items-center gap-2 text-xs text-muted-foreground">
-											<Clock className="h-4 w-4" />
-											<span>
-												{m.lesson_details_active_time({
-													minutes: fNumber(
-														Math.round(data.engagement.activeSeconds / 60),
-													),
-												})}
-											</span>
-										</div>
-									</CardContent>
-								</Card>
+						{/* Progress Accordion Section */}
+						<div className="border border-muted rounded-xl overflow-hidden shadow-sm bg-card">
+							<button
+								type="button"
+								onClick={() => toggleAccordion("progress")}
+								className="w-full p-4 flex items-center justify-between font-bold text-base bg-muted/10 hover:bg-muted/20 border-b transition-colors select-none text-left"
+							>
+								<div className="flex items-center gap-2">
+									<BarChart3 className="h-5 w-5 text-primary" />
+									<span>{m.lesson_details_progress_tab()}</span>
+								</div>
+								<ChevronDown
+									className={cn(
+										"h-4 w-4 text-muted-foreground transition-transform duration-200",
+										activeAccordion === "progress" && "rotate-180",
+									)}
+								/>
+							</button>
+							{activeAccordion === "progress" && (
+								<div className="p-4 md:p-6 animate-fadeIn space-y-4">
+									<div className="grid gap-4 lg:grid-cols-[360px_1fr]">
+										<Card>
+											<CardHeader>
+												<CardTitle>{m.lesson_details_completion()}</CardTitle>
+												<CardDescription>
+													{m.lesson_details_progress_summary_desc()}
+												</CardDescription>
+											</CardHeader>
+											<CardContent className="space-y-5">
+												<div className="space-y-2">
+													<div className="flex justify-between text-sm">
+														<span className="font-medium">
+															{m.lesson_details_completion_rate()}
+														</span>
+														<span className="text-muted-foreground">
+															{fPercent(completionRate)}
+														</span>
+													</div>
+													<Progress value={completionRate} />
+												</div>
+												<div className="grid grid-cols-2 gap-3 text-sm">
+													<div className="rounded-md bg-muted/50 p-3">
+														<p className="text-muted-foreground">
+															{m.lesson_details_started()}
+														</p>
+														<p className="text-2xl font-black">
+															{fNumber(data.progress.startedCount)}
+														</p>
+													</div>
+													<div className="rounded-md bg-muted/50 p-3">
+														<p className="text-muted-foreground">
+															{m.lesson_details_completed()}
+														</p>
+														<p className="text-2xl font-black">
+															{fNumber(data.progress.completedCount)}
+														</p>
+													</div>
+												</div>
+												<div className="flex items-center gap-2 text-xs text-muted-foreground">
+													<Clock className="h-4 w-4" />
+													<span>
+														{m.lesson_details_active_time({
+															minutes: fNumber(
+																Math.round(data.engagement.activeSeconds / 60),
+															),
+														})}
+													</span>
+												</div>
+											</CardContent>
+										</Card>
 
-								<Card>
-									<CardHeader>
-										<CardTitle>{m.lesson_details_daily_progress()}</CardTitle>
-										<CardDescription>
-											{m.lesson_details_daily_progress_desc()}
-										</CardDescription>
-									</CardHeader>
-									<CardContent>
-										<Table>
-											<TableHeader>
-												<TableRow>
-													<TableHead>{m.lesson_details_day()}</TableHead>
-													<TableHead>{m.lesson_details_started()}</TableHead>
-													<TableHead>{m.lesson_details_completed()}</TableHead>
-													<TableHead>
-														{m.lesson_details_completion_rate()}
-													</TableHead>
-												</TableRow>
-											</TableHeader>
-											<TableBody>
-												{data.progress.byDay.map((day) => {
-													const rate =
-														day.startedCount > 0
-															? (day.completedCount / day.startedCount) * 100
-															: 0;
+										<Card>
+											<CardHeader>
+												<CardTitle>
+													{m.lesson_details_daily_progress()}
+												</CardTitle>
+												<CardDescription>
+													{m.lesson_details_daily_progress_desc()}
+												</CardDescription>
+											</CardHeader>
+											<CardContent className="p-2 sm:p-6">
+												{/* Desktop View Table */}
+												<div className="hidden sm:block">
+													<Table>
+														<TableHeader>
+															<TableRow>
+																<TableHead>{m.lesson_details_day()}</TableHead>
+																<TableHead>
+																	{m.lesson_details_started()}
+																</TableHead>
+																<TableHead>
+																	{m.lesson_details_completed()}
+																</TableHead>
+																<TableHead>
+																	{m.lesson_details_completion_rate()}
+																</TableHead>
+															</TableRow>
+														</TableHeader>
+														<TableBody>
+															{data.progress.byDay.map((day) => {
+																const rate =
+																	day.startedCount > 0
+																		? (day.completedCount / day.startedCount) *
+																			100
+																		: 0;
 
-													return (
-														<TableRow key={day.dayUtc}>
-															<TableCell>{fDate(day.dayUtc)}</TableCell>
-															<TableCell>{fNumber(day.startedCount)}</TableCell>
-															<TableCell>
-																{fNumber(day.completedCount)}
-															</TableCell>
-															<TableCell>{fPercent(rate)}</TableCell>
-														</TableRow>
-													);
-												})}
-												{data.progress.byDay.length === 0 && (
-													<TableRow>
-														<TableCell
-															colSpan={4}
-															className="py-8 text-center text-muted-foreground"
-														>
+																return (
+																	<TableRow key={day.dayUtc}>
+																		<TableCell>{fDate(day.dayUtc)}</TableCell>
+																		<TableCell>
+																			{fNumber(day.startedCount)}
+																		</TableCell>
+																		<TableCell>
+																			{fNumber(day.completedCount)}
+																		</TableCell>
+																		<TableCell>{fPercent(rate)}</TableCell>
+																	</TableRow>
+																);
+															})}
+															{data.progress.byDay.length === 0 && (
+																<TableRow>
+																	<TableCell
+																		colSpan={4}
+																		className="py-8 text-center text-muted-foreground"
+																	>
+																		{m.lesson_details_no_progress()}
+																	</TableCell>
+																</TableRow>
+															)}
+														</TableBody>
+													</Table>
+												</div>
+
+												{/* Mobile View Cards */}
+												<div className="block sm:hidden space-y-3">
+													{data.progress.byDay.map((day) => {
+														const rate =
+															day.startedCount > 0
+																? (day.completedCount / day.startedCount) * 100
+																: 0;
+
+														return (
+															<div
+																key={day.dayUtc}
+																className="rounded-xl border bg-muted/10 p-3.5 space-y-2 text-xs"
+															>
+																<div className="flex justify-between items-center border-b pb-2 select-none font-bold">
+																	<span>{fDate(day.dayUtc)}</span>
+																	<Badge
+																		variant="outline"
+																		className="bg-primary/5 text-primary border-primary/20 text-[10px]"
+																	>
+																		{fPercent(rate)}{" "}
+																		{m.lesson_details_completion_rate()}
+																	</Badge>
+																</div>
+																<div className="grid grid-cols-2 gap-2 text-muted-foreground select-none">
+																	<div>
+																		{m.lesson_details_started()}:{" "}
+																		<span className="font-bold text-foreground">
+																			{fNumber(day.startedCount)}
+																		</span>
+																	</div>
+																	<div>
+																		{m.lesson_details_completed()}:{" "}
+																		<span className="font-bold text-foreground">
+																			{fNumber(day.completedCount)}
+																		</span>
+																	</div>
+																</div>
+															</div>
+														);
+													})}
+													{data.progress.byDay.length === 0 && (
+														<div className="py-8 text-center text-muted-foreground text-sm border border-dashed rounded-lg bg-muted/5 select-none">
 															{m.lesson_details_no_progress()}
-														</TableCell>
-													</TableRow>
-												)}
-											</TableBody>
-										</Table>
-									</CardContent>
-								</Card>
-							</div>
-						</TabsContent>
-					</Tabs>
+														</div>
+													)}
+												</div>
+											</CardContent>
+										</Card>
+									</div>
+								</div>
+							)}
+						</div>
+					</div>
 				</>
 			) : null}
 		</div>

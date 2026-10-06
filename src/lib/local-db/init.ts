@@ -9,7 +9,8 @@ import * as SQLite from "wa-sqlite";
 import { IDBBatchAtomicVFS } from "wa-sqlite/src/examples/IDBBatchAtomicVFS.js";
 import { migrateSchema } from "./schema";
 
-const DB_NAME = "local-ed-app-db";
+const DB_NAME = "local-ed-app-db-v1";
+const DELETE_BLOCKED_TIMEOUT_MS = 5_000;
 
 type SQLParams = readonly SQLiteBindValue[];
 
@@ -45,14 +46,34 @@ function getReadyState() {
  * Cleanly close the local database.
  */
 export async function closeLocalDb(): Promise<void> {
-	if (db !== null && sqlite3 !== null) {
+	// Let the serialized operation queue drain before closing resources it may use.
+	await dbQueue.catch(() => undefined);
+
+	const activeDb = db;
+	const activeSqlite = sqlite3;
+	const activeVfs = vfs;
+	let closeError: unknown;
+
+	if (activeDb !== null && activeSqlite !== null) {
 		try {
-			await sqlite3.close(db);
-		} catch {
-			// Ignore close failures during teardown
+			await activeSqlite.close(activeDb);
+		} catch (error) {
+			closeError = error;
 		}
 	}
 	db = null;
+
+	// IDBBatchAtomicVFS owns a separate IDBDatabase connection. Closing only
+	// SQLite leaves that connection alive and blocks indexedDB.deleteDatabase().
+	if (activeVfs) {
+		try {
+			await activeVfs.close();
+		} catch (error) {
+			closeError ??= error;
+		}
+	}
+
+	if (closeError) throw closeError;
 }
 
 /**
@@ -72,24 +93,36 @@ export async function deleteLocalDb(): Promise<void> {
 	if (typeof window !== "undefined" && window.indexedDB) {
 		return new Promise<void>((resolve, reject) => {
 			const req = window.indexedDB.deleteDatabase(DB_NAME);
+			let blockedTimeout: ReturnType<typeof setTimeout> | undefined;
+			const clearBlockedTimeout = () => {
+				if (blockedTimeout) clearTimeout(blockedTimeout);
+			};
 			req.onsuccess = () => {
+				clearBlockedTimeout();
 				console.info(
 					"[LocalDB] SQLite IndexedDB database deleted successfully",
 				);
 				resolve();
 			};
 			req.onerror = (err) => {
+				clearBlockedTimeout();
 				console.error(
 					"[LocalDB] Failed to delete SQLite IndexedDB database",
 					err,
 				);
-				reject(err);
+				reject(req.error ?? err);
 			};
 			req.onblocked = () => {
 				console.warn(
-					"[LocalDB] Deletion blocked. Some connections might still be open.",
+					"[LocalDB] Database deletion is waiting for another open connection.",
 				);
-				resolve(); // Resolve anyway so we don't block downstream code indefinitely
+				blockedTimeout ??= setTimeout(() => {
+					reject(
+						new Error(
+							"Local database deletion remained blocked by another browser context.",
+						),
+					);
+				}, DELETE_BLOCKED_TIMEOUT_MS);
 			};
 		});
 	}
@@ -100,11 +133,11 @@ export async function deleteLocalDb(): Promise<void> {
  * Safe to call multiple times — returns the same promise.
  */
 export async function initLocalDb(): Promise<void> {
-	if (db !== null && sqlite3 !== null) {
-		return;
-	}
 	if (initPromise) {
 		return initPromise;
+	}
+	if (db !== null && sqlite3 !== null) {
+		return;
 	}
 
 	initPromise = (async () => {

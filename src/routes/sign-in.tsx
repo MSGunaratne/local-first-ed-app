@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useActionState } from "react";
 import { z } from "zod";
 import AuthHeader from "#/components/AuthHeader";
 import { authMutations } from "#/features/auth/auth.queries";
@@ -27,29 +27,29 @@ export const Route = createFileRoute("/sign-in")({
 function SignInPage() {
 	const { returnTo } = Route.useSearch();
 	const navigate = useNavigate();
-	const { mutateAsync, isPending } = useMutation(authMutations.signIn());
-	const [error, setError] = useState("");
+	const { mutateAsync } = useMutation(authMutations.signIn());
+	const [state, formAction, isPending] = useActionState(
+		async (_previous: { error: string }, formData: FormData) => {
+			const email = formData.get("email") as string;
+			const password = formData.get("password") as string;
 
-	const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
-		e.preventDefault();
-		setError("");
+			try {
+				const { redirectTo } = await mutateAsync({
+					email,
+					password,
+					returnTo,
+				});
 
-		const formData = new FormData(e.currentTarget);
-		const email = formData.get("email") as string;
-		const password = formData.get("password") as string;
-
-		try {
-			const { redirectTo } = await mutateAsync({
-				email,
-				password,
-				returnTo,
-			});
-
-			navigate({ to: redirectTo, replace: true });
-		} catch (err) {
-			setError(err instanceof Error ? err.message : m.auth_error_default());
-		}
-	};
+				navigate({ to: redirectTo, replace: true });
+				return { error: "" };
+			} catch (err) {
+				return {
+					error: err instanceof Error ? err.message : m.auth_error_default(),
+				};
+			}
+		},
+		{ error: "" },
+	);
 
 	return (
 		<div className="flex min-h-screen flex-col bg-gradient-to-br from-background to-muted">
@@ -64,11 +64,14 @@ function SignInPage() {
 							{m.auth_sign_in_description()}
 						</CardDescription>
 					</CardHeader>
-					<form onSubmit={handleSubmit}>
+					<form action={formAction}>
 						<CardContent className="space-y-4">
-							{error && (
-								<div className="rounded-md bg-destructive/10 p-3 text-base text-destructive font-medium border border-destructive/20">
-									{error}
+							{state.error && (
+								<div
+									role="alert"
+									className="rounded-md bg-destructive/10 p-3 text-base text-destructive font-medium border border-destructive/20"
+								>
+									{state.error}
 								</div>
 							)}
 							<div className="space-y-2">

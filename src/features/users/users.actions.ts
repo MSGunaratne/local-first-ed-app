@@ -11,7 +11,6 @@ import {
 	normalizeDataTableListInput,
 } from "@/lib/dataTableSearchSchema";
 import { baseMiddleware, idempotentMiddleware } from "@/lib/server-fn";
-import { userCreateClientSchema, userUpdateClientSchema } from "./users.schema";
 import {
 	createUser,
 	deleteUser,
@@ -20,6 +19,10 @@ import {
 	getUsers,
 	updateUser,
 } from "./users.service";
+import {
+	userCreateClientSchema,
+	userUpdateClientSchema,
+} from "./users.validation";
 
 // ----------------------------------------------------------------------
 

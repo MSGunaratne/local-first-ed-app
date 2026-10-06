@@ -4,6 +4,7 @@ import { useSelector } from "@tanstack/react-store";
 import type { JSONContent } from "@tiptap/core";
 import { BookOpen, X } from "lucide-react";
 import { toast } from "sonner";
+import { uuidv7 } from "uuidv7";
 import { Badge } from "@/components/ui/badge";
 import {
 	Breadcrumb,
@@ -19,16 +20,25 @@ import {
 	type LessonInsert,
 	lessonInsertSchema,
 } from "@/features/lessons/lessons.schema";
-import { useAppForm } from "@/hooks/use-app-form";
+import { useLessonForm } from "@/hooks/use-lesson-form";
+import {
+	normalizeOcrTextForComparison,
+	type OcrInsertionOptions,
+	ocrTextToTiptapBlocks,
+} from "@/lib/ocr-postprocess";
 import { m } from "@/paraglide/messages";
 import { Subject } from "@/types/lesson";
 import type { CurriculumItem } from "../lesson.types";
-import type { LessonDetails } from "../lessons.service";
+import type { Lesson } from "../lessons.schema";
 import { CurationPanel } from "./curation-panel";
 
 interface LessonFormProps {
 	mode: "create" | "edit";
-	initialValues?: LessonDetails;
+	initialValues?: Lesson;
+}
+
+interface LessonOcrInsertionOptions extends OcrInsertionOptions {
+	showToast?: boolean;
 }
 
 export function LessonForm({ mode, initialValues }: LessonFormProps) {
@@ -43,36 +53,25 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 		subject: Subject.MATH,
 		gradeLevel: 6,
 		contentJson: null,
-		contentHtml: "",
 		linkedCurriculumIds: [],
-		estimatedDuration: 0,
+		estimatedDuration: null,
 		teacherNotes: "",
 		isPublished: true,
 	};
 
-	const form = useAppForm({
+	const form = useLessonForm({
 		defaultValues: initialValues ?? defaultValues,
 		validators: {
 			onChange: lessonInsertSchema,
 		},
 		onSubmit: async ({ value }) => {
-			const { generateHtmlFromJson } = await import("@/components/ui/editor");
-			const contentHtml = value.contentJson
-				? generateHtmlFromJson(value.contentJson)
-				: null;
-
-			const payload = {
-				...value,
-				contentHtml,
-			};
-
 			if (mode === "create") {
-				await createMutation(payload);
+				await createMutation({ data: value, id: uuidv7() });
 			} else {
 				if (!initialValues?.id)
 					throw new Error("Lesson ID is missing for update");
 
-				await updateMutation(payload);
+				await updateMutation(value);
 			}
 			navigate({ to: "/lessons" });
 		},
@@ -84,19 +83,6 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 		form.store,
 		(s) => s.values.linkedCurriculumIds ?? [],
 	);
-	const isEditorEmpty = useSelector(form.store, (s) => {
-		const content = s.values.contentJson;
-		if (!content) return true;
-		if (typeof content === "object") {
-			if (
-				content.type === "doc" &&
-				(!content.content || content.content.length === 0)
-			) {
-				return true;
-			}
-		}
-		return false;
-	});
 
 	const applyMetadata = (match: CurriculumItem) => {
 		form.setFieldValue("title", match.topic);
@@ -137,7 +123,7 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 	const handleInsertText = (
 		ocrText: string,
 		topic?: string,
-		options?: { showToast?: boolean },
+		options?: LessonOcrInsertionOptions,
 	) => {
 		if (!ocrText.trim()) return;
 		const showToast = options?.showToast ?? true;
@@ -152,10 +138,13 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 			});
 		}
 
-		newContent.push({
-			type: "paragraph",
-			content: [{ type: "text", text: ocrText }],
-		});
+		newContent.push(
+			...ocrTextToTiptapBlocks(ocrText, options?.language, {
+				tableCandidates: options?.tableCandidates,
+				tableSelections: options?.tableSelections,
+			}),
+		);
+		if (newContent.length === (topic ? 1 : 0)) return;
 
 		const currentContent = form.getFieldValue(
 			"contentJson",
@@ -170,16 +159,15 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 			}
 			if (content.content) {
 				for (const node of content.content) {
-					text += " " + extractTextContent(node);
+					text += ` ${extractTextContent(node)}`;
 				}
 			}
 			return text;
 		};
 
 		const editorText = extractTextContent(currentContent);
-		const cleanStr = (s: string) => s.replace(/\s+/g, "").toLowerCase();
-		const cleanedOcr = cleanStr(ocrText);
-		const cleanedEditor = cleanStr(editorText);
+		const cleanedOcr = normalizeOcrTextForComparison(ocrText);
+		const cleanedEditor = normalizeOcrTextForComparison(editorText);
 		const alreadyHasText = cleanedEditor.includes(cleanedOcr);
 
 		if (alreadyHasText) {
@@ -227,7 +215,11 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 		}
 	};
 
-	const handleQuickApply = (match: CurriculumItem, ocrText: string) => {
+	const handleQuickApply = (
+		match: CurriculumItem,
+		ocrText: string,
+		options?: OcrInsertionOptions,
+	) => {
 		applyMetadata(match);
 
 		const currentIds = form.getFieldValue("linkedCurriculumIds") ?? [];
@@ -236,7 +228,10 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 		}
 
 		if (ocrText.trim()) {
-			handleInsertText(ocrText, match.topic, { showToast: false });
+			handleInsertText(ocrText, match.topic, {
+				...options,
+				showToast: false,
+			});
 		}
 
 		toast.success(m.curation_toast_quick_applied());
@@ -277,6 +272,15 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 		);
 	};
 
+	const handleSubjectRecommendation = (subject: Subject) => {
+		if (form.getFieldValue("subject") !== subject) {
+			form.setFieldValue("subject", subject);
+			toast.info(
+				`Subject changed to ${subject.toUpperCase()} based on the scanned document.`,
+			);
+		}
+	};
+
 	return (
 		<div className="space-y-4">
 			<Breadcrumb className="px-1">
@@ -299,7 +303,7 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 				{/* Media / Curation Section */}
-				<div className="md:col-span-1 h-[600px]">
+				<div className="md:col-span-1 md:sticky md:top-20 h-[600px] md:h-[calc(100vh-160px)] min-h-[550px] max-h-[820px] flex flex-col">
 					<CurationPanel
 						subject={currentSubject}
 						grade={currentGrade}
@@ -309,7 +313,7 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 						onLinkToggle={handleLinkToggle}
 						onInsertText={handleInsertText}
 						onInsertImage={handleInsertImage}
-						isEditorEmpty={isEditorEmpty}
+						onSubjectRecommendation={handleSubjectRecommendation}
 					/>
 				</div>
 
@@ -342,7 +346,7 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 										)}
 									</form.AppField>
 
-									<div className="grid grid-cols-2 gap-4">
+									<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 										<form.AppField name="subject">
 											{(field) => (
 												<field.Select
@@ -369,18 +373,17 @@ export function LessonForm({ mode, initialValues }: LessonFormProps) {
 												/>
 											)}
 										</form.AppField>
-									</div>
 
-									<form.AppField name="estimatedDuration">
-										{(field) => (
-											<field.NumberField
-												label={m.lessons_form_duration_label()}
-												description={m.lessons_form_duration_description()}
-												min={1}
-												max={180}
-											/>
-										)}
-									</form.AppField>
+										<form.AppField name="estimatedDuration">
+											{(field) => (
+												<field.NumberField
+													label={m.lessons_form_duration_label()}
+													min={1}
+													max={180}
+												/>
+											)}
+										</form.AppField>
+									</div>
 
 									{linkedCurriculumIds.length > 0 && (
 										<div className="space-y-2">

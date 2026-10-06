@@ -19,12 +19,15 @@ import { m } from "@/paraglide/messages";
 type ThemeMode = "light" | "dark" | "auto";
 
 const THEME_METADATA = {
-	light: { label: m.common_theme_light(), icon: Sun },
-	dark: { label: m.common_theme_dark(), icon: Moon },
-	auto: { label: m.common_theme_auto(), icon: Laptop },
+	light: { getLabel: m.common_theme_light, icon: Sun },
+	dark: { getLabel: m.common_theme_dark, icon: Moon },
+	auto: { getLabel: m.common_theme_auto, icon: Laptop },
 } as const satisfies Record<
 	ThemeMode,
-	{ label: string; icon: React.ComponentType<{ className?: string }> }
+	{
+		getLabel: () => string;
+		icon: React.ComponentType<{ className?: string }>;
+	}
 >;
 
 function getInitialMode(): ThemeMode {
@@ -83,7 +86,9 @@ export default function ThemeToggle({
 	};
 
 	const TriggerIcon = THEME_METADATA[mode].icon;
-	const label = m.common_theme_mode({ mode: THEME_METADATA[mode].label });
+	const label = m.common_theme_mode({
+		mode: THEME_METADATA[mode].getLabel(),
+	});
 
 	if (isCollapsed) {
 		return (
@@ -111,8 +116,8 @@ export default function ThemeToggle({
 							>
 								{(Object.keys(THEME_METADATA) as ThemeMode[]).map(
 									(themeMode) => {
-										const { label: themeLabel, icon: Icon } =
-											THEME_METADATA[themeMode];
+										const { getLabel, icon: Icon } = THEME_METADATA[themeMode];
+										const themeLabel = getLabel();
 										return (
 											<DropdownMenuItem
 												key={themeMode}
@@ -152,7 +157,8 @@ export default function ThemeToggle({
 				</div>
 				<div className="flex gap-2">
 					{(Object.keys(THEME_METADATA) as ThemeMode[]).map((themeMode) => {
-						const { label: themeLabel, icon: Icon } = THEME_METADATA[themeMode];
+						const { getLabel, icon: Icon } = THEME_METADATA[themeMode];
+						const themeLabel = getLabel();
 						return (
 							<Tooltip key={themeMode}>
 								<TooltipTrigger asChild>

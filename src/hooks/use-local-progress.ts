@@ -56,16 +56,7 @@ async function recordProgressEvent(
 	const occurredAt = new Date();
 	const occurredAtSeconds = Math.floor(occurredAt.getTime() / 1000);
 
-	const { execute } = await import("@/lib/local-db");
-	await execute(
-		`INSERT OR IGNORE INTO student_progress_event
-      (id, lesson_id, progress_status, idempotency_key, occurred_at, sync_status)
-     VALUES (?, ?, ?, ?, ?, 'pending');`,
-		[id, lessonId, status, idempotencyKey, occurredAtSeconds],
-	);
-
-	const { enqueueAndFlushIfOnline } = await import("@/lib/mutation-queue");
-	await enqueueAndFlushIfOnline({
+	const mutation = {
 		scope: "analytics",
 		type: "create",
 		serverFn: "submitStudentProgressEvent",
@@ -76,7 +67,21 @@ async function recordProgressEvent(
 			occurredAt,
 		},
 		idempotencyKey,
+	} as const;
+	const { transaction } = await import("@/lib/local-db");
+	const { enqueueUsingTransaction, flushIfOnline } = await import(
+		"@/lib/mutation-queue"
+	);
+	await transaction(async (exec, qry) => {
+		await exec(
+			`INSERT OR IGNORE INTO student_progress_event
+        (id, lesson_id, progress_status, idempotency_key, occurred_at, sync_status)
+       VALUES (?, ?, ?, ?, ?, 'pending');`,
+			[id, lessonId, status, idempotencyKey, occurredAtSeconds],
+		);
+		await enqueueUsingTransaction(mutation, exec, qry);
 	});
+	await flushIfOnline();
 }
 
 export function useLocalProgress() {

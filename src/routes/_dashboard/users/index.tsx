@@ -89,6 +89,9 @@ function DashboardListRoutePending() {
 const columnHelper = createColumnHelper<User>();
 
 function UsersPage() {
+	const { session } = Route.useRouteContext();
+	const canManageUsers =
+		session.user.role === "admin" || session.user.role === "super-admin";
 	const {
 		pagination,
 		sorting,
@@ -142,7 +145,7 @@ function UsersPage() {
 
 	const columns = useMemo(
 		() => [
-			getSelectionColumn<User>(),
+			...(canManageUsers ? [getSelectionColumn<User>()] : []),
 			columnHelper.accessor("name", {
 				header: m.users_table_name(),
 				cell: ({ row }) => (
@@ -183,42 +186,45 @@ function UsersPage() {
 			columnHelper.display({
 				id: "actions",
 				header: () => <span className="sr-only">{m.common_actions()}</span>,
-				cell: ({ row }) => (
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" size="icon" className="h-8 w-8">
-								<MoreHorizontal className="h-4 w-4" />
-								<span className="sr-only">{m.common_open_menu()}</span>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuItem asChild>
-								<Link
-									to="/users/$userId/edit"
-									params={{ userId: row.original.id }}
-								>
-									<Edit className="mr-2 h-4 w-4" />
-									{m.common_edit()}
-								</Link>
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								className="text-destructive"
-								onClick={() => {
-									setRowsToDelete([row]);
-									setDeleteDialogOpen(true);
-								}}
-							>
-								<Trash2 className="mr-2 h-4 w-4" />
-								{m.common_delete()}
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				),
+				cell: ({ row }) =>
+					canManageUsers || row.original.id === session.user.id ? (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="ghost" size="icon" className="h-8 w-8">
+									<MoreHorizontal className="h-4 w-4" />
+									<span className="sr-only">{m.common_open_menu()}</span>
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem asChild>
+									<Link
+										to="/users/$userId/edit"
+										params={{ userId: row.original.id }}
+									>
+										<Edit className="mr-2 h-4 w-4" />
+										{m.common_edit()}
+									</Link>
+								</DropdownMenuItem>
+								{canManageUsers && (
+									<DropdownMenuItem
+										className="text-destructive"
+										onClick={() => {
+											setRowsToDelete([row]);
+											setDeleteDialogOpen(true);
+										}}
+									>
+										<Trash2 className="mr-2 h-4 w-4" />
+										{m.common_delete()}
+									</DropdownMenuItem>
+								)}
+							</DropdownMenuContent>
+						</DropdownMenu>
+					) : null,
 				enableSorting: false,
 				enableHiding: false,
 			}),
 		],
-		[],
+		[canManageUsers, session.user.id],
 	);
 
 	const table = useReactTable({
@@ -233,7 +239,7 @@ function UsersPage() {
 		manualFiltering: true,
 		autoResetPageIndex: false,
 		// Enable features
-		enableRowSelection: true,
+		enableRowSelection: canManageUsers,
 		// State change handlers - URL-synced state (from hook)
 		onPaginationChange: handlers.onPaginationChange,
 		onSortingChange: handlers.onSortingChange,
@@ -267,12 +273,14 @@ function UsersPage() {
 					</h1>
 					<p className="text-muted-foreground">{m.users_description()}</p>
 				</div>
-				<Button asChild>
-					<Link to="/users/create">
-						<Plus className="mr-2 h-4 w-4" />
-						{m.users_add_button()}
-					</Link>
-				</Button>
+				{canManageUsers && (
+					<Button asChild>
+						<Link to="/users/create">
+							<Plus className="mr-2 h-4 w-4" />
+							{m.users_add_button()}
+						</Link>
+					</Button>
+				)}
 			</div>
 
 			{/* Toolbar */}
@@ -283,17 +291,21 @@ function UsersPage() {
 						onGlobalFilterChange={handlers.onGlobalFilterChange}
 						placeholder={m.users_search_placeholder()}
 					/>
-					<DataTableRowActions
-						table={table}
-						onDeleteSelected={handleDeleteSelected}
-					/>
+					{canManageUsers && (
+						<DataTableRowActions
+							table={table}
+							onDeleteSelected={handleDeleteSelected}
+						/>
+					)}
 				</div>
 				<div className="flex items-center gap-2">
-					<DataTableExport
-						table={table}
-						filename="users"
-						onServerExport={handleExport}
-					/>
+					{canManageUsers && (
+						<DataTableExport
+							table={table}
+							filename="users"
+							onServerExport={handleExport}
+						/>
+					)}
 					<DataTableViewOptions table={table} />
 				</div>
 			</div>

@@ -15,6 +15,7 @@ import {
 	deleteLesson,
 	getLessonById,
 	getLessons,
+	restoreLesson,
 	updateLesson,
 } from "./lessons.service";
 
@@ -30,10 +31,27 @@ export const getLessonsFn = createServerFn({ method: "GET" })
 		return getLessons(normalizeDataTableListInput(data), context.signal);
 	});
 
+export const getPublishedLessonsFn = createServerFn({ method: "GET" })
+	.middleware([baseMiddleware])
+	.validator((data) => dataTableListInputSchema.parse(data))
+	.handler(async ({ data, context }) => {
+		return getLessons(
+			normalizeDataTableListInput(data),
+			context.signal,
+			"published",
+		);
+	});
+
 export const getLessonByIdFn = createServerFn({ method: "GET" })
 	.validator((data) => idInputSchema.parse(data))
 	.handler(async ({ data }) => {
 		return getLessonById(data.id);
+	});
+
+export const getPublishedLessonByIdFn = createServerFn({ method: "GET" })
+	.validator((data) => idInputSchema.parse(data))
+	.handler(async ({ data }) => {
+		return getLessonById(data.id, "published");
 	});
 
 export const createLessonFn = createServerFn({ method: "POST" })
@@ -50,16 +68,19 @@ export const updateLessonFn = createServerFn({ method: "POST" })
 		updateByIdInputSchema(lessonInsertSchema.partial()).parse(data),
 	)
 	.handler(async ({ data }) => {
-		return updateLesson(
-			data.id,
-			data.data,
-			data.expectedUpdatedAt ? new Date(data.expectedUpdatedAt) : undefined,
-		);
+		return updateLesson(data.id, data.data, data.expectedRevision);
 	});
 
 export const deleteLessonFn = createServerFn({ method: "POST" })
 	.middleware([idempotentMiddleware])
 	.validator((data) => idInputSchema.parse(data))
 	.handler(async ({ data }) => {
-		return deleteLesson(data.id);
+		return deleteLesson(data.id, data.expectedRevision);
+	});
+
+export const restoreLessonFn = createServerFn({ method: "POST" })
+	.middleware([idempotentMiddleware])
+	.validator((data) => updateByIdInputSchema(lessonInsertSchema).parse(data))
+	.handler(async ({ data }) => {
+		return restoreLesson(data.id, data.data, data.expectedRevision);
 	});

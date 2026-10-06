@@ -3,12 +3,13 @@ import { PanelLeft } from "lucide-react";
 import type { Session } from "#/lib/auth-client";
 import ParaglideLocaleSwitcher from "@/components/LocaleSwitcher";
 import { ConnectionModeToggle } from "@/components/pwa/connection-mode-toggle";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { navConfig } from "@/config/dashboard-nav";
 import BetterAuthHeader from "@/integrations/better-auth/header-user";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import ThemeToggle from "@/components/ThemeToggle";
+import { asRole } from "@/types/user";
 import { NavItem } from "./nav-item";
 import { useSidebar } from "./sidebar-context";
 
@@ -19,6 +20,14 @@ export function Sidebar({
 	const { state, isMobile, openMobile, setOpenMobile, toggleSidebar } =
 		useSidebar();
 	const isCollapsed = state === "collapsed";
+
+	const isAdmin = !!asRole(session?.user?.role, "admin");
+	const filteredNavConfig = navConfig.filter((item) => {
+		if (item.path === "/users") {
+			return isAdmin;
+		}
+		return true;
+	});
 
 	return (
 		<>
@@ -92,7 +101,7 @@ export function Sidebar({
 				{/* Nav Items */}
 				<div className="flex-1 overflow-auto py-4">
 					<nav className="flex flex-col gap-1 px-2">
-						{navConfig.map((item) => (
+						{filteredNavConfig.map((item) => (
 							<NavItem key={item.title} item={item} />
 						))}
 					</nav>

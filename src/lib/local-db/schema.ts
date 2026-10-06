@@ -5,13 +5,13 @@
 // ----------------------------------------------------------------------
 
 import type { SQLiteAPI } from "wa-sqlite";
-import { execWithParams } from "@/lib/local-db/init";
 
 const SCHEMA_VERSION = 1;
 
 /**
- * Run schema migrations on the local SQLite database.
- * Uses a simple version-based approach with a `_meta` table.
+ * Initialize the fresh v1 local SQLite schema.
+ * Existing databases are deliberately not migrated: the database name changes
+ * when the schema is reset, leaving this initializer compact and deterministic.
  */
 export async function migrateSchema(
 	sqlite3: SQLiteAPI,
@@ -28,60 +28,26 @@ export async function migrateSchema(
     );`,
 	);
 
-	// Check current version
-	const rows: string[] = [];
-	await execWithParams(
-		sqlite3,
-		db,
-		"SELECT value FROM _meta WHERE key = 'schema_version';",
-		undefined,
-		(row: readonly unknown[]) => {
-			const value = row[0];
-			if (typeof value === "string") {
-				rows.push(value);
-			}
-		},
-	);
-
-	const currentVersion = rows.length > 0 ? Number.parseInt(rows[0], 10) : 0;
-
 	await applyV1(sqlite3, db);
-	// Update schema version
-	await execWithParams(
-		sqlite3,
+	await sqlite3.exec(
 		db,
 		`INSERT OR REPLACE INTO _meta (key, value)
-     VALUES ('schema_version', ?);`,
-		[String(SCHEMA_VERSION)],
+     VALUES ('schema_version', '${SCHEMA_VERSION}');`,
 	);
 
-	console.info(
-		`[LocalDB] Schema migrated from v${currentVersion} to v${SCHEMA_VERSION}`,
-	);
+	console.info(`[LocalDB] Schema v${SCHEMA_VERSION} initialized`);
 }
-
-// ----------------------------------------------------------------------
-// V1: Initial tables — mirrors D1 schema
-// ----------------------------------------------------------------------
 
 async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
 	await sqlite3.exec(
 		db,
 		`
-    -- Users (read-only local cache of server users)
+    -- Minimal user reference cache used by lessons/classes.
     CREATE TABLE IF NOT EXISTS user (
       id                TEXT PRIMARY KEY,
       name              TEXT NOT NULL,
-      email             TEXT NOT NULL UNIQUE,
-      email_verified    INTEGER NOT NULL DEFAULT 0,
-      image             TEXT,
-      phone_number      TEXT UNIQUE,
-      created_at        INTEGER NOT NULL DEFAULT (unixepoch()),
       updated_at        INTEGER NOT NULL DEFAULT (unixepoch()),
-      role              TEXT NOT NULL,
-      banned            INTEGER DEFAULT 0,
-      ban_reason        TEXT,
-      ban_expires       INTEGER
+      role              TEXT NOT NULL
     );
 
     -- Classes
@@ -94,7 +60,7 @@ async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
       created_at        INTEGER NOT NULL DEFAULT (unixepoch()),
       updated_at        INTEGER NOT NULL DEFAULT (unixepoch()),
       deleted_at        INTEGER,
-      base_updated_at   INTEGER,
+      base_revision     INTEGER NOT NULL DEFAULT 0,
       -- sync fields
       sync_status       TEXT NOT NULL DEFAULT 'synced',
       is_deleted        INTEGER NOT NULL DEFAULT 0
@@ -108,7 +74,6 @@ async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
       grade_level           INTEGER NOT NULL,
       teacher_id            TEXT REFERENCES user(id) ON DELETE SET NULL,
       content_json          TEXT,
-      content_html          TEXT,
       original_image_url    TEXT,
       linked_curriculum_ids TEXT,
       estimated_duration    INTEGER,
@@ -121,7 +86,7 @@ async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
       sync_status           TEXT NOT NULL DEFAULT 'synced',
       is_deleted            INTEGER NOT NULL DEFAULT 0,
       deleted_at            INTEGER,
-      base_updated_at       INTEGER,
+      base_revision         INTEGER NOT NULL DEFAULT 0,
       created_at            INTEGER NOT NULL DEFAULT (unixepoch()),
       updated_at            INTEGER NOT NULL DEFAULT (unixepoch())
     );
@@ -166,7 +131,7 @@ async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
     -- Sync cursor tracking
     CREATE TABLE IF NOT EXISTS _sync_cursors (
       scope       TEXT PRIMARY KEY,
-      cursor      TEXT NOT NULL,
+      revision    INTEGER NOT NULL DEFAULT 0,
       synced_at   INTEGER NOT NULL DEFAULT (unixepoch())
     );
 
@@ -179,6 +144,8 @@ async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
       local_record    TEXT NOT NULL,
       remote_record   TEXT NOT NULL,
       created_at      INTEGER NOT NULL DEFAULT (unixepoch()),
+      local_updated_at INTEGER,
+      remote_updated_at INTEGER,
       resolved_at     INTEGER
     );
 
@@ -190,9 +157,16 @@ async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
       payload_json      TEXT NOT NULL,
       idempotency_key   TEXT NOT NULL,
       status            TEXT NOT NULL DEFAULT 'pending',
+      entity_id         TEXT,
       created_at        INTEGER NOT NULL,
+      sequence          INTEGER NOT NULL,
       retry_count       INTEGER NOT NULL DEFAULT 0,
-      last_error        TEXT
+      next_attempt_at   INTEGER NOT NULL,
+      lease_owner       TEXT,
+      lease_expires_at  INTEGER,
+      error_kind        TEXT,
+      last_error        TEXT,
+      remote_record_json TEXT
     );
 
     -- Indexes for common queries
@@ -203,8 +177,8 @@ async function applyV1(sqlite3: SQLiteAPI, db: number): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_class_sync_status ON class(sync_status);
     CREATE INDEX IF NOT EXISTS idx_user_role ON user(role);
     CREATE INDEX IF NOT EXISTS idx_sync_conflicts_scope_entity ON _sync_conflicts(scope, entity_id);
-    CREATE INDEX IF NOT EXISTS idx_outbox_status_created ON _outbox(status, created_at);
-    CREATE INDEX IF NOT EXISTS idx_outbox_scope_created ON _outbox(scope, created_at);
+    CREATE INDEX IF NOT EXISTS idx_outbox_status_attempt ON _outbox(status, next_attempt_at, sequence);
+    CREATE INDEX IF NOT EXISTS idx_outbox_entity_sequence ON _outbox(scope, entity_id, sequence);
     CREATE INDEX IF NOT EXISTS idx_student_progress_lesson ON student_progress_event(lesson_id);
     CREATE INDEX IF NOT EXISTS idx_student_progress_sync_status ON student_progress_event(sync_status);
   `,

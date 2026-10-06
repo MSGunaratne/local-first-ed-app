@@ -26,7 +26,7 @@ const signInWithPasswordFn = createServerFn({ method: "POST" })
 			password: data.password,
 		});
 
-		return { redirectTo: data.returnTo ?? "/" };
+		return { redirectTo: data.returnTo ?? "/dashboard" };
 	});
 
 const signUpFn = createServerFn({ method: "POST" })

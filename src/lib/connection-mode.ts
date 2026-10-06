@@ -26,15 +26,18 @@ function getStoredConnectionMode(): ConnectionMode {
 }
 
 function getEffectiveOnlineState(mode = getStoredConnectionMode()) {
+	const physicallyOnline =
+		typeof navigator === "undefined" ? true : navigator.onLine !== false;
+
 	if (mode === "online") {
-		return true;
+		return physicallyOnline;
 	}
 
 	if (mode === "offline") {
 		return false;
 	}
 
-	return onlineManager.isOnline();
+	return physicallyOnline;
 }
 
 function getSnapshot() {

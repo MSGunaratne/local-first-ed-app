@@ -4,8 +4,8 @@ import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { uuidv7 } from "uuidv7";
 import { z } from "zod";
-import { QuestionType, Subject, SyncStatus } from "@/types/lesson";
 import { users } from "@/features/users/users.schema";
+import { QuestionType, Subject, SyncStatus } from "@/types/lesson";
 import type { FlashcardItem } from "./lesson.types";
 
 export const lessons = sqliteTable("lesson", {
@@ -22,8 +22,6 @@ export const lessons = sqliteTable("lesson", {
 	}),
 	// TipTap JSON content (source of truth for editing)
 	contentJson: text("content_json", { mode: "json" }).$type<JSONContent>(),
-	// Pre-rendered HTML (for fast offline rendering without parsing)
-	contentHtml: text("content_html"),
 	// Original uploaded image URL (for reference)
 	originalImageUrl: text("original_image_url"),
 	linkedCurriculumIds: text("linked_curriculum_ids", { mode: "json" }).$type<
@@ -105,7 +103,6 @@ export const lessonInsertSchema = createInsertSchema(lessons, {
 	title: z.string().min(1, "Title is required").trim(),
 	gradeLevel: z.number().min(6).max(12),
 	contentJson: (sch) => sch.nullable(),
-	contentHtml: z.string().nullable(),
 	linkedCurriculumIds: z.array(z.string()).nullable(),
 	estimatedDuration: z.number().min(1).max(300).nullable(),
 	teacherNotes: z.string().nullable(),

@@ -13,11 +13,7 @@ export async function requireAdminSession(
 ) {
 	const session = await requireSession();
 	const role = asRole(session.user.role);
-	if (
-		role !== Role.TEACHER &&
-		role !== Role.ADMIN &&
-		role !== Role.SUPER_ADMIN
-	) {
+	if (role !== Role.ADMIN && role !== Role.SUPER_ADMIN) {
 		throw new AuthorizationError(message);
 	}
 

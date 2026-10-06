@@ -9,16 +9,17 @@ import {
 	BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAppForm } from "@/hooks/use-app-form";
+import { useUserForm } from "@/hooks/use-user-form";
+import { useConnectionMode } from "@/lib/connection-mode";
 import { m } from "@/paraglide/messages";
 import { userMutations } from "../users.queries";
+import type { UserDetails } from "../users.service";
 import {
 	type UserCreateInput,
 	type UserUpdateInput,
 	userCreateClientSchema,
 	userUpdateClientSchema,
-} from "../users.schema";
-import type { UserDetails } from "../users.service";
+} from "../users.validation";
 
 // ----------------------------------------------------------------------
 
@@ -63,6 +64,7 @@ function UserFormLayout({
 
 export function UserCreateForm() {
 	const navigate = useNavigate();
+	const { isOnline } = useConnectionMode();
 	const { mutateAsync } = useMutation(userMutations.create());
 
 	const defaultValues: UserCreateInput = {
@@ -73,7 +75,7 @@ export function UserCreateForm() {
 		image: null,
 	};
 
-	const form = useAppForm({
+	const form = useUserForm({
 		defaultValues,
 		validators: {
 			onSubmit: userCreateClientSchema,
@@ -141,7 +143,15 @@ export function UserCreateForm() {
 
 					<div className="flex justify-between pt-4">
 						<form.ResetButton />
-						<form.SubmitButton label={m.users_form_submit_create()} />
+						<form.SubmitButton
+							label={m.users_form_submit_create()}
+							disabled={!isOnline}
+							title={
+								!isOnline
+									? "User account changes require an internet connection."
+									: undefined
+							}
+						/>
 					</div>
 				</form>
 			</form.AppForm>
@@ -157,6 +167,7 @@ export function UserEditForm({
 	initialValues: UserDetails;
 }) {
 	const navigate = useNavigate();
+	const { isOnline } = useConnectionMode();
 	const { mutateAsync } = useMutation(userMutations.update(initialValues.id));
 
 	const defaultValues: UserUpdateInput = {
@@ -166,7 +177,7 @@ export function UserEditForm({
 		image: null,
 	};
 
-	const form = useAppForm({
+	const form = useUserForm({
 		defaultValues,
 		validators: {
 			onSubmit: userUpdateClientSchema,
@@ -222,7 +233,15 @@ export function UserEditForm({
 
 					<div className="flex justify-between pt-4">
 						<form.ResetButton />
-						<form.SubmitButton label={m.users_form_submit_update()} />
+						<form.SubmitButton
+							label={m.users_form_submit_update()}
+							disabled={!isOnline}
+							title={
+								!isOnline
+									? "User account changes require an internet connection."
+									: undefined
+							}
+						/>
 					</div>
 				</form>
 			</form.AppForm>

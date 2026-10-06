@@ -1,5 +1,8 @@
 import { and, asc, count, desc, eq, isNull } from "drizzle-orm";
-import { requireTeacherOrAdminSession } from "#/lib/auth/access";
+import {
+	requireTeacherOrAdminSession,
+	requireTeacherOwnershipOrAdmin,
+} from "#/lib/auth/access";
 import { db } from "@/db";
 import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
 import {
@@ -8,6 +11,10 @@ import {
 	getDrizzleSortColumn,
 } from "@/db/utils/drizzle-filter";
 import { ConflictError, NotFoundError, ServerError } from "@/db/utils/errors";
+import {
+	getServerRevision,
+	withServerRevision,
+} from "@/features/sync/sync.service";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { throwIfAborted } from "@/lib/server-fn";
 import type { LessonInsert } from "./lessons.schema";
@@ -27,7 +34,11 @@ const lessonQuickFilterConfig: QuickFilterConfig<typeof lessons> = {
 export async function getLessons(
 	params: DataTableQueryParams,
 	abortSignal?: AbortSignal,
+	visibility: "staff" | "published" = "staff",
 ) {
+	if (visibility === "staff") {
+		await requireTeacherOrAdminSession("Only staff can view draft lessons");
+	}
 	throwIfAborted(abortSignal);
 	const { pagination, sorting, columnFilters, globalFilter } = params;
 
@@ -40,7 +51,11 @@ export async function getLessons(
 		globalFilter,
 		lessonQuickFilterConfig,
 	);
-	const whereClause = and(searchFilters, isNull(lessons.deletedAt));
+	const whereClause = and(
+		searchFilters,
+		isNull(lessons.deletedAt),
+		visibility === "published" ? eq(lessons.isPublished, true) : undefined,
+	);
 
 	const { column, isDesc } = getDrizzleSortColumn(
 		lessons,
@@ -97,14 +112,24 @@ export type LessonListItem = Awaited<
 	ReturnType<typeof getLessons>
 >["data"][number];
 
-export async function getLessonById(id: string) {
+export async function getLessonById(
+	id: string,
+	visibility: "staff" | "published" = "staff",
+) {
+	if (visibility === "staff") {
+		await requireTeacherOrAdminSession("Only staff can view draft lessons");
+	}
 	const selectedLesson = await db.query.lessons.findFirst({
-		where: and(eq(lessons.id, id), isNull(lessons.deletedAt)),
+		where: and(
+			eq(lessons.id, id),
+			isNull(lessons.deletedAt),
+			visibility === "published" ? eq(lessons.isPublished, true) : undefined,
+		),
 	});
 	if (!selectedLesson) {
 		throw new NotFoundError("Lesson", id);
 	}
-	return selectedLesson;
+	return withServerRevision("lessons", selectedLesson);
 }
 
 export async function createLesson(data: LessonInsert & { id?: string }) {
@@ -121,15 +146,15 @@ export async function createLesson(data: LessonInsert & { id?: string }) {
 
 	if (!newLesson) throw new ServerError("Failed to create lesson");
 
-	return newLesson;
+	return withServerRevision("lessons", newLesson);
 }
 
 export async function updateLesson(
 	id: string,
 	data: Partial<LessonInsert>,
-	expectedUpdatedAt?: Date | null,
+	expectedRevision?: number,
 ) {
-	await requireTeacherOrAdminSession(
+	const session = await requireTeacherOrAdminSession(
 		"Only teachers and admins can update lessons",
 	);
 
@@ -139,14 +164,18 @@ export async function updateLesson(
 	if (!existingLesson) {
 		throw new NotFoundError("Lesson", id);
 	}
+	requireTeacherOwnershipOrAdmin(
+		existingLesson.teacherId ?? "",
+		session.user.id,
+		session.user.role,
+		"You can only update lessons you own",
+	);
 
-	if (
-		expectedUpdatedAt &&
-		existingLesson.updatedAt.getTime() !== new Date(expectedUpdatedAt).getTime()
-	) {
+	const currentRevision = await getServerRevision("lessons", id);
+	if (expectedRevision !== undefined && expectedRevision !== currentRevision) {
 		throw new ConflictError(
 			"This lesson was modified by another user. Please refresh and try again.",
-			existingLesson,
+			{ ...existingLesson, serverRevision: currentRevision },
 		);
 	}
 
@@ -160,11 +189,11 @@ export async function updateLesson(
 		throw new ServerError("Failed to update lesson");
 	}
 
-	return updatedLesson;
+	return withServerRevision("lessons", updatedLesson);
 }
 
-export async function deleteLesson(id: string) {
-	await requireTeacherOrAdminSession(
+export async function deleteLesson(id: string, expectedRevision?: number) {
+	const session = await requireTeacherOrAdminSession(
 		"Only teachers and admins can delete lessons",
 	);
 
@@ -174,12 +203,72 @@ export async function deleteLesson(id: string) {
 	if (!existingLesson) {
 		throw new NotFoundError("Lesson", id);
 	}
+	requireTeacherOwnershipOrAdmin(
+		existingLesson.teacherId ?? "",
+		session.user.id,
+		session.user.role,
+		"You can only delete lessons you own",
+	);
+	const currentRevision = await getServerRevision("lessons", id);
+	if (expectedRevision !== undefined && expectedRevision !== currentRevision) {
+		throw new ConflictError(
+			"This lesson was modified by another user. Please refresh and try again.",
+			{ ...existingLesson, serverRevision: currentRevision },
+		);
+	}
 
 	const now = new Date();
 	await db
 		.update(lessons)
 		.set({ deletedAt: now, isDeleted: true, updatedAt: now })
 		.where(eq(lessons.id, id));
+	return {
+		id,
+		deleted: true,
+		serverRevision: await getServerRevision("lessons", id),
+	};
+}
+
+export async function restoreLesson(
+	id: string,
+	data: LessonInsert,
+	expectedRevision?: number,
+) {
+	const session = await requireTeacherOrAdminSession(
+		"Only teachers and admins can restore lessons",
+	);
+	const existingLesson = await db.query.lessons.findFirst({
+		where: eq(lessons.id, id),
+	});
+	if (!existingLesson) throw new NotFoundError("Lesson", id);
+	requireTeacherOwnershipOrAdmin(
+		existingLesson.teacherId ?? "",
+		session.user.id,
+		session.user.role,
+		"You can only restore lessons you own",
+	);
+	const currentRevision = await getServerRevision("lessons", id);
+	if (expectedRevision !== undefined && expectedRevision !== currentRevision) {
+		throw new ConflictError(
+			"This deleted lesson changed before it could be restored.",
+			{ ...existingLesson, serverRevision: currentRevision },
+		);
+	}
+	const validatedData = lessonInsertSchema.parse(data);
+	const now = new Date();
+	const [restoredLesson] = await db
+		.update(lessons)
+		.set({
+			...validatedData,
+			deletedAt: null,
+			isDeleted: false,
+			lastModified: now,
+			updatedAt: now,
+		})
+		.where(eq(lessons.id, id))
+		.returning();
+	if (!restoredLesson) throw new ServerError("Failed to restore lesson");
+	return withServerRevision("lessons", restoredLesson);
 }
 
 export type LessonDetails = Awaited<ReturnType<typeof getLessonById>>;

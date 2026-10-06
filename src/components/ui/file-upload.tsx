@@ -87,9 +87,9 @@ export function FileUploader({
 			{value && value.length > 0 && (
 				<div className="h-fit max-h-[200px] w-full rounded-md border overflow-y-auto">
 					<div className="p-4 space-y-4">
-						{value.map((file, index) => (
+						{value.map((file) => (
 							<div
-								key={`${file.name}-${file.size}-${index}`}
+								key={`${file.name}-${file.size}-${file.lastModified}`}
 								className="flex items-center justify-between gap-4 p-2 rounded-lg border bg-card"
 							>
 								<div className="flex items-center gap-3 overflow-hidden">

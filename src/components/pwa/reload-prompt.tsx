@@ -4,6 +4,21 @@ import type { Workbox } from "workbox-window";
 
 // Update check interval: 1 hour
 const UPDATE_INTERVAL_MS = 60 * 60 * 1000;
+const APP_CACHE_PREFIXES = [
+	"workbox-precache",
+	"public-pages-",
+	"auth-pages-",
+	"offline-identity-",
+	"pages-cache",
+	"api-cache",
+	"static-assets",
+	"images-cache",
+	"ocr-data-cache",
+];
+
+function isApplicationCache(cacheName: string) {
+	return APP_CACHE_PREFIXES.some((prefix) => cacheName.startsWith(prefix));
+}
 
 function useServiceWorker() {
 	const [needRefresh, setNeedRefresh] = useState(false);
@@ -26,14 +41,40 @@ function useServiceWorker() {
 	}, []);
 
 	useEffect(() => {
-		if (
-			typeof window === "undefined" ||
-			!("serviceWorker" in navigator) ||
-			import.meta.env.DEV
-		) {
+		if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
 			return;
 		}
 		let cancelled = false;
+
+		if (import.meta.env.DEV) {
+			void (async () => {
+				const hadController = navigator.serviceWorker.controller !== null;
+				const registrations = await navigator.serviceWorker.getRegistrations();
+				await Promise.all(
+					registrations.map((registration) => registration.unregister()),
+				);
+
+				if ("caches" in window) {
+					const cacheNames = await caches.keys();
+					await Promise.all(
+						cacheNames
+							.filter(isApplicationCache)
+							.map((cacheName) => caches.delete(cacheName)),
+					);
+				}
+
+				// An unregistered worker can keep controlling this document until the
+				// next navigation. Always reload once when a stale controller existed;
+				// the removed registration means the new document cannot loop here.
+				if (hadController && !cancelled) window.location.reload();
+			})().catch((error: unknown) => {
+				console.error("Development service worker cleanup failed:", error);
+			});
+
+			return () => {
+				cancelled = true;
+			};
+		}
 
 		const registerServiceWorker = async () => {
 			try {

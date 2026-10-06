@@ -30,10 +30,11 @@ async function signUpDisposableTeacher(page: Page) {
 }
 
 test.describe("teacher lesson creation workflow", () => {
-	test("signs in and creates a published lesson", async ({ page }) => {
+	test("signs in and creates a published lesson", async ({ browser, page }) => {
 		const lessonTitle = `Playwright Teacher Lesson ${Date.now()}`;
+		let activeCredentials = teacherCredentials;
 
-		await signIn(page, teacherCredentials);
+		await signIn(page, activeCredentials);
 
 		try {
 			await expect(page).toHaveURL(
@@ -42,7 +43,8 @@ test.describe("teacher lesson creation workflow", () => {
 			);
 		} catch {
 			const disposableTeacher = await signUpDisposableTeacher(page);
-			await signIn(page, disposableTeacher);
+			activeCredentials = disposableTeacher;
+			await signIn(page, activeCredentials);
 		}
 
 		await expect(page).toHaveURL((url) => url.pathname === "/lessons/create");
@@ -66,5 +68,15 @@ test.describe("teacher lesson creation workflow", () => {
 
 		await expect(page).toHaveURL(/\/lessons/);
 		await expect(page.getByText(lessonTitle)).toBeVisible();
+
+		const cleanContext = await browser.newContext();
+		try {
+			const cleanPage = await cleanContext.newPage();
+			await signIn(cleanPage, activeCredentials);
+			await cleanPage.goto("/lessons");
+			await expect(cleanPage.getByText(lessonTitle)).toBeVisible();
+		} finally {
+			await cleanContext.close();
+		}
 	});
 });

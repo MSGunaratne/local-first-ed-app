@@ -45,6 +45,17 @@ interface ScoredDocument {
 	finalScore: number;
 }
 
+export interface SubjectRecommendation {
+	subject: Subject;
+	score: number;
+	currentScore: number;
+	margin: number;
+}
+
+const MAX_WEAK_CURRENT_SUBJECT_SCORE = 3;
+const MIN_RECOMMENDED_SUBJECT_SCORE = 4;
+const MIN_RECOMMENDATION_MARGIN = 1.5;
+
 // Cache for loaded curriculum data and derived search documents.
 const curriculumCache = new Map<string, CurriculumItem[]>();
 const searchDocumentCache = new Map<string, SearchDocument[]>();
@@ -386,6 +397,50 @@ export async function findMatches(
 		console.error("Error finding matches:", error);
 		return [];
 	}
+}
+
+export function chooseSubjectRecommendation(
+	currentSubject: Subject,
+	topScores: Record<Subject, number>,
+): SubjectRecommendation | null {
+	const currentScore = topScores[currentSubject] ?? 0;
+	const [bestSubject, bestScore] = Object.entries(topScores).sort(
+		([, leftScore], [, rightScore]) => rightScore - leftScore,
+	)[0] as [Subject, number];
+	const margin = bestScore - currentScore;
+
+	if (
+		bestSubject === currentSubject ||
+		currentScore > MAX_WEAK_CURRENT_SUBJECT_SCORE ||
+		bestScore < MIN_RECOMMENDED_SUBJECT_SCORE ||
+		margin < MIN_RECOMMENDATION_MARGIN
+	) {
+		return null;
+	}
+
+	return { subject: bestSubject, score: bestScore, currentScore, margin };
+}
+
+/**
+ * Recommend a different lesson subject only when curriculum evidence for the
+ * current selection is weak and another subject wins by a safe margin.
+ */
+export async function findRecommendedSubject(
+	text: string,
+	currentSubject: Subject,
+	grade?: number,
+): Promise<SubjectRecommendation | null> {
+	const scores = await Promise.all(
+		Object.values(Subject).map(async (subject) => {
+			const matches = await findMatches(text, subject, grade);
+			return [subject, matches[0]?.score ?? 0] as const;
+		}),
+	);
+
+	return chooseSubjectRecommendation(
+		currentSubject,
+		Object.fromEntries(scores) as Record<Subject, number>,
+	);
 }
 
 /**

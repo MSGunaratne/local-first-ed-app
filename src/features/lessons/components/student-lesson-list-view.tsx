@@ -1,5 +1,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { BookOpen, Search } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import type { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,7 +12,6 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { lessonQueries } from "@/features/lessons/lessons.queries";
 import {
 	SORT_MAP,
@@ -20,7 +21,6 @@ import {
 import { m } from "@/paraglide/messages";
 import type { Subject } from "@/types/lesson";
 import { SUBJECT_METADATA } from "@/types/lesson";
-import type { z } from "zod";
 import { StudentLessonCard } from "./student-lesson-card";
 
 export type StudentLessonSearch = z.infer<typeof studentSearchSchema>;
@@ -36,6 +36,21 @@ export function StudentLessonListView({
 			| ((prev: StudentLessonSearch) => StudentLessonSearch),
 	) => void;
 }) {
+	const [searchText, setSearchText] = useState(search.q ?? "");
+	const handleSearch = useCallback(
+		(value: string) => {
+			onSearchChange((prev) => ({ ...prev, q: value || undefined, page: 1 }));
+		},
+		[onSearchChange],
+	);
+	useEffect(() => {
+		setSearchText(search.q ?? "");
+	}, [search.q]);
+	useEffect(() => {
+		if (searchText === (search.q ?? "")) return;
+		const timer = setTimeout(() => handleSearch(searchText), 300);
+		return () => clearTimeout(timer);
+	}, [handleSearch, search.q, searchText]);
 	const currentSort = search.sort || "newest";
 	const sorting = [SORT_MAP[currentSort]];
 
@@ -44,7 +59,7 @@ export function StudentLessonListView({
 		{ id: "isPublished", value: 1 },
 	];
 
-	const lessonListQuery = lessonQueries.list({
+	const lessonListQuery = lessonQueries.publishedList({
 		pagination: { pageIndex: (search.page || 1) - 1, pageSize: 12 },
 		sorting,
 		columnFilters,
@@ -59,10 +74,6 @@ export function StudentLessonListView({
 	const lessons = data?.data ?? [];
 	const meta = data?.meta;
 	const showOfflineHint = isError && lessons.length === 0;
-
-	const handleSearch = (value: string) => {
-		onSearchChange((prev) => ({ ...prev, q: value || undefined, page: 1 }));
-	};
 
 	const handleSortValChange = (value: string) => {
 		onSearchChange((prev) => ({
@@ -102,8 +113,8 @@ export function StudentLessonListView({
 							type="search"
 							placeholder={m.student_search_placeholder()}
 							className="pl-9"
-							defaultValue={search.q}
-							onChange={(e) => handleSearch(e.target.value)}
+							value={searchText}
+							onChange={(e) => setSearchText(e.target.value)}
 						/>
 					</div>
 					<Select value={currentSort} onValueChange={handleSortValChange}>
@@ -121,20 +132,39 @@ export function StudentLessonListView({
 				</div>
 			</div>
 
-			<Tabs
-				value={search.subject || "all"}
-				onValueChange={handleSubjectChange}
-				className="w-full"
-			>
-				<TabsList className="w-full grid grid-cols-4">
-					<TabsTrigger value="all">{m.student_all_subjects()}</TabsTrigger>
-					{Object.entries(SUBJECT_METADATA).map(([key, meta]) => (
-						<TabsTrigger key={key} value={key}>
-							{meta.label}
-						</TabsTrigger>
-					))}
-				</TabsList>
-			</Tabs>
+			<div className="w-full overflow-x-auto scrollbar-none select-none py-1">
+				<div className="flex gap-2 min-w-max pb-2 px-1">
+					<Button
+						type="button"
+						variant={!search.subject ? "default" : "outline"}
+						onClick={() => handleSubjectChange("all")}
+						className="h-10 rounded-full text-xs font-bold px-5"
+					>
+						✨ {m.student_all_subjects()}
+					</Button>
+					{Object.entries(SUBJECT_METADATA).map(([key, meta]) => {
+						const isSelected = search.subject === key;
+						const emojiMap = {
+							math: "🧮",
+							english: "📖",
+							ict: "💻",
+						};
+						const emoji = emojiMap[key as keyof typeof emojiMap] || "📚";
+						return (
+							<Button
+								key={key}
+								type="button"
+								variant={isSelected ? "default" : "outline"}
+								onClick={() => handleSubjectChange(key)}
+								className="h-10 rounded-full text-xs font-bold px-5 gap-1.5"
+							>
+								<span>{emoji}</span>
+								<span>{meta.label}</span>
+							</Button>
+						);
+					})}
+				</div>
+			</div>
 
 			{showOfflineHint && (
 				<div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">

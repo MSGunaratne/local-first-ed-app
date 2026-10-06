@@ -3,6 +3,7 @@ import { type ZodType, z } from "zod";
 export const idInputSchema = z.object({
 	id: z.uuid(),
 	idempotencyKey: z.string().optional(),
+	expectedRevision: z.number().int().nonnegative().optional(),
 });
 
 export function updateByIdInputSchema<T extends ZodType>(dataSchema: T) {
@@ -10,6 +11,6 @@ export function updateByIdInputSchema<T extends ZodType>(dataSchema: T) {
 		id: z.string(),
 		data: dataSchema,
 		idempotencyKey: z.string().optional(),
-		expectedUpdatedAt: z.string().optional(),
+		expectedRevision: z.number().int().nonnegative().optional(),
 	});
 }

@@ -41,10 +41,7 @@ export function AppError({ error }: { error: Error }) {
 						{m.error_go_back()}
 					</Button>
 					<Button
-						onClick={() => {
-							router.invalidate();
-							window.location.reload();
-						}}
+						onClick={() => void router.invalidate()}
 						className="w-full sm:w-auto gap-2"
 					>
 						<RefreshCcw className="h-4 w-4" />

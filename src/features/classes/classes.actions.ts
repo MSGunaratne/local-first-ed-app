@@ -15,6 +15,7 @@ import {
 	deleteClass,
 	getClassById,
 	getClasses,
+	restoreClass,
 	updateClass,
 } from "./classes.service";
 
@@ -49,16 +50,19 @@ export const updateClassFn = createServerFn({ method: "POST" })
 		updateByIdInputSchema(classInsertSchema.partial()).parse(data),
 	)
 	.handler(async ({ data }) => {
-		return updateClass(
-			data.id,
-			data.data,
-			data.expectedUpdatedAt ? new Date(data.expectedUpdatedAt) : undefined,
-		);
+		return updateClass(data.id, data.data, data.expectedRevision);
 	});
 
 export const deleteClassFn = createServerFn({ method: "POST" })
 	.middleware([idempotentMiddleware])
 	.validator((data) => idInputSchema.parse(data))
 	.handler(async ({ data }) => {
-		return deleteClass(data.id);
+		return deleteClass(data.id, data.expectedRevision);
+	});
+
+export const restoreClassFn = createServerFn({ method: "POST" })
+	.middleware([idempotentMiddleware])
+	.validator((data) => updateByIdInputSchema(classInsertSchema).parse(data))
+	.handler(async ({ data }) => {
+		return restoreClass(data.id, data.data, data.expectedRevision);
 	});

@@ -34,4 +34,36 @@ test.describe("student client and PWA smoke tests", () => {
 
 		await expect(page.locator("body")).toContainText(/offline|connection/i);
 	});
+
+	test("relaunches an exact cached public route and rejects an uncached route", async ({
+		context,
+		page,
+	}) => {
+		await page.goto("/student");
+		await page
+			.evaluate(() => navigator.serviceWorker.ready)
+			.catch(() => undefined);
+		await expect
+			.poll(
+				() =>
+					page
+						.evaluate(() => Boolean(navigator.serviceWorker.controller))
+						.catch(() => false),
+				{ timeout: 15_000 },
+			)
+			.toBe(true);
+		await page.reload();
+		await expect(page.getByText("Student Hub")).toBeVisible();
+
+		await context.setOffline(true);
+		try {
+			await page.goto("/student");
+			await expect(page.getByText("Student Hub")).toBeVisible();
+
+			await page.goto("/student/not-previously-visited");
+			await expect(page.locator("body")).toContainText(/offline|connection/i);
+		} finally {
+			await context.setOffline(false);
+		}
+	});
 });

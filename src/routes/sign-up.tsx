@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useActionState } from "react";
 import AuthHeader from "#/components/AuthHeader";
 import { authMutations } from "#/features/auth/auth.queries";
 import { Button } from "@/components/ui/button";
@@ -22,41 +22,39 @@ export const Route = createFileRoute("/sign-up")({
 
 function SignUpPage() {
 	const navigate = useNavigate();
-	const { mutateAsync, isPending } = useMutation(authMutations.signUp());
-	const [error, setError] = useState("");
+	const { mutateAsync } = useMutation(authMutations.signUp());
+	const [state, formAction, isPending] = useActionState(
+		async (_previous: { error: string }, formData: FormData) => {
+			const name = formData.get("name") as string;
+			const email = formData.get("email") as string;
+			const password = formData.get("password") as string;
+			const confirmPassword = formData.get("confirmPassword") as string;
 
-	const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
-		e.preventDefault();
-		setError("");
+			if (password !== confirmPassword) {
+				return { error: m.auth_error_passwords_dont_match() };
+			}
 
-		const formData = new FormData(e.currentTarget);
-		const name = formData.get("name") as string;
-		const email = formData.get("email") as string;
-		const password = formData.get("password") as string;
-		const confirmPassword = formData.get("confirmPassword") as string;
+			if (password.length < 6) {
+				return { error: m.auth_error_password_too_short() };
+			}
 
-		if (password !== confirmPassword) {
-			setError(m.auth_error_passwords_dont_match());
-			return;
-		}
+			try {
+				const { redirectTo } = await mutateAsync({
+					name,
+					email,
+					password,
+				});
 
-		if (password.length < 6) {
-			setError(m.auth_error_password_too_short());
-			return;
-		}
-
-		try {
-			const { redirectTo } = await mutateAsync({
-				name,
-				email,
-				password,
-			});
-
-			navigate({ to: redirectTo });
-		} catch (err) {
-			setError(err instanceof Error ? err.message : m.auth_error_default());
-		}
-	};
+				navigate({ to: redirectTo });
+				return { error: "" };
+			} catch (err) {
+				return {
+					error: err instanceof Error ? err.message : m.auth_error_default(),
+				};
+			}
+		},
+		{ error: "" },
+	);
 
 	return (
 		<div className="flex min-h-screen flex-col bg-gradient-to-br from-background to-muted">
@@ -71,11 +69,14 @@ function SignUpPage() {
 							{m.auth_sign_up_description()}
 						</CardDescription>
 					</CardHeader>
-					<form onSubmit={handleSubmit}>
+					<form action={formAction}>
 						<CardContent className="space-y-4">
-							{error && (
-								<div className="rounded-md bg-destructive/10 p-3 text-base text-destructive font-medium border border-destructive/20">
-									{error}
+							{state.error && (
+								<div
+									role="alert"
+									className="rounded-md bg-destructive/10 p-3 text-base text-destructive font-medium border border-destructive/20"
+								>
+									{state.error}
 								</div>
 							)}
 							<div className="space-y-2">

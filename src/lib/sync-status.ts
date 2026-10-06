@@ -11,11 +11,16 @@ interface SyncState {
 	pendingMutationCount: number /** Number of mutations currently pending in TanStack Query */;
 	queuedMutationCount: number;
 	failedMutationCount: number;
+	corruptMutationCount: number;
+	reauthenticationRequiredCount: number;
 	conflictCount: number;
 	lastSyncAt: number | null;
 	isOnline: boolean;
 	storageUsageBytes: number;
 	storageQuotaBytes: number;
+	localDatabaseStatus: "idle" | "initializing" | "ready" | "error";
+	localDatabaseError: string | null;
+	syncError: string | null;
 }
 
 interface HotModuleApi {
@@ -26,11 +31,16 @@ let currentState: SyncState = {
 	pendingMutationCount: 0,
 	queuedMutationCount: 0,
 	failedMutationCount: 0,
+	corruptMutationCount: 0,
+	reauthenticationRequiredCount: 0,
 	conflictCount: 0,
 	lastSyncAt: null,
 	isOnline: true,
 	storageUsageBytes: 0,
 	storageQuotaBytes: 0,
+	localDatabaseStatus: "idle",
+	localDatabaseError: null,
+	syncError: null,
 };
 
 const listeners = new Set<() => void>();
@@ -65,11 +75,16 @@ const SERVER_SNAPSHOT: SyncState = {
 	pendingMutationCount: 0,
 	queuedMutationCount: 0,
 	failedMutationCount: 0,
+	corruptMutationCount: 0,
+	reauthenticationRequiredCount: 0,
 	conflictCount: 0,
 	lastSyncAt: null,
 	isOnline: true,
 	storageUsageBytes: 0,
 	storageQuotaBytes: 0,
+	localDatabaseStatus: "idle",
+	localDatabaseError: null,
+	syncError: null,
 };
 
 function getServerSnapshot(): SyncState {
@@ -94,7 +109,6 @@ function initializeSyncStatus() {
 	onlineManager.subscribe((isOnline) => {
 		updateState({ isOnline });
 		if (isOnline) {
-			updateState({ lastSyncAt: Date.now() });
 			// Auto-flush mutation queue on reconnect
 			void flushMutationQueue();
 		}
@@ -104,22 +118,13 @@ function initializeSyncStatus() {
 	const queryClient = getQueryClient();
 	const mutationCache = queryClient.getMutationCache();
 
-	mutationCache.subscribe((event) => {
+	mutationCache.subscribe(() => {
 		const allMutations = mutationCache.getAll();
 		const pending = allMutations.filter(
 			(m) => m.state.status === "pending",
 		).length;
 
 		updateState({ pendingMutationCount: pending });
-
-		// Update last sync time when a mutation succeeds while online
-		if (
-			event.type === "updated" &&
-			event.mutation.state.status === "success" &&
-			onlineManager.isOnline()
-		) {
-			updateState({ lastSyncAt: Date.now() });
-		}
 	});
 
 	// Track queued mutations (offline queue)
@@ -171,13 +176,19 @@ async function refreshQueuedCount() {
 		const mutationQueue = await import("@/lib/mutation-queue");
 		const all = await mutationQueue.getAll();
 		const pending = all.filter(
-			(m) => m.status === "pending" || m.status === "in-flight",
+			(m) => m.status === "pending" || m.status === "inFlight",
 		);
-		const failed = all.filter((m) => m.status === "failed");
+		const corruptCount = await mutationQueue.getCorruptCount();
+		const blocked = all.filter((m) => m.status === "blocked");
+		const reauthenticationRequired = all.filter(
+			(m) => m.status === "blocked" && m.errorKind === "authentication",
+		);
 
 		updateState({
 			queuedMutationCount: pending.length,
-			failedMutationCount: failed.length,
+			failedMutationCount: blocked.length + corruptCount,
+			corruptMutationCount: corruptCount,
+			reauthenticationRequiredCount: reauthenticationRequired.length,
 		});
 	} catch {
 		// Silently ignore
@@ -187,8 +198,12 @@ async function refreshQueuedCount() {
 async function refreshConflictCount() {
 	try {
 		const { getUnresolvedConflictCount } = await import("@/lib/local-db");
-		const count = await getUnresolvedConflictCount();
-		updateState({ conflictCount: count });
+		const localCount = await getUnresolvedConflictCount();
+		const { getAll } = await import("@/lib/mutation-queue");
+		const queueCount = (await getAll()).filter(
+			(mutation) => mutation.status === "conflict",
+		).length;
+		updateState({ conflictCount: localCount + queueCount });
 	} catch {
 		updateState({ conflictCount: 0 });
 	}
@@ -199,9 +214,6 @@ async function flushMutationQueue() {
 		const mutationQueue = await import("@/lib/mutation-queue");
 		const result = await mutationQueue.flushMutationQueue();
 		if (result.succeeded > 0) {
-			updateState({ lastSyncAt: Date.now() });
-		}
-		if (result.succeeded > 0) {
 			// Notify SW to broadcast invalidation to all tabs
 			navigator.serviceWorker?.controller?.postMessage({
 				type: "MUTATIONS_FLUSHED",
@@ -210,6 +222,24 @@ async function flushMutationQueue() {
 	} catch (error) {
 		console.error("[SyncStatus] Failed to flush mutation queue:", error);
 	}
+}
+
+export function reportSyncCompleted(timestamp: number) {
+	updateState({ lastSyncAt: timestamp, syncError: null });
+}
+
+export function reportSyncError(error: unknown) {
+	updateState({
+		syncError:
+			error instanceof Error ? error.message : "Synchronization failed",
+	});
+}
+
+export function reportLocalDatabaseStatus(
+	status: SyncState["localDatabaseStatus"],
+	error: string | null = null,
+) {
+	updateState({ localDatabaseStatus: status, localDatabaseError: error });
 }
 
 // ----------------------------------------------------------------------

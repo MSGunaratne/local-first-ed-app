@@ -9,15 +9,15 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { uuidv7 } from "uuidv7";
 import { z } from "zod";
-import { classes } from "@/features/classes/classes.schema";
-import { lessons } from "@/features/lessons/lessons.schema";
 import {
-	ANALYTICS_EVENT_TYPES,
 	ACTOR_TYPES,
+	ANALYTICS_EVENT_TYPES,
 	AUTH_STATES,
 	DEVICE_CLASSES,
 } from "#/types/analytics";
 import { Role } from "#/types/user";
+import { classes } from "@/features/classes/classes.schema";
+import { lessons } from "@/features/lessons/lessons.schema";
 
 export const analyticsSessions = sqliteTable(
 	"analytics_session",

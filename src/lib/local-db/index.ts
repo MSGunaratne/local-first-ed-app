@@ -10,28 +10,25 @@ export {
 } from "./init";
 
 export {
-	deleteLocal,
+	deleteLocalAndEnqueue,
 	getLocalAll,
 	getLocalById,
-	getLocalExpectedUpdatedAt,
-	getPendingDeleteRecords,
-	getPendingPushRecords,
+	getLocalExpectedRevision,
 	getSyncCursor,
 	getUnresolvedConflictCount,
 	getUnresolvedConflicts,
-	insertLocal,
-	markSynced,
+	insertLocalAndEnqueue,
 	pullRecords,
-	purgeSynced,
 	resolveConflict,
 	type SyncConflictRecord,
 	type SyncDirection,
 	type SyncResult,
-	updateLocal,
+	updateLocalAndEnqueue,
 } from "./sync";
 
 export {
 	startSyncCoordinator,
 	stopSyncCoordinator,
 	syncAll,
+	syncAllSafely,
 } from "./sync-coordinator";

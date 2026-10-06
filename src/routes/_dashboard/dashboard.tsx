@@ -12,6 +12,7 @@ import {
 	Plus,
 	Users,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,16 @@ const dashboardSearchSchema = z.object({
 		.optional()
 		.catch(undefined),
 });
+
+function useHasHydrated() {
+	const [hasHydrated, setHasHydrated] = useState(false);
+
+	useEffect(() => {
+		setHasHydrated(true);
+	}, []);
+
+	return hasHydrated;
+}
 
 function KpiValueSkeleton({
 	className,
@@ -110,7 +121,10 @@ function DashboardIndex() {
 function AdminDashboardView() {
 	const search = Route.useSearch();
 	const navigate = useNavigate({ from: Route.fullPath });
-	const { data, isLoading } = useQuery(analyticsQueries.overview(7));
+	const query = useQuery(analyticsQueries.overview(7));
+	const hasHydrated = useHasHydrated();
+	const { data } = query;
+	const isLoading = !hasHydrated || query.isLoading;
 	const kpis = data?.kpis;
 
 	const subjectFilter = search.feedbackSubject ?? "all";
@@ -469,7 +483,10 @@ function TeacherDashboardView() {
 		globalFilter: "",
 	} satisfies DataTableQueryParams;
 
-	const { data, isLoading } = useQuery(lessonQueries.list(teacherLessonParams));
+	const query = useQuery(lessonQueries.list(teacherLessonParams));
+	const hasHydrated = useHasHydrated();
+	const { data } = query;
+	const isLoading = !hasHydrated || query.isLoading;
 	const recentLessons = data?.data ?? [];
 	const totalLessons = data?.meta.itemCount ?? 0;
 	const publishedLessons = recentLessons.filter(

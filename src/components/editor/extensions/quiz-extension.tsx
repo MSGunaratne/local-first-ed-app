@@ -1,11 +1,35 @@
 import { mergeAttributes, Node, ReactNodeViewRenderer } from "@tiptap/react";
 import { QuizComponent } from "./quiz-component";
 
+export type QuizKind = "mcq" | "shortAnswer";
+
+export interface QuizAttributes {
+	kind: QuizKind;
+	question: string;
+	options: string[];
+	correctAnswer: number;
+	acceptedAnswers: string[];
+	explanation: string;
+}
+
 declare module "@tiptap/core" {
 	interface Commands<ReturnType> {
 		quiz: {
-			setQuiz: () => ReturnType;
+			setQuiz: (attributes?: Partial<QuizAttributes>) => ReturnType;
 		};
+	}
+}
+
+function parseJsonArray(value: string | null, fallback: string[]) {
+	if (!value) return fallback;
+	try {
+		const parsed: unknown = JSON.parse(value);
+		return Array.isArray(parsed) &&
+			parsed.every((item) => typeof item === "string")
+			? parsed
+			: fallback;
+	} catch {
+		return fallback;
 	}
 }
 
@@ -18,15 +42,12 @@ export const Quiz = Node.create({
 
 	addAttributes() {
 		return {
-			question: {
-				default: "",
-			},
-			options: {
-				default: ["Option 1", "Option 2"],
-			},
-			correctAnswer: {
-				default: 0,
-			},
+			kind: { default: "mcq" },
+			question: { default: "" },
+			options: { default: ["", ""] },
+			correctAnswer: { default: 0 },
+			acceptedAnswers: { default: [""] },
+			explanation: { default: "" },
 		};
 	},
 
@@ -34,17 +55,28 @@ export const Quiz = Node.create({
 		return [
 			{
 				tag: "react-quiz",
-				getAttrs: (node) => {
-					if (typeof node === "string") return {};
-
-					const options = node.getAttribute("options");
+				getAttrs: (element) => {
+					if (typeof element === "string") return {};
 					return {
-						question: node.getAttribute("question"),
-						options: options ? JSON.parse(options) : [],
-						correctAnswer: parseInt(
-							node.getAttribute("correctAnswer") || "0",
-							10,
+						kind:
+							element.getAttribute("data-kind") === "shortAnswer"
+								? "shortAnswer"
+								: "mcq",
+						question: element.getAttribute("data-question") ?? "",
+						options: parseJsonArray(element.getAttribute("data-options"), [
+							"",
+							"",
+						]),
+						correctAnswer:
+							Number.parseInt(
+								element.getAttribute("data-correct-answer") ?? "0",
+								10,
+							) || 0,
+						acceptedAnswers: parseJsonArray(
+							element.getAttribute("data-accepted-answers"),
+							[""],
 						),
+						explanation: element.getAttribute("data-explanation") ?? "",
 					};
 				},
 			},
@@ -52,7 +84,27 @@ export const Quiz = Node.create({
 	},
 
 	renderHTML({ HTMLAttributes }) {
-		return ["react-quiz", mergeAttributes(HTMLAttributes)];
+		const {
+			id,
+			kind,
+			question,
+			options,
+			correctAnswer,
+			acceptedAnswers,
+			explanation,
+		} = HTMLAttributes;
+		return [
+			"react-quiz",
+			mergeAttributes({
+				"data-id": id,
+				"data-kind": kind,
+				"data-question": question,
+				"data-options": JSON.stringify(options),
+				"data-correct-answer": correctAnswer,
+				"data-accepted-answers": JSON.stringify(acceptedAnswers),
+				"data-explanation": explanation,
+			}),
+		];
 	},
 
 	addNodeView() {
@@ -62,12 +114,9 @@ export const Quiz = Node.create({
 	addCommands() {
 		return {
 			setQuiz:
-				() =>
-				({ commands }) => {
-					return commands.insertContent({
-						type: this.name,
-					});
-				},
+				(attributes = {}) =>
+				({ commands }) =>
+					commands.insertContent({ type: this.name, attrs: attributes }),
 		};
 	},
 });

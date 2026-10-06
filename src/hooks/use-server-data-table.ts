@@ -9,8 +9,8 @@ import type {
 } from "@tanstack/react-table";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import {
-	dataTableSearchSchema,
 	type DataTableSearchParams,
+	dataTableSearchSchema,
 } from "@/lib/dataTableSearchSchema";
 
 // ----------------------------------------------------------------------

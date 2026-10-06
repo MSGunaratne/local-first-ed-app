@@ -9,14 +9,22 @@ import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { getQueryClient } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
 import {
+	createUserFn,
 	deleteUserFn,
 	exportUsersFn,
 	getUserByIdFn,
 	getUsersFn,
+	updateUserFn,
 } from "./users.actions";
-import type { UserCreateInput, UserUpdateInput } from "./users.schema";
+import type { UserCreateInput, UserUpdateInput } from "./users.validation";
 
 // ----------------------------------------------------------------------
+
+function requirePhysicalConnection() {
+	if (!onlineManager.isOnline() || navigator.onLine === false) {
+		throw new Error("User account changes require an internet connection.");
+	}
+}
 
 export const userQueries = {
 	all: () => ["users"] as const,
@@ -48,20 +56,9 @@ export const userMutations = {
 	create: () =>
 		mutationOptions({
 			mutationFn: async (data: UserCreateInput) => {
-				const { enqueueAndFlushIfOnline } = await import(
-					"@/lib/mutation-queue"
-				);
+				requirePhysicalConnection();
 				const idempotencyKey = uuidv7();
-
-				await enqueueAndFlushIfOnline({
-					scope: "users",
-					type: "create",
-					serverFn: "createUser",
-					payload: { ...data, idempotencyKey },
-					idempotencyKey,
-				});
-
-				return { queued: true };
+				return createUserFn({ data: { ...data, idempotencyKey } });
 			},
 			onMutate: async (newUser) => {
 				const queryClient = getQueryClient();
@@ -78,20 +75,11 @@ export const userMutations = {
 	update: (id: string) =>
 		mutationOptions({
 			mutationFn: async (data: UserUpdateInput) => {
-				const { enqueueAndFlushIfOnline } = await import(
-					"@/lib/mutation-queue"
-				);
+				requirePhysicalConnection();
 				const idempotencyKey = uuidv7();
-
-				await enqueueAndFlushIfOnline({
-					scope: "users",
-					type: "update",
-					serverFn: "updateUser",
-					payload: { id, data, idempotencyKey },
-					idempotencyKey,
+				return updateUserFn({
+					data: { id, data: { ...data, idempotencyKey }, idempotencyKey },
 				});
-
-				return { queued: true };
 			},
 			onMutate: async (updatedData) => {
 				const queryClient = getQueryClient();
@@ -132,23 +120,10 @@ export const userMutations = {
 	delete: () =>
 		mutationOptions({
 			mutationFn: async (id: string) => {
+				requirePhysicalConnection();
 				const idempotencyKey = uuidv7();
-
-				if (onlineManager.isOnline()) {
-					await deleteUserFn({ data: { id, idempotencyKey } });
-					return { id };
-				}
-
-				const { enqueue } = await import("@/lib/mutation-queue");
-				await enqueue({
-					scope: "users",
-					type: "delete",
-					serverFn: "deleteUser",
-					payload: { id, idempotencyKey },
-					idempotencyKey,
-				});
-
-				return { queued: true, id };
+				await deleteUserFn({ data: { id, idempotencyKey } });
+				return { id };
 			},
 			onMutate: async (deletedId) => {
 				const queryClient = getQueryClient();

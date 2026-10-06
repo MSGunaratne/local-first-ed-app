@@ -135,8 +135,8 @@ CREATE TABLE `lesson` (
 	`title` text NOT NULL,
 	`subject` text NOT NULL,
 	`grade_level` integer NOT NULL,
+	`teacher_id` text,
 	`content_json` text,
-	`content_html` text,
 	`original_image_url` text,
 	`linked_curriculum_ids` text,
 	`estimated_duration` integer,
@@ -150,7 +150,8 @@ CREATE TABLE `lesson` (
 	`is_deleted` integer DEFAULT false NOT NULL,
 	`deleted_at` integer,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
+	FOREIGN KEY (`teacher_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE set null
 );
 --> statement-breakpoint
 CREATE TABLE `student_profile` (
@@ -163,6 +164,15 @@ CREATE TABLE `student_profile` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `student_profile_user_id_unique` ON `student_profile` (`user_id`);--> statement-breakpoint
+CREATE TABLE `sync_change` (
+	`revision` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`scope` text NOT NULL,
+	`entity_id` text NOT NULL,
+	`operation` text NOT NULL,
+	`data_json` text,
+	`changed_at` integer DEFAULT (unixepoch()) NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `account` (
 	`id` text PRIMARY KEY NOT NULL,
 	`account_id` text NOT NULL,

@@ -1,10 +1,20 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { UserEditForm } from "@/features/users/components/user-form";
 import { userQueries } from "@/features/users/users.queries";
 import { ensureQueryDataAfterRestore } from "@/lib/query-client";
 
 export const Route = createFileRoute("/_dashboard/users/$userId/edit")({
+	beforeLoad: ({ context, params }) => {
+		const role = context.session.user.role;
+		if (
+			role !== "admin" &&
+			role !== "super-admin" &&
+			context.session.user.id !== params.userId
+		) {
+			throw redirect({ to: "/users" });
+		}
+	},
 	loader: async ({ context: { queryClient }, params }) => {
 		await ensureQueryDataAfterRestore(
 			queryClient,

@@ -12,6 +12,7 @@ dist-ssr
 .vinxi
 __unconfig*
 todos.json
+.pnpm-store
 
 # Test and coverage output
 test-results/

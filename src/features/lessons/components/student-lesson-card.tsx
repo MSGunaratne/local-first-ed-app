@@ -18,6 +18,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { useLocalProgress } from "@/hooks/use-local-progress";
+import { m } from "@/paraglide/messages";
 import { SUBJECT_METADATA, Subject } from "@/types/lesson";
 import type { Lesson } from "../lessons.schema";
 
@@ -78,25 +79,26 @@ export function StudentLessonCard({ lesson }: StudentLessonCardProps) {
 				</CardDescription>
 			</CardContent>
 			<CardFooter className="pt-0 pb-5 px-6">
-				<div className="w-full flex items-center justify-between gap-4">
+				<div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 					<div className="flex items-center gap-3">
-						<div className="flex items-center text-sm text-muted-foreground">
-							<Clock className="mr-1.5 h-4 w-4 text-primary/60" />
-							{lesson.estimatedDuration} mins
-						</div>
+						{lesson.estimatedDuration ? (
+							<div className="flex items-center text-sm text-muted-foreground select-none">
+								<Clock className="mr-1.5 h-4 w-4 text-primary/60" />
+								{m.common_mins({ count: lesson.estimatedDuration })}
+							</div>
+						) : null}
 						<LessonStatusBadge lessonId={lesson.id} />
 					</div>
 					<Button
 						asChild
-						variant="secondary"
-						size="sm"
-						className="group-hover:translate-x-1 transition-transform"
+						variant="default"
+						className="h-11 sm:h-9 w-full sm:w-auto font-bold text-sm shadow-sm select-none"
 					>
 						<Link
 							to="/student/lessons/$lessonId"
 							params={{ lessonId: lesson.id }}
 						>
-							Start
+							{m.student_start_button()}
 						</Link>
 					</Button>
 				</div>

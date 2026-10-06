@@ -1,6 +1,5 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import { getSession } from "#/lib/auth/auth-functions";
-import { clearAuthQueryState } from "@/lib/query-client";
 import {
 	changePassword,
 	signInWithPassword,
@@ -46,9 +45,6 @@ export const authMutations = {
 				successMessage: "Signed out successfully!",
 				errorMessage: "Failed to sign out",
 				invalidates: [authQueries.sessionKey()],
-				onSettledCallback: () => {
-					void clearAuthQueryState();
-				},
 			},
 		}),
 	changePassword: () =>

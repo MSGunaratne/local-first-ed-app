@@ -1,6 +1,10 @@
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { asc, count, desc, eq } from "drizzle-orm";
-import { requireAdminSession, requireSession } from "#/lib/auth/access";
+import {
+	requireAdminSession,
+	requireSession,
+	requireTeacherOrAdminSession,
+} from "#/lib/auth/access";
 import { db } from "@/db";
 import type { QuickFilterConfig } from "@/db/utils/drizzle-filter";
 import {
@@ -11,12 +15,12 @@ import {
 import { NotFoundError, ServerError } from "@/db/utils/errors";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { throwIfAborted } from "@/lib/server-fn";
-import type { UserCreateInput, UserUpdateInput } from "./users.schema";
+import { users } from "./users.schema";
+import type { UserCreateInput, UserUpdateInput } from "./users.validation";
 import {
 	userCreateServerSchema,
-	users,
 	userUpdateServerSchema,
-} from "./users.schema";
+} from "./users.validation";
 
 // ----------------------------------------------------------------------
 
@@ -38,6 +42,7 @@ export async function getUsers(
 	params: DataTableQueryParams,
 	abortSignal?: AbortSignal,
 ) {
+	await requireTeacherOrAdminSession("Only staff can view users");
 	throwIfAborted(abortSignal);
 	const { pagination, sorting, columnFilters, globalFilter } = params;
 
@@ -93,6 +98,7 @@ export async function getUsers(
 export async function exportUsers(
 	params: Omit<DataTableQueryParams, "pagination">,
 ) {
+	await requireAdminSession("Only admins can export users");
 	const { sorting, columnFilters, globalFilter } = params;
 
 	const userFilters = buildDrizzleFilter(
@@ -109,6 +115,7 @@ export async function exportUsers(
 }
 
 export async function getUserById(id: string) {
+	await requireTeacherOrAdminSession("Only staff can view users");
 	const selectedUser = await db.query.user.findFirst({
 		where: eq(users.id, id),
 	});

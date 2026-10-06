@@ -10,7 +10,17 @@ import {
 	getCoreRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
-import { Edit, Eye, MoreHorizontal, Plus, Share, Trash2 } from "lucide-react";
+import {
+	AlertTriangle,
+	Check,
+	Clock,
+	Edit,
+	Eye,
+	MoreHorizontal,
+	Plus,
+	Share,
+	Trash2,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
 	DataTable,
@@ -165,6 +175,44 @@ function LessonsPage() {
 			columnHelper.accessor("createdAt", {
 				header: m.common_created_at(),
 				cell: ({ getValue }) => fDate(getValue()),
+			}),
+			columnHelper.accessor("syncStatus", {
+				header: "Sync",
+				cell: ({ getValue }) => {
+					const status = getValue();
+					if (status === "pending") {
+						return (
+							<Badge
+								variant="outline"
+								className="gap-1 text-xs bg-amber-500/10 text-amber-600 border-amber-200 hover:bg-amber-500/10 shrink-0 select-none"
+							>
+								<Clock className="h-3 w-3 animate-pulse" />
+								{m.lessons_sync_pending()}
+							</Badge>
+						);
+					}
+					if (status === "conflict") {
+						return (
+							<Badge
+								variant="destructive"
+								className="gap-1 text-xs shrink-0 select-none"
+							>
+								<AlertTriangle className="h-3 w-3" />
+								{m.lessons_sync_conflict()}
+							</Badge>
+						);
+					}
+					return (
+						<Badge
+							variant="outline"
+							className="gap-1 text-xs bg-green-500/10 text-green-600 border-green-200 hover:bg-green-500/10 shrink-0 select-none"
+						>
+							<Check className="h-3 w-3" />
+							{m.lessons_sync_confirmed()}
+						</Badge>
+					);
+				},
+				enableSorting: false,
 			}),
 			columnHelper.display({
 				id: "actions",

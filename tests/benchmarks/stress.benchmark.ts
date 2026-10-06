@@ -179,16 +179,22 @@ type OutboxRow = {
 	server_fn: string;
 	payload_json: string;
 	idempotency_key: string;
-	status: "pending" | "in-flight" | "failed";
+	status: "pending" | "inFlight" | "blocked" | "conflict";
+	entity_id: string | null;
 	created_at: number;
+	sequence: number;
 	retry_count: number;
+	next_attempt_at: number;
+	lease_owner: string | null;
+	lease_expires_at: number | null;
+	error_kind: string | null;
 	last_error: string | null;
+	remote_record_json: string | null;
 };
 
 const outboxRows: OutboxRow[] = [];
 
-vi.mock("@/lib/local-db/init", () => ({
-	execute: vi.fn(async (sql: string, params: unknown[] = []) => {
+async function executeQueueSql(sql: string, params: readonly unknown[] = []) {
 		if (sql.includes("INSERT INTO _outbox")) {
 			outboxRows.push({
 				id: String(params[0]),
@@ -197,10 +203,17 @@ vi.mock("@/lib/local-db/init", () => ({
 				server_fn: String(params[3]),
 				payload_json: String(params[4]),
 				idempotency_key: String(params[5]),
-				status: params[6] as OutboxRow["status"],
+				status: "pending",
+				entity_id: params[6] == null ? null : String(params[6]),
 				created_at: Number(params[7]),
-				retry_count: Number(params[8]),
-				last_error: params[9] == null ? null : String(params[9]),
+				sequence: Number(params[8]),
+				retry_count: 0,
+				next_attempt_at: Number(params[9]),
+				lease_owner: null,
+				lease_expires_at: null,
+				error_kind: null,
+				last_error: null,
+				remote_record_json: null,
 			});
 			return;
 		}
@@ -211,47 +224,60 @@ vi.mock("@/lib/local-db/init", () => ({
 			return;
 		}
 
-		if (sql.includes("DELETE FROM _outbox WHERE id IN")) {
-			for (const id of params) {
-				const index = outboxRows.findIndex((row) => row.id === id);
-				if (index >= 0) outboxRows.splice(index, 1);
-			}
-			return;
-		}
-
 		if (sql.includes("DELETE FROM _outbox;")) {
 			outboxRows.length = 0;
 			return;
 		}
 
-		if (sql.includes("UPDATE _outbox SET status = 'in-flight'")) {
-			const row = outboxRows.find((item) => item.id === params[0]);
-			if (row) row.status = "in-flight";
-			return;
-		}
-
-		if (sql.includes("SET status = 'failed'")) {
-			const row = outboxRows.find((item) => item.id === params[1]);
-			if (row) {
-				row.status = "failed";
-				row.retry_count += 1;
-				row.last_error = String(params[0]);
+		if (sql.includes("SET status = 'inFlight', lease_owner")) {
+			const row = outboxRows.find((item) => item.id === params[2]);
+			if (row?.status === "pending") {
+				row.status = "inFlight";
+				row.lease_owner = String(params[0]);
+				row.lease_expires_at = Number(params[1]);
 			}
 			return;
 		}
 
-		if (sql.includes("UPDATE _outbox SET retry_count = ?")) {
-			const row = outboxRows.find((item) => item.id === params[1]);
-			if (row) row.retry_count = Number(params[0]);
+		if (sql.includes("SET status = ?, retry_count = ?")) {
+			const row = outboxRows.find((item) => item.id === params[6]);
+			if (row) {
+				row.status = params[0] as OutboxRow["status"];
+				row.retry_count = Number(params[1]);
+				row.next_attempt_at = Number(params[2]);
+				row.lease_owner = null;
+				row.lease_expires_at = null;
+				row.error_kind = String(params[3]);
+				row.last_error = String(params[4]);
+				row.remote_record_json = params[5] == null ? null : String(params[5]);
+			}
 			return;
 		}
-	}),
-	query: vi.fn(async () => outboxRows),
-}));
+	}
 
-vi.mock("@/lib/local-db", () => ({
-	markSynced: vi.fn(),
-	purgeSynced: vi.fn(),
+async function queryQueueSql<T>(sql: string, params: readonly unknown[] = []) {
+	if (sql.includes("COALESCE(MAX(sequence)")) {
+		return [{ value: Math.max(0, ...outboxRows.map((row) => row.sequence)) + 1 }] as T[];
+	}
+	if (sql.includes("lease_owner = ?") && sql.includes("status = 'inFlight'")) {
+		return outboxRows.filter(
+			(row) => row.id === params[0] && row.lease_owner === params[1],
+		) as T[];
+	}
+	return [...outboxRows].sort((a, b) => a.sequence - b.sequence) as T[];
+}
+
+vi.mock("@/lib/local-db/init", () => ({
+	execute: vi.fn(executeQueueSql),
+	query: vi.fn(queryQueueSql),
+	transaction: vi.fn(
+		async (
+			fn: (
+				exec: typeof executeQueueSql,
+				qry: typeof queryQueueSql,
+			) => Promise<void>,
+		) => fn(executeQueueSql, queryQueueSql),
+	),
 }));
 
 beforeEach(() => {
@@ -357,6 +383,10 @@ async function benchmarkQueueStress() {
 		const remainingAfterFirstPass = outboxRows.length;
 
 		registerServerFn("submitStudentProgressEvent", async () => ({ success: true }));
+		for (const row of outboxRows) {
+			row.status = "pending";
+			row.next_attempt_at = 0;
+		}
 		const secondPass = await flushMutationQueue();
 		const remainingAfterSecondPass = outboxRows.length;
 

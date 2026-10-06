@@ -1,16 +1,21 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import type { QueryClient } from "@tanstack/react-query";
+import { type QueryClient, useQuery } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,
 	Scripts,
+	useRouterState,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { useEffect } from "react";
 import { getLocale } from "#/paraglide/runtime";
 import { AppError } from "@/components/app-error";
+import { LocalFirstStatusBanner } from "@/components/pwa/local-first-status-banner";
 import { ReloadPrompt } from "@/components/pwa/reload-prompt";
 import { Toaster } from "@/components/ui/sonner";
 import { AnalyticsProvider } from "@/features/analytics/components/analytics-provider";
+import { authQueries } from "@/features/auth/auth.queries";
+import { warmOfflineRoute } from "@/lib/query-client";
 
 import { NotFound } from "../components/not-found";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
@@ -111,34 +116,53 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+	const { queryClient } = Route.useRouteContext();
 	return (
 		<html lang={getLocale()} suppressHydrationWarning>
 			<head>
+				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: static bootstrap has no user-controlled input */}
 				<script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
 				<HeadContent />
 			</head>
 			<body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
-				<TanStackQueryProvider>
+				<TanStackQueryProvider queryClient={queryClient}>
+					<LocalFirstStatusBanner />
+					<OfflineRouteWarmer />
 					<AnalyticsProvider>
 						{children}
 						<Toaster />
 						<ReloadPrompt />
-						<TanStackDevtools
-							config={{
-								position: "bottom-right",
-							}}
-							plugins={[
-								{
-									name: "Tanstack Router",
-									render: <TanStackRouterDevtoolsPanel />,
-								},
-								TanStackQueryDevtools,
-							]}
-						/>
+						<DevelopmentTools />
 					</AnalyticsProvider>
 				</TanStackQueryProvider>
 				<Scripts />
 			</body>
 		</html>
 	);
+}
+
+function DevelopmentTools() {
+	if (!import.meta.env.DEV) return null;
+	return (
+		<TanStackDevtools
+			config={{ position: "bottom-right" }}
+			plugins={[
+				{
+					name: "Tanstack Router",
+					render: <TanStackRouterDevtoolsPanel />,
+				},
+				TanStackQueryDevtools,
+			]}
+		/>
+	);
+}
+
+function OfflineRouteWarmer() {
+	const { data: session } = useQuery(authQueries.session());
+	const href = useRouterState({ select: (state) => state.location.href });
+	useEffect(() => {
+		if (session?.user)
+			void warmOfflineRoute(new URL(href, window.location.origin).href);
+	}, [href, session?.user]);
+	return null;
 }

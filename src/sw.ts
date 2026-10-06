@@ -3,170 +3,276 @@
 import { BackgroundSyncPlugin } from "workbox-background-sync";
 import { ExpirationPlugin } from "workbox-expiration";
 import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
-import { offlineFallback } from "workbox-recipes";
 import { NavigationRoute, registerRoute } from "workbox-routing";
-import { CacheFirst, NetworkFirst, NetworkOnly } from "workbox-strategies";
+import { CacheFirst, NetworkOnly } from "workbox-strategies";
 import { SYNC_SCOPES } from "./types/sync";
 
 declare let self: ServiceWorkerGlobalScope;
+
 const REPLAYED_MUTATIONS_EVENT = "OFFLINE_MUTATIONS_REPLAYED";
+const PUBLIC_PAGE_CACHE = "public-pages-v2";
+const IDENTITY_METADATA_CACHE = "offline-identity-v2";
+const IDENTITY_METADATA_URL = "/__offline_identity__";
+const LEGACY_CACHES = [
+	"pages-cache",
+	"api-cache",
+	"static-assets",
+	"images-cache",
+	"ocr-data-cache",
+];
+const AUTH_PAGE_LIMIT = 15;
+const PUBLIC_PAGE_LIMIT = 10;
+const PAGE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+let activeIdentity: string | null = null;
 
-async function notifyReplaySuccess() {
-	const clientList = await self.clients.matchAll({
-		type: "window",
-		includeUncontrolled: true,
-	});
-
-	for (const client of clientList) {
-		client.postMessage({
-			type: REPLAYED_MUTATIONS_EVENT,
-			queryScopes: SYNC_SCOPES,
-		});
-	}
-}
-
-// Precache: filter out large OCR data files for lazy loading
-
-const fullManifest = self.__WB_MANIFEST;
-const filteredManifest = fullManifest.filter((entry) => {
-	const url = typeof entry === "string" ? entry : entry.url;
-	return !url.includes("ocr-data/");
-});
-precacheAndRoute(filteredManifest);
+// Install only the core shell. Heavy feature assets are cached after first use,
+// so route-level code splitting still reduces initial installation cost.
+precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
-
-// Prefer explicit activation claim for predictable update behavior across tabs.
-self.addEventListener("activate", (event) => {
-	event.waitUntil(self.clients.claim());
-});
-
-// Message handler: skip waiting + flush mutation queue
-self.addEventListener("message", (event) => {
-	if (event.data && event.data.type === "SKIP_WAITING") {
-		self.skipWaiting();
-	}
-
-	if (event.data && event.data.type === "MUTATIONS_FLUSHED") {
-		void notifyReplaySuccess();
-	}
-});
-
-// ----------------------------------------------------------------------
-// Navigation requests: NetworkFirst with offline fallback
-// Caches SSR-rendered HTML pages for offline access
-// ----------------------------------------------------------------------
-
-registerRoute(
-	new NavigationRoute(
-		new NetworkFirst({
-			cacheName: "pages-cache",
-			networkTimeoutSeconds: 3,
-			plugins: [
-				new ExpirationPlugin({
-					maxEntries: 50,
-					maxAgeSeconds: 24 * 60 * 60, // 24 hours
-				}),
-			],
-		}),
-	),
-);
-
-// ----------------------------------------------------------------------
-// Server functions / API requests: NetworkFirst with timeout
-// Matches TanStack Start server function GET endpoints
-// ----------------------------------------------------------------------
 
 registerRoute(
 	({ request, url }) =>
-		request.method === "GET" &&
-		!url.pathname.startsWith("/api/sync/") &&
-		(url.pathname.startsWith("/_server") || url.pathname.includes("/api/")),
-	new NetworkFirst({
-		cacheName: "api-cache",
-		networkTimeoutSeconds: 3,
+		url.origin === self.location.origin &&
+		["script", "style", "worker"].includes(request.destination),
+	new CacheFirst({
+		cacheName: "app-runtime-assets-v1",
 		plugins: [
 			new ExpirationPlugin({
-				maxEntries: 100,
-				maxAgeSeconds: 24 * 60 * 60, // 24 hours
+				maxEntries: 80,
+				maxAgeSeconds: 30 * 24 * 60 * 60,
 			}),
 		],
 	}),
 );
 
-// ----------------------------------------------------------------------
-// Analytics Ingestion: NetworkOnly + Background Sync
-// ----------------------------------------------------------------------
+registerRoute(
+	({ url }) =>
+		url.origin === self.location.origin &&
+		url.pathname.startsWith("/ocr-data/"),
+	new CacheFirst({
+		cacheName: "ocr-runtime-assets-v1",
+		plugins: [
+			new ExpirationPlugin({
+				maxEntries: 8,
+				maxAgeSeconds: 90 * 24 * 60 * 60,
+			}),
+		],
+	}),
+);
 
-const bgSyncPlugin = new BackgroundSyncPlugin("analytics-queue", {
-	maxRetentionTime: 24 * 60, // Retry for max of 24 Hours (specified in minutes)
+function authCacheName(identity: string) {
+	return `auth-pages-v2-${identity}`;
+}
+
+function normalizedPath(pathname: string) {
+	return pathname.replace(/^\/(en|si)(?=\/|$)/, "") || "/";
+}
+
+function isPublicNavigation(pathname: string) {
+	const path = normalizedPath(pathname);
+	return (
+		path === "/" ||
+		path === "/sign-in" ||
+		path === "/sign-up" ||
+		path === "/student" ||
+		path.startsWith("/student/")
+	);
+}
+
+async function getIdentity() {
+	if (activeIdentity) return activeIdentity;
+	const cache = await caches.open(IDENTITY_METADATA_CACHE);
+	const response = await cache.match(IDENTITY_METADATA_URL);
+	activeIdentity = (await response?.text()) || "anonymous";
+	return activeIdentity;
+}
+
+async function setIdentity(identity: string) {
+	activeIdentity = identity;
+	const cache = await caches.open(IDENTITY_METADATA_CACHE);
+	await cache.put(IDENTITY_METADATA_URL, new Response(identity));
+}
+
+async function cacheHtml(
+	cacheName: string,
+	request: Request,
+	response: Response,
+) {
+	if (
+		!response.ok ||
+		!response.headers.get("content-type")?.includes("text/html")
+	) {
+		return;
+	}
+	const headers = new Headers(response.headers);
+	headers.set("x-offline-cached-at", String(Date.now()));
+	const cached = new Response(await response.clone().blob(), {
+		status: response.status,
+		statusText: response.statusText,
+		headers,
+	});
+	const cache = await caches.open(cacheName);
+	await cache.put(request, cached);
+	await prunePageCache(
+		cacheName,
+		cacheName === PUBLIC_PAGE_CACHE ? PUBLIC_PAGE_LIMIT : AUTH_PAGE_LIMIT,
+	);
+}
+
+async function prunePageCache(cacheName: string, maxEntries: number) {
+	const cache = await caches.open(cacheName);
+	const requests = await cache.keys();
+	const entries = await Promise.all(
+		requests.map(async (request) => {
+			const response = await cache.match(request);
+			return {
+				request,
+				cachedAt: Number(response?.headers.get("x-offline-cached-at") ?? 0),
+			};
+		}),
+	);
+	const now = Date.now();
+	for (const entry of entries) {
+		if (!entry.cachedAt || now - entry.cachedAt > PAGE_MAX_AGE_MS) {
+			await cache.delete(entry.request);
+		}
+	}
+	const retained = entries
+		.filter(
+			(entry) => entry.cachedAt && now - entry.cachedAt <= PAGE_MAX_AGE_MS,
+		)
+		.sort((a, b) => b.cachedAt - a.cachedAt);
+	for (const entry of retained.slice(maxEntries))
+		await cache.delete(entry.request);
+}
+
+async function fetchNavigation(request: Request) {
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), 3_000);
+	try {
+		return await fetch(new Request(request, { signal: controller.signal }));
+	} finally {
+		clearTimeout(timeout);
+	}
+}
+
+async function handleNavigation(request: Request, url: URL) {
+	const publicRoute = isPublicNavigation(url.pathname);
+	const identity = await getIdentity();
+	const cacheName = publicRoute
+		? PUBLIC_PAGE_CACHE
+		: identity !== "anonymous"
+			? authCacheName(identity)
+			: null;
+
+	try {
+		const response = await fetchNavigation(request);
+		if (cacheName) await cacheHtml(cacheName, request, response);
+		return response;
+	} catch {
+		if (cacheName) {
+			const exact = await (await caches.open(cacheName)).match(request, {
+				ignoreSearch: false,
+			});
+			if (exact) return exact;
+		}
+		return (
+			(await caches.match("/offline.html")) ??
+			new Response("Offline", { status: 503 })
+		);
+	}
+}
+
+registerRoute(
+	new NavigationRoute(({ request, url }) => handleNavigation(request, url)),
+);
+
+const analyticsSync = new BackgroundSyncPlugin("analytics-queue", {
+	maxRetentionTime: 24 * 60,
+	onSync: async ({ queue }) => {
+		await queue.replayRequests();
+		const clients = await self.clients.matchAll({
+			type: "window",
+			includeUncontrolled: true,
+		});
+		for (const client of clients) {
+			client.postMessage({
+				type: REPLAYED_MUTATIONS_EVENT,
+				queryScopes: SYNC_SCOPES,
+			});
+		}
+	},
 });
 
 registerRoute(
 	({ url, request }) =>
 		request.method === "POST" && url.pathname === "/api/analytics/ingest",
-	new NetworkOnly({
-		plugins: [bgSyncPlugin],
-	}),
+	new NetworkOnly({ plugins: [analyticsSync] }),
 );
 
-// ----------------------------------------------------------------------
-// Static assets: CacheFirst for performance
-// ----------------------------------------------------------------------
+async function warmAuthenticatedRoute(urlValue: unknown) {
+	if (typeof urlValue !== "string") return;
+	const url = new URL(urlValue, self.location.origin);
+	if (url.origin !== self.location.origin || isPublicNavigation(url.pathname))
+		return;
+	const identity = await getIdentity();
+	if (identity === "anonymous") return;
+	const request = new Request(url.href, {
+		headers: { Accept: "text/html" },
+		credentials: "include",
+	});
+	const response = await fetchNavigation(request);
+	await cacheHtml(authCacheName(identity), request, response);
+}
 
-registerRoute(
-	({ request }) =>
-		request.destination === "style" ||
-		request.destination === "script" ||
-		request.destination === "font",
-	new CacheFirst({
-		cacheName: "static-assets",
-		plugins: [
-			new ExpirationPlugin({
-				maxEntries: 100,
-				maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
-			}),
-		],
-	}),
-);
+self.addEventListener("message", (event) => {
+	const message = event.data as Record<string, unknown> | null;
+	const reply = () => event.ports[0]?.postMessage({ ok: true });
+	if (!message) return;
+	if (message.type === "SKIP_WAITING") {
+		void self.skipWaiting().then(reply);
+		return;
+	}
+	if (message.type === "MUTATIONS_FLUSHED") {
+		const task = self.clients
+			.matchAll({ type: "window", includeUncontrolled: true })
+			.then((clients) => {
+				for (const client of clients) {
+					client.postMessage({
+						type: REPLAYED_MUTATIONS_EVENT,
+						queryScopes: SYNC_SCOPES,
+					});
+				}
+			});
+		event.waitUntil(task.finally(reply));
+		return;
+	}
 
-// ----------------------------------------------------------------------
-// Images: CacheFirst with longer expiration
-// ----------------------------------------------------------------------
+	const task = (async () => {
+		if (
+			message.type === "SET_CACHE_IDENTITY" &&
+			typeof message.identity === "string"
+		) {
+			await setIdentity(message.identity);
+		} else if (
+			message.type === "CLEAR_CACHE_IDENTITY" &&
+			typeof message.identity === "string"
+		) {
+			await caches.delete(authCacheName(message.identity));
+			if ((await getIdentity()) === message.identity)
+				await setIdentity("anonymous");
+		} else if (message.type === "WARM_AUTH_ROUTE") {
+			await warmAuthenticatedRoute(message.url);
+		}
+	})();
+	event.waitUntil(task.finally(reply));
+});
 
-registerRoute(
-	({ request }) => request.destination === "image",
-	new CacheFirst({
-		cacheName: "images-cache",
-		plugins: [
-			new ExpirationPlugin({
-				maxEntries: 20,
-				maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-			}),
-		],
-	}),
-);
-
-// ----------------------------------------------------------------------
-// OCR data: CacheFirst, loaded on-demand (not precached)
-// ----------------------------------------------------------------------
-
-registerRoute(
-	({ url }) => url.pathname.includes("/ocr-data/"),
-	new CacheFirst({
-		cacheName: "ocr-data-cache",
-		plugins: [
-			new ExpirationPlugin({
-				maxEntries: 10,
-				maxAgeSeconds: 90 * 24 * 60 * 60, // 90 days
-			}),
-		],
-	}),
-);
-
-// ----------------------------------------------------------------------
-// Offline fallback: Show friendly page when navigating to uncached pages
-// ----------------------------------------------------------------------
-
-offlineFallback({
-	pageFallback: "/offline.html",
+self.addEventListener("activate", (event) => {
+	event.waitUntil(
+		Promise.all([
+			self.clients.claim(),
+			...LEGACY_CACHES.map((cacheName) => caches.delete(cacheName)),
+		]),
+	);
 });

@@ -5,9 +5,10 @@ import * as analyticsSchema from "@/features/analytics/analytics.schema";
 import * as classSchema from "@/features/classes/classes.schema";
 import * as lessonSchema from "@/features/lessons/lessons.schema";
 import * as studentSchema from "@/features/students/students.schema";
+import * as syncSchema from "@/features/sync/sync.schema";
 import * as userSchema from "@/features/users/users.schema";
 
-export const db = drizzle(env.ed_app_db, {
+export const db = drizzle(env.ed_app_db_v2, {
 	schema: {
 		user: userSchema.users,
 		session: userSchema.sessions,
@@ -17,6 +18,7 @@ export const db = drizzle(env.ed_app_db, {
 		...classSchema,
 		...lessonSchema,
 		...studentSchema,
+		...syncSchema,
 		...relations,
 	},
 });

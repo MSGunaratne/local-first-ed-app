@@ -78,9 +78,11 @@ export function workboxServiceWorkerPlugin(): Plugin {
 				swSrc: swDest,
 				swDest,
 				globDirectory: outputDir,
-				globPatterns: ["**/*.{css,html,ico,js,json,png,svg,webmanifest,webp,woff,woff2}"],
-				globIgnores: [SW_FILENAME, "**/ocr-data/**"],
-				maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+				globPatterns: [
+					"**/*.{css,html,ico,png,svg,webmanifest,webp,woff,woff2}",
+				],
+				globIgnores: [SW_FILENAME, "ocr-data/**"],
+				maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
 			});
 
 			if (warnings.length > 0) {

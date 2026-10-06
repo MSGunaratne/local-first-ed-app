@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Subject } from "@/types/lesson";
-import { findMatches } from "./content-mapper";
+import { chooseSubjectRecommendation, findMatches } from "./content-mapper";
 
 describe("Content Mapper Matching Logic", () => {
 	it("finds matches by exact keywords in English", async () => {
@@ -85,5 +85,23 @@ describe("Content Mapper Matching Logic", () => {
 		);
 
 		expect(matches).toHaveLength(0);
+	});
+
+	it("recommends a clearly stronger subject only when the current subject is weak", () => {
+		expect(
+			chooseSubjectRecommendation(Subject.MATH, {
+				[Subject.MATH]: 1.2,
+				[Subject.ENGLISH]: 0.8,
+				[Subject.ICT]: 6.4,
+			}),
+		).toMatchObject({ subject: Subject.ICT, currentScore: 1.2, score: 6.4 });
+
+		expect(
+			chooseSubjectRecommendation(Subject.MATH, {
+				[Subject.MATH]: 4.1,
+				[Subject.ENGLISH]: 0.5,
+				[Subject.ICT]: 5.8,
+			}),
+		).toBeNull();
 	});
 });

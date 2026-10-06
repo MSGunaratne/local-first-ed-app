@@ -23,8 +23,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SUBJECT_METADATA, Subject } from "@/types/lesson";
 import { m } from "@/paraglide/messages";
+import { SUBJECT_METADATA, Subject } from "@/types/lesson";
 import { fNumber } from "@/utils/format-number";
 
 type FeedbackItem = {

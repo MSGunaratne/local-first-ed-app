@@ -11,6 +11,10 @@ import {
 	getDrizzleSortColumn,
 } from "@/db/utils/drizzle-filter";
 import { ConflictError, NotFoundError, ServerError } from "@/db/utils/errors";
+import {
+	getServerRevision,
+	withServerRevision,
+} from "@/features/sync/sync.service";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import type { ClassInsert } from "./classes.schema";
 import { classes, classInsertSchema } from "./classes.schema";
@@ -27,6 +31,7 @@ const classQuickFilterConfig: QuickFilterConfig<typeof classes> = {
 // ----------------------------------------------------------------------
 
 export async function getClasses(params: DataTableQueryParams) {
+	await requireTeacherOrAdminSession("Only staff can view classes");
 	const { pagination, sorting, columnFilters, globalFilter } = params;
 
 	const page = pagination?.pageIndex ?? 0;
@@ -84,13 +89,14 @@ export async function getClasses(params: DataTableQueryParams) {
 }
 
 export async function getClassById(id: string) {
+	await requireTeacherOrAdminSession("Only staff can view classes");
 	const selectedClass = await db.query.classes.findFirst({
 		where: and(eq(classes.id, id), isNull(classes.deletedAt)),
 	});
 	if (!selectedClass) {
 		throw new NotFoundError("Class", id);
 	}
-	return selectedClass;
+	return withServerRevision("classes", selectedClass);
 }
 
 export async function createClass(data: ClassInsert & { id?: string }) {
@@ -110,6 +116,7 @@ export async function createClass(data: ClassInsert & { id?: string }) {
 		.returning();
 
 	if (!result[0]) throw new ServerError("Failed to create class");
+	return withServerRevision("classes", result[0]);
 
 	// throw redirect({
 	// 	to: "/classes",
@@ -120,7 +127,7 @@ export async function createClass(data: ClassInsert & { id?: string }) {
 export async function updateClass(
 	id: string,
 	data: Partial<ClassInsert>,
-	expectedUpdatedAt?: Date | null,
+	expectedRevision?: number,
 ) {
 	const session = await requireTeacherOrAdminSession(
 		"Only teachers and admins can update classes",
@@ -140,13 +147,11 @@ export async function updateClass(
 		"You can only update classes assigned to you",
 	);
 
-	if (
-		expectedUpdatedAt &&
-		existingClass.updatedAt.getTime() !== new Date(expectedUpdatedAt).getTime()
-	) {
+	const currentRevision = await getServerRevision("classes", id);
+	if (expectedRevision !== undefined && expectedRevision !== currentRevision) {
 		throw new ConflictError(
 			"This class was modified by another user. Please refresh and try again.",
-			existingClass,
+			{ ...existingClass, serverRevision: currentRevision },
 		);
 	}
 
@@ -161,13 +166,14 @@ export async function updateClass(
 	if (!updatedClass) {
 		throw new ServerError("Failed to update class");
 	}
+	return withServerRevision("classes", updatedClass);
 	// throw redirect({
 	// 	to: "/classes",
 	// 	search: {},
 	// });
 }
 
-export async function deleteClass(id: string) {
+export async function deleteClass(id: string, expectedRevision?: number) {
 	const session = await requireTeacherOrAdminSession(
 		"Only teachers and admins can delete classes",
 	);
@@ -185,16 +191,64 @@ export async function deleteClass(id: string) {
 		session.user.role,
 		"You can only delete classes assigned to you",
 	);
+	const currentRevision = await getServerRevision("classes", id);
+	if (expectedRevision !== undefined && expectedRevision !== currentRevision) {
+		throw new ConflictError(
+			"This class was modified by another user. Please refresh and try again.",
+			{ ...existingClass, serverRevision: currentRevision },
+		);
+	}
 
 	const now = new Date();
 	await db
 		.update(classes)
 		.set({ deletedAt: now, updatedAt: now })
 		.where(eq(classes.id, id));
+	return {
+		id,
+		deleted: true,
+		serverRevision: await getServerRevision("classes", id),
+	};
 
 	// Drizzle delete doesn't return success status in simple run, but if it throws it fails.
 	// We can check rowsAffected if we used execute() or returned valid info,
 	// but 'result' depends on driver.
 	// For sqlite with drizzle-orm/libsql or better-sqlite3:
 	// usually it just works or throws.
+}
+
+export async function restoreClass(
+	id: string,
+	data: ClassInsert,
+	expectedRevision?: number,
+) {
+	const session = await requireTeacherOrAdminSession(
+		"Only teachers and admins can restore classes",
+	);
+	const existingClass = await db.query.classes.findFirst({
+		where: eq(classes.id, id),
+	});
+	if (!existingClass) throw new NotFoundError("Class", id);
+	requireTeacherOwnershipOrAdmin(
+		existingClass.teacherId,
+		session.user.id,
+		session.user.role,
+		"You can only restore classes assigned to you",
+	);
+	const currentRevision = await getServerRevision("classes", id);
+	if (expectedRevision !== undefined && expectedRevision !== currentRevision) {
+		throw new ConflictError(
+			"This deleted class changed before it could be restored.",
+			{ ...existingClass, serverRevision: currentRevision },
+		);
+	}
+	const validatedData = classInsertSchema.parse(data);
+	const { teacherId: _ignoredTeacherId, ...safeData } = validatedData;
+	const [restoredClass] = await db
+		.update(classes)
+		.set({ ...safeData, deletedAt: null, updatedAt: new Date() })
+		.where(eq(classes.id, id))
+		.returning();
+	if (!restoredClass) throw new ServerError("Failed to restore class");
+	return withServerRevision("classes", restoredClass);
 }

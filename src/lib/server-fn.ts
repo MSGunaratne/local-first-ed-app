@@ -1,80 +1,82 @@
 import { createMiddleware } from "@tanstack/react-start";
-import { z } from "zod";
-import { checkIdempotencyKey, recordIdempotencyKey } from "@/lib/idempotency";
+import { ConflictError } from "@/db/utils/errors";
+import {
+	claimIdempotencyKey,
+	completeIdempotencyKey,
+	hashIdempotencyRequest,
+	releaseIdempotencyKey,
+} from "@/lib/idempotency";
 
-type ServerFnContext = {
-	signal: AbortSignal;
-};
+type ServerFnContext = { signal: AbortSignal };
 
-const idempotencyBodySchema = z.object({
-	idempotencyKey: z.string().optional(),
-});
+function findIdempotencyKey(value: unknown, depth = 0): string | undefined {
+	if (depth > 5 || typeof value !== "object" || value === null) return;
+	if ("idempotencyKey" in value && typeof value.idempotencyKey === "string") {
+		return value.idempotencyKey;
+	}
+	for (const nested of Object.values(value)) {
+		const key = findIdempotencyKey(nested, depth + 1);
+		if (key) return key;
+	}
+}
 
-/**
- * Throws a standard AbortError when a request is already cancelled.
- */
 export function throwIfAborted(signal?: AbortSignal) {
 	signal?.throwIfAborted();
 }
 
-/**
- * Base middleware for all server functions.
- * Provides a properly typed context containing the AbortSignal from the request.
- */
 export const baseMiddleware = createMiddleware().server(
 	async ({ next, request }) => {
 		throwIfAborted(request.signal);
-
 		return next({
-			context: {
-				signal: request.signal,
-			} satisfies ServerFnContext,
+			context: { signal: request.signal } satisfies ServerFnContext,
 		});
 	},
 );
 
-/**
- * Idempotency middleware for mutation server functions.
- * Reads an `idempotencyKey` from the input data and deduplicates requests.
- */
 export const idempotentMiddleware = createMiddleware().server(
 	async ({ next, request }) => {
 		throwIfAborted(request.signal);
 
-		// Extract idempotency key from the request body if present.
-		// Clone the request so the body can still be read downstream.
 		let idempotencyKey: string | undefined;
+		let requestHash: string | undefined;
 		try {
-			const cloned = request.clone();
-			const body = await cloned.text();
+			const body = await request.clone().text();
 			if (body) {
-				idempotencyKey = idempotencyBodySchema.parse(
-					JSON.parse(body),
-				).idempotencyKey;
+				idempotencyKey = findIdempotencyKey(JSON.parse(body));
+				if (idempotencyKey) requestHash = await hashIdempotencyRequest(body);
 			}
 		} catch {
-			// If parsing fails, just skip idempotency check
+			// Inputs without a readable top-level key continue without deduplication.
 		}
 
-		if (idempotencyKey) {
-			const cached = await checkIdempotencyKey(idempotencyKey);
-			if (cached !== undefined) {
-				// This mutation was already processed — return the cached result
-				return cached as never;
+		if (idempotencyKey && requestHash) {
+			const claim = await claimIdempotencyKey(idempotencyKey, requestHash);
+			if (claim.status === "completed") return claim.response as never;
+			if (claim.status === "in_progress") {
+				throw new ConflictError(
+					"This operation is already being processed. Please wait before retrying.",
+				);
+			}
+			if (claim.status === "key_reused") {
+				throw new ConflictError(
+					"This idempotency key was already used for a different operation.",
+				);
 			}
 		}
 
-		const result = await next({
-			context: {
-				signal: request.signal,
-			} satisfies ServerFnContext,
-		});
-
-		// Record the successful result for deduplication
-		if (idempotencyKey) {
-			await recordIdempotencyKey(idempotencyKey, result);
+		try {
+			const result = await next({
+				context: { signal: request.signal } satisfies ServerFnContext,
+			});
+			if (idempotencyKey && requestHash) {
+				await completeIdempotencyKey(idempotencyKey, requestHash, result);
+			}
+			return result;
+		} catch (error) {
+			if (idempotencyKey && requestHash) {
+				await releaseIdempotencyKey(idempotencyKey, requestHash);
+			}
+			throw error;
 		}
-
-		return result;
 	},
 );

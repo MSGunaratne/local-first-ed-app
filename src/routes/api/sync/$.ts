@@ -1,131 +1,95 @@
-// ----------------------------------------------------------------------
-// Unified Sync API: Provides incremental data for offline-first clients
-// ----------------------------------------------------------------------
-
 import { createFileRoute } from "@tanstack/react-router";
-import { and, asc, eq, gt, or } from "drizzle-orm";
+import { and, asc, eq, gt } from "drizzle-orm";
 import { db } from "@/db";
-import { classes } from "@/features/classes/classes.schema";
-import { lessons } from "@/features/lessons/lessons.schema";
-import { users } from "@/features/users/users.schema";
+import { normalizeError } from "@/db/utils/errors";
+import { syncChanges } from "@/features/sync/sync.schema";
 import { requireTeacherOrAdminSession } from "@/lib/auth/access";
+import { parseSyncCursor } from "@/lib/sync-cursor";
 import {
-	parseSyncCursor,
-	type SyncCursor,
-	serializeSyncCursor,
-} from "@/lib/sync-cursor";
+	SYNC_SCOPES,
+	type SyncChange,
+	type SyncPullResponse,
+	type SyncScope,
+} from "@/types/sync";
 
-const DEFAULT_LIMIT = 500;
-const MAX_LIMIT = 1000;
+const DEFAULT_LIMIT = 250;
+const MAX_LIMIT = 500;
 
-function getLimit(url: URL) {
-	const requested = Number.parseInt(url.searchParams.get("limit") ?? "", 10);
-	if (!Number.isFinite(requested) || requested <= 0) {
-		return DEFAULT_LIMIT;
-	}
-	return Math.min(requested, MAX_LIMIT);
+function parseLimit(url: URL) {
+	const value = Number(url.searchParams.get("limit"));
+	return Number.isSafeInteger(value) && value > 0
+		? Math.min(value, MAX_LIMIT)
+		: DEFAULT_LIMIT;
 }
 
-function getCursorWhere(
-	table: typeof lessons | typeof classes | typeof users,
-	cursor: SyncCursor | null,
-) {
-	if (!cursor) {
-		return undefined;
-	}
+function isSyncScope(value: string): value is SyncScope {
+	return (SYNC_SCOPES as readonly string[]).includes(value);
+}
 
-	const updatedAt = new Date(cursor.updatedAt);
-	if (Number.isNaN(updatedAt.getTime())) {
-		return undefined;
+function parseData(value: string | null) {
+	if (!value) return null;
+	const parsed: unknown = JSON.parse(value);
+	if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+		throw new Error("Invalid sync change payload");
 	}
-
-	return or(
-		gt(table.updatedAt, updatedAt),
-		and(eq(table.updatedAt, updatedAt), gt(table.id, cursor.id)),
-	);
+	return parsed as Record<string, unknown>;
 }
 
 export const Route = createFileRoute("/api/sync/$")({
 	server: {
 		handlers: {
-			GET: async ({
-				request,
-				params,
-			}: {
-				request: Request;
-				params: { _: string };
-			}) => {
-				const scope =
-					params._ || new URL(request.url).pathname.split("/").pop() || "";
-				const url = new URL(request.url);
-				const cursor = parseSyncCursor(
-					url.searchParams.get("cursor") ?? url.searchParams.get("since"),
-				);
-				const limit = getLimit(url);
-
+			GET: async ({ request, params }) => {
 				try {
 					await requireTeacherOrAdminSession(
 						"Only teachers and admins can sync offline data",
 					);
-
-					let data: Array<{ id: string; updatedAt: Date }> = [];
-
-					switch (scope) {
-						case "lessons":
-							data = await db.query.lessons.findMany({
-								where: getCursorWhere(lessons, cursor),
-								orderBy: [asc(lessons.updatedAt), asc(lessons.id)],
-								limit: limit + 1,
-							});
-							break;
-						case "classes":
-							data = await db.query.classes.findMany({
-								where: getCursorWhere(classes, cursor),
-								orderBy: [asc(classes.updatedAt), asc(classes.id)],
-								limit: limit + 1,
-							});
-							break;
-						case "users":
-							data = await db.query.user.findMany({
-								where: getCursorWhere(users, cursor),
-								orderBy: [asc(users.updatedAt), asc(users.id)],
-								limit: limit + 1,
-							});
-							break;
-						default:
-							return new Response(
-								JSON.stringify({
-									error: "Invalid scope",
-									received: scope,
-									params,
-									url: request.url,
-								}),
-								{
-									status: 400,
-									headers: { "Content-Type": "application/json" },
-								},
-							);
+					const scope =
+						params._splat ||
+						new URL(request.url).pathname.split("/").pop() ||
+						"";
+					if (!isSyncScope(scope)) {
+						return Response.json({ error: "Invalid scope" }, { status: 400 });
 					}
 
-					const hasMore = data.length > limit;
-					const page = hasMore ? data.slice(0, limit) : data;
-					const nextCursor = serializeSyncCursor(page.at(-1));
+					const url = new URL(request.url);
+					const revision =
+						parseSyncCursor(url.searchParams.get("revision")) ?? 0;
+					const limit = parseLimit(url);
+					const rows = await db
+						.select()
+						.from(syncChanges)
+						.where(
+							and(
+								eq(syncChanges.scope, scope),
+								gt(syncChanges.revision, revision),
+							),
+						)
+						.orderBy(asc(syncChanges.revision))
+						.limit(limit + 1);
 
-					return new Response(
-						JSON.stringify({ data: page, cursor: nextCursor, hasMore }),
-						{
-							status: 200,
-							headers: { "Content-Type": "application/json" },
-						},
-					);
+					const hasMore = rows.length > limit;
+					const page = hasMore ? rows.slice(0, limit) : rows;
+					const changes: SyncChange[] = page.map((row) => ({
+						revision: row.revision,
+						scope,
+						entityId: row.entityId,
+						operation: row.operation,
+						data:
+							row.operation === "delete"
+								? null
+								: { ...parseData(row.dataJson), serverRevision: row.revision },
+					}));
+					const response: SyncPullResponse = {
+						changes,
+						revision: page.at(-1)?.revision ?? revision,
+						hasMore,
+					};
+					return Response.json(response);
 				} catch (error) {
-					console.error(`[Sync API] Error pulling ${scope}:`, error);
-					return new Response(
-						JSON.stringify({ error: "Internal Server Error" }),
-						{
-							status: 500,
-							headers: { "Content-Type": "application/json" },
-						},
+					const normalized = normalizeError(error);
+					return Response.json(
+						{ error: normalized.message, code: normalized.code },
+						{ status: normalized.status },
 					);
 				}
 			},

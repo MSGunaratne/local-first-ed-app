@@ -7,12 +7,23 @@ import { uuidv7 } from "uuidv7";
 import type { User } from "@/features/users/users.schema";
 import type { DataTableQueryParams } from "@/lib/dataTableSearchSchema";
 import { buildLocalDataTableResult } from "@/lib/local-data-table";
+import {
+	readLocalFirstDetail,
+	readLocalFirstList,
+	restoreQuerySnapshots,
+	updateListCaches,
+} from "@/lib/local-first-query";
 import { cacheSessionUserForLocalInsert } from "@/lib/local-session-user";
 import { getCachedAuthSession, getQueryClient } from "@/lib/query-client";
 import { m } from "@/paraglide/messages";
-import { getLessonByIdFn, getLessonsFn } from "./lessons.actions";
-import type { LessonListItem } from "./lessons.service";
+import {
+	getLessonByIdFn,
+	getLessonsFn,
+	getPublishedLessonByIdFn,
+	getPublishedLessonsFn,
+} from "./lessons.actions";
 import type { LessonInsert, Lesson as LessonType } from "./lessons.schema";
+import type { LessonListItem } from "./lessons.service";
 
 function asLessonArray(value: unknown): LessonType[] {
 	if (!Array.isArray(value)) {
@@ -30,24 +41,6 @@ function asLesson(value: unknown): LessonType | null {
 	}
 
 	return null;
-}
-
-function getExpectedUpdatedAt(value: unknown): string | undefined {
-	if (typeof value !== "object" || value === null) {
-		return undefined;
-	}
-
-	const maybeUpdatedAt = (value as { updatedAt?: unknown }).updatedAt;
-	if (maybeUpdatedAt instanceof Date) {
-		return maybeUpdatedAt.toISOString();
-	}
-
-	if (typeof maybeUpdatedAt === "string") {
-		const parsed = new Date(maybeUpdatedAt);
-		return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
-	}
-
-	return undefined;
 }
 
 function getLocalLessonList(
@@ -94,34 +87,71 @@ export const lessonQueries = {
 	list: (params: DataTableQueryParams) =>
 		queryOptions({
 			queryKey: [...lessonQueries.lists(), params],
-			queryFn: async ({ signal }) => {
-				const { getLocalAll, isReady } = await import("@/lib/local-db");
-				// Try local SQLite first (especially useful if offline)
-				if (isReady()) {
-					const local = asLessonArray(await getLocalAll("lessons"));
-					if (local.length > 0) {
-						const localUsers = asUserArray(await getLocalAll("users"));
+			queryFn: ({ signal }) =>
+				readLocalFirstList({
+					scope: "lessons",
+					parse: asLessonArray,
+					fromLocal: async (local) => {
+						const { getLocalAll } = await import("@/lib/local-db");
+						const users = asUserArray(await getLocalAll("users"));
 						return getLocalLessonList(
-							toLocalLessonListItems(local, localUsers),
+							toLocalLessonListItems(local, users),
 							params,
 						);
-					}
-				}
-				// Fallback to server
-				return getLessonsFn({ data: params, signal });
-			},
+					},
+					fromServer: () => getLessonsFn({ data: params, signal }),
+				}),
 			placeholderData: keepPreviousData,
+			refetchOnMount: "always",
 		}),
 	detail: (id: string) =>
 		queryOptions({
 			queryKey: [...lessonQueries.all(), id],
-			queryFn: async () => {
-				const { getLocalById, isReady } = await import("@/lib/local-db");
-				if (isReady()) {
-					const local = asLesson(await getLocalById("lessons", id));
-					if (local) return local;
+			queryFn: () =>
+				readLocalFirstDetail({
+					scope: "lessons",
+					id,
+					parse: asLesson,
+					fromServer: () => getLessonByIdFn({ data: { id } }),
+					offlineMessage: "This lesson is not available offline yet.",
+				}),
+		}),
+	publishedList: (params: DataTableQueryParams) =>
+		queryOptions({
+			queryKey: [...lessonQueries.all(), "published", "list", params],
+			queryFn: async ({ signal }) => {
+				if (typeof window !== "undefined") {
+					const { getLocalAll, initLocalDb } = await import("@/lib/local-db");
+					await initLocalDb();
+					const local = asLessonArray(await getLocalAll("lessons")).filter(
+						(lesson) => lesson.isPublished,
+					);
+					if (local.length > 0 || navigator.onLine === false) {
+						const users = asUserArray(await getLocalAll("users"));
+						return getLocalLessonList(
+							toLocalLessonListItems(local, users),
+							params,
+						);
+					}
 				}
-				return getLessonByIdFn({ data: { id } });
+				return getPublishedLessonsFn({ data: params, signal });
+			},
+			placeholderData: keepPreviousData,
+		}),
+	publishedDetail: (id: string) =>
+		queryOptions({
+			queryKey: [...lessonQueries.all(), "published", id],
+			queryFn: async () => {
+				if (typeof window !== "undefined") {
+					const { getLocalById, initLocalDb } = await import("@/lib/local-db");
+					await initLocalDb();
+					const local = asLesson(await getLocalById("lessons", id));
+					if (local?.isPublished) return local;
+					if (navigator.onLine === false) {
+						throw new Error("This lesson is not available offline yet.");
+					}
+				}
+				return getPublishedLessonByIdFn({ data: { id } });
 			},
 		}),
 };
@@ -129,18 +159,15 @@ export const lessonQueries = {
 export const lessonMutations = {
 	create: () =>
 		mutationOptions({
-			mutationFn: async (data: LessonInsert) => {
-				const { insertLocal, isReady } = await import("@/lib/local-db");
-				const { enqueueAndFlushIfOnline } = await import(
-					"@/lib/mutation-queue"
+			mutationFn: async ({ data, id }: { data: LessonInsert; id: string }) => {
+				const { initLocalDb, insertLocalAndEnqueue } = await import(
+					"@/lib/local-db"
 				);
+				await initLocalDb();
 
-				const id = uuidv7();
 				const now = Math.floor(Date.now() / 1000);
 				const session = await getCachedAuthSession();
-				const teacherId = isReady()
-					? await cacheSessionUserForLocalInsert(session)
-					: (session?.user.id ?? null);
+				const teacherId = await cacheSessionUserForLocalInsert(session);
 				const completeData = {
 					...data,
 					id,
@@ -151,13 +178,7 @@ export const lessonMutations = {
 					isDeleted: 0,
 				};
 
-				// 1. Persist to local SQLite immediately
-				if (isReady()) {
-					await insertLocal("lessons", completeData);
-				}
-
-				// 2. Enqueue for background sync
-				await enqueueAndFlushIfOnline({
+				await insertLocalAndEnqueue("lessons", completeData, {
 					scope: "lessons",
 					type: "create",
 					serverFn: "createLesson",
@@ -167,11 +188,40 @@ export const lessonMutations = {
 
 				return { id };
 			},
-			onMutate: async (newLesson) => {
+			onMutate: async ({ data: newLesson, id }) => {
 				const queryClient = getQueryClient();
 				await queryClient.cancelQueries({ queryKey: lessonQueries.lists() });
-
-				return { optimistic: true, data: newLesson };
+				const session = await getCachedAuthSession();
+				const now = new Date();
+				const optimisticLesson = {
+					...newLesson,
+					id,
+					teacherId: session?.user.id ?? null,
+					teacherName: session?.user.name ?? null,
+					createdAt: now,
+					updatedAt: now,
+					lastModified: now,
+					syncStatus: "pending",
+					isDeleted: false,
+					deletedAt: null,
+				} as LessonListItem;
+				const snapshots = updateListCaches<LessonListItem>(
+					queryClient,
+					lessonQueries.lists(),
+					(items, key) => {
+						const params = key.at(-1) as DataTableQueryParams | undefined;
+						if (params?.pagination.pageIndex !== 0) {
+							return { items, countDelta: 0 };
+						}
+						return { items: [optimisticLesson, ...items], countDelta: 1 };
+					},
+				);
+				return { snapshots };
+			},
+			onError: (_error, _variables, context) => {
+				if (context?.snapshots) {
+					restoreQuerySnapshots(getQueryClient(), context.snapshots);
+				}
 			},
 			meta: {
 				invalidates: [lessonQueries.lists()],
@@ -182,29 +232,17 @@ export const lessonMutations = {
 	update: (id: string) =>
 		mutationOptions({
 			mutationFn: async (data: LessonInsert) => {
-				const { getLocalExpectedUpdatedAt, updateLocal, isReady } =
+				const { getLocalExpectedRevision, initLocalDb, updateLocalAndEnqueue } =
 					await import("@/lib/local-db");
-				const { enqueueAndFlushIfOnline } = await import(
-					"@/lib/mutation-queue"
-				);
-
-				const expectedUpdatedAt = isReady()
-					? await getLocalExpectedUpdatedAt("lessons", id)
-					: getExpectedUpdatedAt(
-							getQueryClient().getQueryData(lessonQueries.detail(id).queryKey),
-						);
-
-				// 1. Persist to local SQLite immediately
-				if (isReady()) {
-					await updateLocal("lessons", id, data);
-				}
+				await initLocalDb();
+				const expectedRevision = await getLocalExpectedRevision("lessons", id);
 
 				const idempotencyKey = uuidv7();
-				await enqueueAndFlushIfOnline({
+				await updateLocalAndEnqueue("lessons", id, data, {
 					scope: "lessons",
 					type: "update",
 					serverFn: "updateLesson",
-					payload: { id, data, expectedUpdatedAt, idempotencyKey },
+					payload: { id, data, expectedRevision, idempotencyKey },
 					idempotencyKey,
 				});
 
@@ -241,23 +279,18 @@ export const lessonMutations = {
 	delete: () =>
 		mutationOptions({
 			mutationFn: async (id: string) => {
-				const { deleteLocal, isReady } = await import("@/lib/local-db");
-				const { enqueueAndFlushIfOnline } = await import(
-					"@/lib/mutation-queue"
-				);
-
-				// 1. Mark as deleted in local SQLite
-				if (isReady()) {
-					await deleteLocal("lessons", id);
-				}
+				const { deleteLocalAndEnqueue, getLocalExpectedRevision, initLocalDb } =
+					await import("@/lib/local-db");
+				await initLocalDb();
+				const expectedRevision = await getLocalExpectedRevision("lessons", id);
 
 				// 2. Enqueue for background sync
 				const idempotencyKey = uuidv7();
-				await enqueueAndFlushIfOnline({
+				await deleteLocalAndEnqueue("lessons", id, {
 					scope: "lessons",
 					type: "delete",
 					serverFn: "deleteLesson",
-					payload: { id, idempotencyKey },
+					payload: { id, expectedRevision, idempotencyKey },
 					idempotencyKey,
 				});
 
@@ -266,8 +299,20 @@ export const lessonMutations = {
 			onMutate: async (deletedId) => {
 				const queryClient = getQueryClient();
 				await queryClient.cancelQueries({ queryKey: lessonQueries.lists() });
-
-				return { deletedId };
+				const snapshots = updateListCaches<LessonListItem>(
+					queryClient,
+					lessonQueries.lists(),
+					(items) => ({
+						items: items.filter((item) => item.id !== deletedId),
+						countDelta: items.some((item) => item.id === deletedId) ? -1 : 0,
+					}),
+				);
+				return { snapshots };
+			},
+			onError: (_error, _variables, context) => {
+				if (context?.snapshots) {
+					restoreQuerySnapshots(getQueryClient(), context.snapshots);
+				}
 			},
 			meta: {
 				invalidates: [lessonQueries.lists()],

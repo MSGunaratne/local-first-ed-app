@@ -5,15 +5,22 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1782333402361,
-      "tag": "0000_flippant_morbius",
+      "when": 1784025724315,
+      "tag": "0000_spooky_vision",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "6",
-      "when": 1782335000000,
-      "tag": "0001_lesson_teacher",
+      "when": 1784030400000,
+      "tag": "0001_sync_change_triggers",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1784030460000,
+      "tag": "0002_idempotency_reservations",
       "breakpoints": true
     }
   ]

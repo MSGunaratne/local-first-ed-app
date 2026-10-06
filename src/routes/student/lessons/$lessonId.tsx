@@ -1,14 +1,16 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Calendar, CheckCircle2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Editor } from "@/components/ui/editor";
 import { LessonFeedbackPrompt } from "@/features/analytics/components/lesson-feedback-prompt";
 import { lessonQueries } from "@/features/lessons/lessons.queries";
 import { useLocalProgress } from "@/hooks/use-local-progress";
+import { useConnectionMode } from "@/lib/connection-mode";
 import { ensureQueryDataAfterRestore } from "@/lib/query-client";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { fDate } from "@/utils/format-time";
 
@@ -17,18 +19,20 @@ export const Route = createFileRoute("/student/lessons/$lessonId")({
 	loader: ({ context: { queryClient }, params }) =>
 		ensureQueryDataAfterRestore(
 			queryClient,
-			lessonQueries.detail(params.lessonId),
+			lessonQueries.publishedDetail(params.lessonId),
 		),
 });
 
 function LessonPlayer() {
 	const params = Route.useParams();
 	const { data: lesson } = useSuspenseQuery(
-		lessonQueries.detail(params.lessonId),
+		lessonQueries.publishedDetail(params.lessonId),
 	);
 	const { markAsStarted, markAsCompleted, getLessonStatus } =
 		useLocalProgress();
 	const isCompleted = getLessonStatus(lesson.id) === "completed";
+	const { isOnline } = useConnectionMode();
+	const [fontSize, setFontSize] = useState<"base" | "lg" | "xl">("lg");
 
 	useEffect(() => {
 		markAsStarted(lesson.id);
@@ -41,6 +45,24 @@ function LessonPlayer() {
 				lessonTitle={lesson.title}
 				openOnComplete={isCompleted}
 			/>
+
+			{/* Offline Sticky Banner */}
+			{!isOnline && (
+				<div className="bg-amber-500/10 border border-dashed border-amber-300 text-amber-700 dark:text-amber-400 p-3.5 rounded-xl flex items-center justify-between text-xs sm:text-sm font-bold shadow-sm select-none gap-2 shrink-0 animate-pulse">
+					<div className="flex items-center gap-2">
+						<span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-ping" />
+						<span>
+							{m.student_offline_study_mode()} ({m.common_offline()})
+						</span>
+					</div>
+					<Badge
+						variant="outline"
+						className="border-amber-300 text-amber-700 bg-amber-100 dark:bg-amber-950/20 text-[10px]"
+					>
+						Cached
+					</Badge>
+				</div>
+			)}
 
 			{/* Navigation */}
 			<Link
@@ -86,8 +108,66 @@ function LessonPlayer() {
 
 			<hr className="border-border" />
 
+			{/* Font size controllers */}
+			<div className="flex items-center gap-2 justify-end border-b pb-2 select-none">
+				<span className="text-[10px] font-bold text-muted-foreground uppercase">
+					{m.student_font_size_label()}
+				</span>
+				<div className="flex items-center border rounded-lg bg-muted/20 p-0.5">
+					<Button
+						variant="ghost"
+						size="xs"
+						onClick={() => setFontSize("base")}
+						className={cn(
+							"h-7 px-2.5 text-xs font-semibold rounded-md",
+							fontSize === "base" &&
+								"bg-background text-foreground shadow-sm hover:bg-background",
+						)}
+					>
+						A
+					</Button>
+					<Button
+						variant="ghost"
+						size="xs"
+						onClick={() => setFontSize("lg")}
+						className={cn(
+							"h-7 px-2.5 text-sm font-bold rounded-md",
+							fontSize === "lg" &&
+								"bg-background text-foreground shadow-sm hover:bg-background",
+						)}
+					>
+						A+
+					</Button>
+					<Button
+						variant="ghost"
+						size="xs"
+						onClick={() => setFontSize("xl")}
+						className={cn(
+							"h-7 px-2.5 text-base font-black rounded-md",
+							fontSize === "xl" &&
+								"bg-background text-foreground shadow-sm hover:bg-background",
+						)}
+					>
+						A++
+					</Button>
+				</div>
+			</div>
+
 			{/* Content Renderer */}
-			<article className="prose prose-slate dark:prose-invert lg:prose-xl max-w-none">
+			<article
+				className={cn(
+					"prose prose-slate dark:prose-invert max-w-none transition-all duration-200",
+					fontSize === "base"
+						? "text-base [&_p]:text-base [&_p]:leading-relaxed"
+						: "",
+					fontSize === "lg"
+						? "text-lg md:text-xl [&_p]:text-lg md:[&_p]:text-xl [&_p]:leading-relaxed font-normal"
+						: "",
+					fontSize === "xl"
+						? "text-xl md:text-2xl [&_p]:text-xl md:[&_p]:text-2xl [&_p]:leading-relaxed font-medium"
+						: "",
+				)}
+			>
 				{/* We use the Editor in read-only mode to render the JSON content */}
 				{lesson.contentJson ? (
 					<Editor

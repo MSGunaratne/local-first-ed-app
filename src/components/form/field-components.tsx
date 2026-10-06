@@ -1,8 +1,8 @@
 import { useSelector } from "@tanstack/react-store";
 import type { JSONContent } from "@tiptap/core";
 import { CalendarIcon } from "lucide-react";
-import { lazy, Suspense } from "react";
 import type * as React from "react";
+import { lazy, Suspense } from "react";
 import type { DropzoneOptions } from "react-dropzone";
 import PhoneInputWithCountry from "react-phone-number-input/input";
 import { Button } from "@/components/ui/button";
@@ -717,7 +717,7 @@ export function EditorField({
 				>
 					<LazyEditor
 						value={field.state.value}
-						onChange={(json, _html) => {
+						onChange={(json) => {
 							field.handleChange(json);
 						}}
 						placeholder={placeholder}

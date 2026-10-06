@@ -1,10 +1,10 @@
 import { queryOptions } from "@tanstack/react-query";
+import { CURRICULUM_FILES } from "#/lib/content-mapper";
 import type { CurriculumCoverageLessonLink } from "@/features/curriculum/curriculum.service";
 import type { CurriculumItem } from "@/features/lessons/lesson.types";
 import type { Lesson } from "@/features/lessons/lessons.schema";
 import { Subject } from "@/types/lesson";
 import { getCurriculumCoverageLessonLinksFn } from "./curriculum.actions";
-import { CURRICULUM_FILES } from "#/lib/content-mapper";
 
 async function fetchSubjectCurriculum(
 	subject: Subject,
